@@ -43,19 +43,17 @@ kotlin {
     }
 }
 
-// Align JVM targets across the app and every plugin subproject. Some plugins
-// (e.g. flutter_js) pin their Kotlin jvmTarget to 1.8 while AGP 9 defaults the
-// Java compile task to a newer level, which fails AGP's
-// "Inconsistent JVM Target Compatibility" check. Force everything to 17.
+// flutter_js pins its Kotlin jvmTarget to 1.8 while its Java compile task
+// targets 11 (AGP 9 default), which trips the Kotlin plugin's
+// "Inconsistent JVM Target Compatibility" validation. Align its Kotlin
+// target to 11 so the module is internally consistent.
 rootProject.subprojects {
-    afterEvaluate {
-        tasks.withType<JavaCompile>().configureEach {
-            sourceCompatibility = "17"
-            targetCompatibility = "17"
-        }
-        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-            compilerOptions {
-                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    if (name == "flutter_js") {
+        afterEvaluate {
+            tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+                }
             }
         }
     }
