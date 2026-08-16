@@ -1,0 +1,7 @@
+{
+  "packageName": "com.mdownloader.youtube",
+  "name": "YouTube (Hindi Dubbed)",
+  "version": 1,
+  "baseUrl": "https://www.youtube.com",
+  "description": "Resolves Hindi-dubbed movies and episodes from YouTube official channels to direct MP4 (360p/720p) and HLS download links via the InnerTube API. No ffmpeg, no yt-dlp."
+}

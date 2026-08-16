@@ -1,0 +1,7 @@
+{
+  "packageName": "com.mdownloader.template",
+  "name": "Template Plugin",
+  "version": 1,
+  "baseUrl": "https://example.com",
+  "description": "A minimal starter plugin. Copy this folder, rename it, and fill in the functions to add your own site."
+}

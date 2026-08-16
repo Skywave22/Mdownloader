@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/config.dart';
-import '../services/scraper/scraper.dart';
+import '../models/download.dart';
 import 'hls_downloader.dart';
 import 'segmented_downloader.dart';
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../core/theme.dart';
 import '../models/media.dart';
 import '../services/locator.dart';
+import 'widgets.dart';
 import 'details_page.dart';
 
 class SearchPage extends StatefulWidget {
@@ -17,12 +19,20 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _search(String q) async {
     if (q.trim().isEmpty) return;
-    setState(() { _loading = true; _error = ''; });
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
     try {
       final r = await tmdb.searchMulti(q.trim());
       if (mounted) setState(() => _results = r);
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _results = []; });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _results = [];
+        });
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -37,37 +47,49 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: TextField(
-          controller: _controller,
-          autofocus: false,
-          textInputAction: TextInputAction.search,
-          onSubmitted: _search,
-          decoration: const InputDecoration(hintText: 'Search movies & series…', border: InputBorder.none),
-        ),
-        actions: [
-          IconButton(onPressed: _loading ? null : () => _search(_controller.text), icon: const Icon(Icons.search)),
+      appBar: AppBar(title: const Text('Search')),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
+            child: TextField(
+              controller: _controller,
+              textInputAction: TextInputAction.search,
+              onSubmitted: _search,
+              decoration: const InputDecoration(
+                hintText: 'Search movies & series…',
+                prefixIcon: Icon(Icons.search_rounded),
+                suffixIcon: Icon(Icons.arrow_forward_rounded),
+              ),
+            ),
+          ),
+          Expanded(child: _body()),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
-              ? Center(child: Text(_error))
-              : _results == null
-                  ? const Center(child: Text('Search for a movie or series by title.'))
-                  : _results!.isEmpty
-                      ? const Center(child: Text('No results.'))
-                      : GridView.builder(
-                          padding: const EdgeInsets.all(16),
-                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 160,
-                            childAspectRatio: 0.55,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
-                          itemCount: _results!.length,
-                          itemBuilder: (_, i) => _ResultCard(item: _results![i]),
-                        ),
+    );
+  }
+
+  Widget _body() {
+    if (_loading) return const LoadingView();
+    if (_error.isNotEmpty) return ErrorView(message: _error, onRetry: () => _search(_controller.text));
+    final r = _results;
+    if (r == null) {
+      return const Center(
+        child: Text('Search for a movie or series by title.',
+            style: TextStyle(color: AppColors.textLow)),
+      );
+    }
+    if (r.isEmpty) return const Center(child: Text('No results.', style: TextStyle(color: AppColors.textLow)));
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 150,
+        childAspectRatio: 0.52,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: r.length,
+      itemBuilder: (_, i) => _ResultCard(item: r[i]),
     );
   }
 }
@@ -80,24 +102,30 @@ class _ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = item.posterUrl();
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => DetailsPage(item: item),
-      )),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsPage(item: item))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: url.isEmpty
-                  ? Container(color: Colors.white12, child: const Icon(Icons.movie))
-                  : Image.network(url, fit: BoxFit.cover, width: double.infinity,
-                      errorBuilder: (_, __, ___) => Container(color: Colors.white12, child: const Icon(Icons.movie))),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: url.isEmpty
+                    ? Container(color: AppColors.surface2, child: const Icon(Icons.movie, color: AppColors.textLow))
+                    : Image.network(url, fit: BoxFit.cover, width: double.infinity,
+                        errorBuilder: (_, __, ___) => Container(color: AppColors.surface2, child: const Icon(Icons.movie, color: AppColors.textLow))),
+              ),
             ),
           ),
-          const SizedBox(height: 6),
-          Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5)),
-          if (item.year != null) Text('${item.year}', style: TextStyle(fontSize: 11, color: Colors.white54)),
+          const SizedBox(height: 7),
+          Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textHi)),
+          if (item.year != null)
+            Text('${item.year}', style: const TextStyle(fontSize: 11, color: AppColors.textLow)),
         ],
       ),
     );
