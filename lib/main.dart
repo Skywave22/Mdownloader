@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
+import 'core/settings.dart';
 import 'core/theme.dart';
 import 'services/locator.dart';
+import 'ui/discover_page.dart';
 import 'ui/downloads_page.dart';
 import 'ui/home_page.dart';
 import 'ui/plugins_page.dart';
@@ -29,6 +32,9 @@ class _MdownloaderAppState extends State<MdownloaderApp> {
   }
 
   Future<void> _bootstrap() async {
+    try {
+      await AppSettings.load();
+    } catch (_) {}
     await downloadManager.init();
     try {
       await initPlugins();
@@ -48,7 +54,11 @@ class _MdownloaderAppState extends State<MdownloaderApp> {
         body: IndexedStack(
           index: _index,
           children: [
-            HomePage(onSearchTap: () => setState(() => _index = 1)),
+            HomePage(
+              onSearchTap: () => setState(() => _index = 2),
+              onDiscoverTap: () => setState(() => _index = 1),
+            ),
+            DiscoverPage(ready: _ready),
             const SearchPage(),
             DownloadsPage(ready: _ready),
             PluginsPage(ready: _ready),
@@ -59,6 +69,7 @@ class _MdownloaderAppState extends State<MdownloaderApp> {
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: const [
             NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore_rounded), label: 'Discover'),
             NavigationDestination(icon: Icon(Icons.search_outlined), selectedIcon: Icon(Icons.search_rounded), label: 'Search'),
             NavigationDestination(icon: Icon(Icons.download_outlined), selectedIcon: Icon(Icons.download_rounded), label: 'Downloads'),
             NavigationDestination(icon: Icon(Icons.extension_outlined), selectedIcon: Icon(Icons.extension_rounded), label: 'Plugins'),

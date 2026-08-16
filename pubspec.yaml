@@ -3,7 +3,7 @@ description: >-
   MDownloader — TMDB catalog (movies + series) with multi-source scraping and a
   real parallel segmented download manager. Builds to Android APK and Windows EXE.
 publish_to: 'none'
-version: 0.2.0+2
+version: 0.3.0+3
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -30,3 +30,6 @@ flutter:
   assets:
     - assets/plugins/youtube/
     - assets/plugins/template/
+    - assets/plugins/goldmines/
+    - assets/plugins/ultra/
+    - assets/plugins/pen/

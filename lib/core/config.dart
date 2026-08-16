@@ -1,5 +1,7 @@
 class AppConfig {
   static const appName = 'MDownloader';
+  static const appVersion = '0.3.0';
+  static const repoUrl = 'https://github.com/Skywave22/Mdownloader';
 
   // TMDB API (free catalog key). Replace with your own at tmdb.org if you
   // want to be independent of this shared key.

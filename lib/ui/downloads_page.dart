@@ -6,6 +6,7 @@ import '../downloader/segmented_downloader.dart';
 import '../services/locator.dart';
 import 'widgets.dart';
 import 'player_page.dart';
+import 'settings_page.dart';
 
 class DownloadsPage extends StatefulWidget {
   final bool ready;
@@ -35,7 +36,19 @@ class _DownloadsPageState extends State<DownloadsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Downloads')),
+      appBar: AppBar(
+        title: const Text('Downloads'),
+        actions: [
+          IconButton(
+            tooltip: 'Download settings',
+            icon: const Icon(Icons.folder_rounded, color: AppColors.textMid),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            ),
+          ),
+          const SizedBox(width: 6),
+        ],
+      ),
       body: !widget.ready
           ? const LoadingView()
           : downloadManager.tasks.isEmpty
@@ -188,7 +201,7 @@ class _TaskTile extends StatelessWidget {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(icon: const Icon(Icons.play_arrow_rounded, color: AppColors.ok), onPressed: () => task.start(downloadManager.saveDir)),
+            IconButton(icon: const Icon(Icons.play_arrow_rounded, color: AppColors.ok), onPressed: () => downloadManager.retry(task)),
             IconButton(icon: const Icon(Icons.delete_outline_rounded, color: AppColors.danger), onPressed: () => downloadManager.remove(task)),
           ],
         );

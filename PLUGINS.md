@@ -93,6 +93,28 @@ function loadStreams(url, cb) {
   posterUrl: "https://img/...jpg", type: "movie" | "series", year: 2022 }
 ```
 
+Items returned by `search` are shown in the app's **Discover** tab. When the
+user taps one, the app calls your `loadStreams` again with that item's `url`
+string — so `url` can be any payload **you** understand:
+
+```js
+// in search:
+url: JSON.stringify({ v: videoId })       // e.g. an instant video id
+
+// in loadStreams, handle both payload kinds:
+var m = JSON.parse(String(url || '{}'));
+if (m.v) { /* resolve video m.v directly — instant links */ }
+else     { /* m.title / m.tmdbId ... search by title */ }
+```
+
+### Instant (direct-video) payload
+
+When the app already knows an exact video (e.g. `{v: "<videoId>"}`), a plugin
+can resolve links **without searching**. This is what the bundled plugins do for
+"instant download" links: search returns items whose `url` is
+`JSON.stringify({v: id})`, and `loadStreams` turns that straight into MP4/HLS
+links.
+
 ## Helpers available to every plugin
 
 | Helper | Returns |
@@ -119,10 +141,18 @@ chains. The engine also supports `fetch` (an alias of `http_request`).
    containing `plugin.json` + `plugin.js`.
 3. Enable/disable or delete plugins from the Plugins tab.
 
-## Bundled examples
+## Bundled plugins
 
-- `assets/plugins/youtube/` — real working plugin (InnerTube API → MP4/HLS).
-- `assets/plugins/template/` — commented starter to copy for your own site.
+| Plugin | Package | Source |
+|---|---|---|
+| YouTube (Hindi Dubbed) | `com.mdownloader.youtube` | general YouTube search |
+| Goldmines (Hindi Dubbed) | `com.mdownloader.hindi.goldmines` | #1 Hindi-dubbed network |
+| Ultra Movie Parlour | `com.mdownloader.hindi.ultra` | Hindi-dubbed + Bollywood |
+| Pen Movies (Hindi) | `com.mdownloader.hindi.pen` | South-Indian / Bollywood |
+
+All bundled plugins resolve **instant** direct MP4 (360p/720p) and HLS links
+through YouTube's InnerTube API — no ffmpeg, no yt-dlp. `assets/plugins/template/`
+is a commented starter to copy for your own site.
 
 ## Notes
 

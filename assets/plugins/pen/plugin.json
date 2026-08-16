@@ -1,0 +1,7 @@
+{
+  "packageName": "com.mdownloader.hindi.pen",
+  "name": "Pen Movies (Hindi)",
+  "version": 1,
+  "baseUrl": "https://www.youtube.com/@PenMovies",
+  "description": "South-Indian and Bollywood films (many Hindi-dubbed) from the official Pen Movies network. Instant MP4/HLS links via InnerTube."
+}

@@ -70,6 +70,24 @@ class PluginStreamResult {
   });
 }
 
+/// One content item returned by a plugin's `search` function.
+class PluginSearchItem {
+  final String pluginName;
+  final String pluginPackage;
+  final String title;
+  final String url; // plugin-specific payload (JSON string) for loadStreams
+  final String posterUrl;
+  final String type; // 'movie' | 'series' | ''
+  const PluginSearchItem({
+    required this.pluginName,
+    required this.pluginPackage,
+    required this.title,
+    required this.url,
+    this.posterUrl = '',
+    this.type = '',
+  });
+}
+
 /// Scans the plugins folder, loads every plugin into the JS engine, and runs
 /// them to resolve download links for a title.
 class PluginManager extends ChangeNotifier {
@@ -118,7 +136,7 @@ class PluginManager extends ChangeNotifier {
   /// Copies the example plugins shipped with the app into the plugins folder
   /// on first run, so users can read/edit them.
   Future<void> _ensureBundled() async {
-    const bundled = ['youtube', 'template'];
+    const bundled = ['youtube', 'template', 'goldmines', 'ultra', 'pen'];
     for (final name in bundled) {
       final dir = Directory('${pluginsDir.path}${Platform.pathSeparator}$name');
       if (dir.existsSync()) continue;
@@ -291,35 +309,9 @@ class PluginManager extends ChangeNotifier {
     if (enabled.isEmpty) return const [];
 
     final futures = enabled.map((p) async {
-      final labelPrefix = p.name;
       try {
         final res = await engine.invoke(p.packageName, 'loadStreams', [urlJson]);
-        if (res is! Map) return const <PluginStreamResult>[];
-        final success = res['success'] == true;
-        if (!success) return const <PluginStreamResult>[];
-        final data = res['data'];
-        if (data is! List) return const <PluginStreamResult>[];
-        final out = <PluginStreamResult>[];
-        for (final s in data) {
-          if (s is! Map) continue;
-          final url = s['url'];
-          if (url is! String || url.isEmpty) continue;
-          final kindStr = (s['kind'] ?? 'direct').toString();
-          final kind = kindStr == 'hls' ? DownloadKind.hls : DownloadKind.direct;
-          final headers = <String, String>{};
-          if (s['headers'] is Map) {
-            (s['headers'] as Map).forEach((k, v) => headers[k.toString()] = v?.toString() ?? '');
-          }
-          final label = (s['label'] ?? url.split('.').last).toString();
-          out.add(PluginStreamResult(
-            pluginName: p.name,
-            label: '$labelPrefix · $label',
-            url: url,
-            kind: kind,
-            headers: headers,
-          ));
-        }
-        return out;
+        return _parseStreams(p, res);
       } catch (_) {
         return const <PluginStreamResult>[];
       }
@@ -327,5 +319,88 @@ class PluginManager extends ChangeNotifier {
 
     final results = await Future.wait(futures);
     return results.expand((e) => e).toList();
+  }
+
+  List<PluginStreamResult> _parseStreams(PluginInfo p, dynamic res) {
+    if (res is! Map) return const <PluginStreamResult>[];
+    if (res['success'] != true) return const <PluginStreamResult>[];
+    final data = res['data'];
+    if (data is! List) return const <PluginStreamResult>[];
+    final out = <PluginStreamResult>[];
+    for (final s in data) {
+      if (s is! Map) continue;
+      final url = s['url'];
+      if (url is! String || url.isEmpty) continue;
+      final kindStr = (s['kind'] ?? 'direct').toString();
+      final kind = kindStr == 'hls' ? DownloadKind.hls : DownloadKind.direct;
+      final headers = <String, String>{};
+      if (s['headers'] is Map) {
+        (s['headers'] as Map).forEach((k, v) => headers[k.toString()] = v?.toString() ?? '');
+      }
+      final label = (s['label'] ?? url.split('.').last).toString();
+      out.add(PluginStreamResult(
+        pluginName: p.name,
+        label: label,
+        url: url,
+        kind: kind,
+        headers: headers,
+      ));
+    }
+    return out;
+  }
+
+  /// Runs `search` on every enabled plugin and merges the results.
+  Future<List<PluginSearchItem>> searchAll(String query, {Set<String>? onlyPackages}) async {
+    final q = query.trim();
+    if (q.isEmpty) return const [];
+    final enabled = plugins.where((p) => p.enabled && (onlyPackages == null || onlyPackages.contains(p.packageName))).toList();
+    if (enabled.isEmpty) return const [];
+
+    final futures = enabled.map((p) async {
+      try {
+        final res = await engine.invoke(p.packageName, 'search', [q]);
+        if (res is! Map || res['success'] != true) return const <PluginSearchItem>[];
+        final data = res['data'];
+        if (data is! List) return const <PluginSearchItem>[];
+        final out = <PluginSearchItem>[];
+        for (final it in data) {
+          if (it is! Map) continue;
+          final url = it['url'];
+          if (url is! String || url.isEmpty) continue;
+          out.add(PluginSearchItem(
+            pluginName: p.name,
+            pluginPackage: p.packageName,
+            title: (it['title'] ?? 'Untitled').toString(),
+            url: url,
+            posterUrl: (it['posterUrl'] ?? '').toString(),
+            type: (it['type'] ?? '').toString(),
+          ));
+        }
+        return out;
+      } catch (_) {
+        return const <PluginSearchItem>[];
+      }
+    });
+
+    final results = await Future.wait(futures);
+    return results.expand((e) => e).toList();
+  }
+
+  /// Resolves download streams for a plugin search item's payload URL.
+  Future<List<PluginStreamResult>> resolveUrl(String packageName, String urlJson) async {
+    PluginInfo? p;
+    for (final x in plugins) {
+      if (x.packageName == packageName) {
+        p = x;
+        break;
+      }
+    }
+    if (p == null) return const [];
+    try {
+      final res = await engine.invoke(packageName, 'loadStreams', [urlJson]);
+      return _parseStreams(p, res);
+    } catch (_) {
+      return const [];
+    }
   }
 }

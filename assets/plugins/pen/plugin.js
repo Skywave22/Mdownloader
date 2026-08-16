@@ -1,30 +1,18 @@
 // =============================================================================
-//  MDownloader plugin — YouTube (Hindi Dubbed)
-//  Reference implementation. See PLUGINS.md for the full plugin API.
+//  MDownloader plugin — Pen Movies (South Dubbed / Hindi)
 //
-//  The app injects these helpers into every plugin (no imports needed):
-//    http_get(url, headers?)          -> Promise<response body string>
-//    http_post(url, headers?, body)   -> Promise<response body string>
-//    http_request({method,url,headers,body}) -> Promise<{status,body,headers,error}>
-//    sha256(s) / md5(s)               -> hex string
-//    btoa(s) / atob(s) / b64encode(s) / b64decode(s)
-//    storage_get(key) / storage_set(key, value)
-//    manifest                         -> the plugin.json object
-//    console.log / warn / error
+//  Pen Movies is an official Indian movie network on YouTube with a large
+//  catalogue of South-Indian and Bollywood films (many Hindi-dubbed).
+//  Resolves direct MP4 + HLS download links via the InnerTube API — no ffmpeg,
+//  no yt-dlp, instant links.
 //
-//  Export by simply defining these functions at the top level (the app
-//  auto-detects them):
-//    getHome(cb)     -> cb({success, data:{Category:[items]}})
-//    search(q, cb)   -> cb({success, data:[items]})
-//    load(url, cb)   -> cb({success, data: item})
-//    loadStreams(url, cb) -> cb({success, data:[streams]})
-//
-//  item  = {title, url, posterUrl, type}   (url is a plugin payload string)
-//  stream = {url, label, kind:'direct'|'hls', headers:{...}}
+//  Exports: search(query, cb)  and  loadStreams(url, cb)
 // =============================================================================
 
 var KEY = 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w';
 var BASE = 'https://www.youtube.com/youtubei/v1/';
+var CHANNEL = 'Pen Movies';
+var HINT = 'hindi dubbed';
 
 var WEB_CTX = { context: { client: { clientName: 'WEB', clientVersion: '2.20260811.07.00', hl: 'en', gl: 'US' } } };
 var ANDROID_CTX = {
@@ -70,7 +58,6 @@ function thumbOf(t) {
   return '';
 }
 
-// Walk a search response and collect {id, title, thumb} for video results.
 function searchItems(query) {
   return innertube('search', Object.assign({}, WEB_CTX, { query: query })).then(function (j) {
     var out = [];
@@ -99,8 +86,6 @@ function searchItems(query) {
   });
 }
 
-// ANDROID client returns progressive MP4 download URLs even from datacenter IPs
-// where the WEB client is gated. Also surface the WEB merged-HLS manifest.
 function streamsFor(videoId) {
   return innertube('player', Object.assign({}, ANDROID_CTX, { videoId: videoId }), ANDROID_CTX.context.client.userAgent)
     .then(function (j) {
@@ -124,9 +109,6 @@ function streamsFor(videoId) {
     });
 }
 
-// Resolve download links for a title. `url` is a JSON string the app passes:
-//   {tmdbId, title, year, mediaType:'movie'|'tv', season?, episode?}
-// …or an instant payload from search(): {v:'<videoId>'}.
 function loadStreams(url, cb) {
   try {
     var m = JSON.parse(String(url || '{}'));
@@ -137,9 +119,9 @@ function loadStreams(url, cb) {
     }
     var query;
     if (m.mediaType === 'tv') {
-      query = m.title + ' season ' + (m.season || 1) + ' episode ' + (m.episode || 1) + ' hindi dubbed';
+      query = m.title + ' season ' + (m.season || 1) + ' episode ' + (m.episode || 1) + ' ' + HINT + ' ' + CHANNEL;
     } else {
-      query = m.title + (m.year ? ' ' + m.year : '') + ' full movie hindi dubbed';
+      query = m.title + (m.year ? ' ' + m.year : '') + ' full movie ' + HINT + ' ' + CHANNEL;
     }
     searchItems(query).then(function (items) {
       var jobs = items.slice(0, 3).map(function (it) {
@@ -163,7 +145,7 @@ function loadStreams(url, cb) {
 function search(query, cb) {
   var q = String(query || '').trim();
   if (!q) { cb({ success: true, data: [] }); return; }
-  searchItems(q).then(function (items) {
+  searchItems(q + ' ' + HINT + ' ' + CHANNEL).then(function (items) {
     cb({
       success: true,
       data: items.slice(0, 24).map(function (it) {

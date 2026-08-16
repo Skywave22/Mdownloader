@@ -1,0 +1,7 @@
+{
+  "packageName": "com.mdownloader.hindi.ultra",
+  "name": "Ultra Movie Parlour",
+  "version": 1,
+  "baseUrl": "https://www.youtube.com/@UltraMovieParlour",
+  "description": "Hindi-dubbed and Bollywood movies from the official Ultra network on YouTube. Instant MP4/HLS links via InnerTube."
+}

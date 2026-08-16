@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import '../core/config.dart';
+import '../core/settings.dart';
 import '../models/download.dart';
 import 'hls_downloader.dart';
 import 'segmented_downloader.dart';
@@ -31,7 +31,7 @@ class DownloadTask extends ChangeNotifier {
     this.headers = const {},
   });
 
-  Future<void> start(Directory saveDir) async {
+  Future<void> start(Directory saveDir, {int? maxWorkers}) async {
     if (status == DStatus.running || status == DStatus.merging) return;
     file = File('${saveDir.path}${Platform.pathSeparator}$name');
     final dir = Directory('${saveDir.path}${Platform.pathSeparator}.$id');
@@ -53,7 +53,7 @@ class DownloadTask extends ChangeNotifier {
         dir: dir,
         fileName: name,
         headers: headers,
-        maxWorkers: AppConfig.maxWorkers,
+        maxWorkers: maxWorkers ?? AppConfig.maxWorkers,
         chunkSize: AppConfig.autoChunkSize,
         onProgress: onProgress,
       );
@@ -103,10 +103,20 @@ class DownloadManager extends ChangeNotifier {
   }
 
   Future<void> init() async {
-    final docs = await getApplicationDocumentsDirectory();
-    _saveDir = Directory('${docs.path}${Platform.pathSeparator}downloads');
+    // Settings must be loaded first so we honour the user's chosen folder.
+    if (!AppSettings.isLoaded) await AppSettings.load();
+    _saveDir = await AppSettings.instance.resolveDownloadDir();
     await _saveDir!.create(recursive: true);
     await _restore();
+  }
+
+  /// Moves future downloads to a user-chosen folder (and persists the choice).
+  Future<void> setSaveDirectory(String path) async {
+    final dir = Directory(path);
+    await dir.create(recursive: true);
+    _saveDir = dir;
+    await AppSettings.instance.setDownloadDir(path);
+    notifyListeners();
   }
 
   Future<void> _restore() async {
@@ -141,6 +151,11 @@ class DownloadManager extends ChangeNotifier {
     tasks.insert(0, task);
     await _persist();
     notifyListeners();
+    // Download starts immediately — no extra tap needed.
+    final workers = AppSettings.isLoaded ? AppSettings.instance.maxWorkers : AppConfig.maxWorkers;
+    unawaited(task.start(_saveDir!, maxWorkers: workers).catchError((_) {
+      task.error = task.error ?? 'download failed';
+    }));
     return task;
   }
 
@@ -153,7 +168,28 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> remove(DownloadTask task) async {
     task.cancel();
+    try {
+      if (task.file != null && task.file!.existsSync()) await task.file!.delete();
+      final partDir = Directory('${_saveDir!.path}${Platform.pathSeparator}.${task.id}');
+      if (partDir.existsSync()) await partDir.delete(recursive: true);
+    } catch (_) {}
     tasks.remove(task);
+    await _persist();
+    notifyListeners();
+  }
+
+  /// Retry a failed/cancelled task.
+  Future<void> retry(DownloadTask task) async {
+    if (task.status == DStatus.running || task.status == DStatus.merging) return;
+    task.status = DStatus.idle;
+    task.error = null;
+    final workers = AppSettings.isLoaded ? AppSettings.instance.maxWorkers : AppConfig.maxWorkers;
+    unawaited(task.start(_saveDir!, maxWorkers: workers));
+  }
+
+  /// Remove every finished task (keeps the files on disk).
+  Future<void> clearCompleted() async {
+    tasks.removeWhere((t) => t.status == DStatus.completed);
     await _persist();
     notifyListeners();
   }
