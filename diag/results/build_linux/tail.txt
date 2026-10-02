@@ -1,0 +1,3 @@
+Building Linux application...                                   
+✓ Built build/linux/x64/debug/bundle/skystream
+/usr/lib/x86_64-linux-gnu/libasound.so
