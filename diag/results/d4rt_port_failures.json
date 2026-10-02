@@ -1,8 +1,8 @@
 {
- "Static Extension Members Static getter returning computed value": [
-  "Runtime Error: Cannot increment/decrement property on non-instance object of type 'InterpretedExtension'."
+ "File methods - comprehensive existsSync": [
+  "Runtime Error: Native error during bridged method call 'deleteSync' on File: PathNotFoundException: Cannot delete file, path = '/tmp/test.txt' (OS Error: No such file or directory, errno = 2)"
  ],
- "Interpreter Core Feature Tests NullAwareElement (?element)": [
-  "SourceCodeException: Parsing errors in module package:test/main.dart:\\n- This requires the 'null-aware-elements' language feature to be enabled. (ligne 1, colonne 38)\\n- This requires the 'null-aware-elements' language feature to be enabled. (ligne 1, colonne 42)"
+ "File methods - comprehensive writeAsStringSync and readAsStringSync": [
+  "Runtime Error: Native error during bridged method call 'deleteSync' on File: PathNotFoundException: Cannot delete file, path = '/tmp/test.txt' (OS Error: No such file or directory, errno = 2)"
  ]
 }
