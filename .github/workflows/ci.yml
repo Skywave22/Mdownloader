@@ -162,13 +162,26 @@ jobs:
 
           lock = pathlib.Path('pubspec.lock').read_text()
           bad = []
+          # The last four, and libtorrent_flutter below, are the AnymeX runtime
+          # bridge's set (see dependency_overrides in pubspec.yaml). Each is wired
+          # in because the published package cannot be built or resolved here.
           for pkg in ('flutter_js_ng', 'vlc_player', 'flutter_torrent_server',
-                      'screen_brightness_windows'):
+                      'screen_brightness_windows',
+                      'd4rt', 'device_apps', 'install_plugin', 'flutter_qjs'):
               m = re.search(r'^  %s:\n(?:.*\n)*?    source: (\w+)' % pkg, lock, re.M)
               if not m:
                   bad.append(f'{pkg}: not in pubspec.lock at all')
               elif m.group(1) != 'path':
                   bad.append(f'{pkg}: resolved from "{m.group(1)}", not the vendored path')
+
+          # libtorrent_flutter is not vendored: the bridge's own copy of it is
+          # used, straight from the bridge's git repository, because the hosted
+          # package lacks the `customLibraryPath` setter the bridge calls.
+          m = re.search(r'^  libtorrent_flutter:\n(?:.*\n)*?    source: (\w+)', lock, re.M)
+          if not m:
+              bad.append('libtorrent_flutter: not in pubspec.lock at all')
+          elif m.group(1) != 'git':
+              bad.append(f'libtorrent_flutter: resolved from "{m.group(1)}", not the bridge\'s git copy')
 
           for b in bad:
               print(f'::error::{b}')
@@ -238,11 +251,11 @@ jobs:
       - name: Test
         run: flutter test
 
-  # The two vendored Dart packages, in parallel with the app suite rather than
-  # appended to it. Both are path dependencies, so each needs its own
-  # package_config; the root analysis_options excludes packages/**, so this job
-  # is the only place either is analysed. Neither has generated code, so
-  # neither needs a build_runner step.
+  # The vendored Dart packages with something to run, in parallel with the app
+  # suite rather than appended to it. All are path dependencies, so each needs
+  # its own package_config; the root analysis_options excludes packages/**, so
+  # this job is the only place any is analysed. None has generated code, so none
+  # needs a build_runner step.
   #
   # flutter_js_ng now has its own analysis_options.yaml (flutter_lints, without
   # the root's strict-* flags, which were what turned vendored upstream style
@@ -252,6 +265,14 @@ jobs:
   # test that cannot pass on a host machine - it asserts an int and gets a
   # JSValue pointer back - so this leg analyses without running it.
   # Its native side is compiled by every leg of the build matrix below.
+  #
+  # d4rt is upstream's Dart interpreter with its analyzer calls ported to the
+  # analyzer 14 this app resolves (packages/d4rt/README.md), and `test/` is
+  # upstream's own 80-file suite, unchanged: it is what says the port still
+  # interprets Dart correctly, and what goes red if an analyzer bump breaks it.
+  # Pure Dart, so `dart test`, not `flutter test`. The infos it carries are
+  # upstream's own style and deprecation notices, so this leg runs with
+  # --no-fatal-infos too: errors and warnings are what it gates.
   packages:
     name: Package ${{ matrix.package }}
     runs-on: ubuntu-latest
@@ -259,7 +280,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [vlc_player, flutter_torrent_server, flutter_js_ng]
+        package: [vlc_player, flutter_torrent_server, flutter_js_ng, d4rt]
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -284,6 +305,9 @@ jobs:
           flutter pub get
           if [ "$PACKAGE" = "flutter_js_ng" ]; then
             flutter analyze --no-fatal-infos
+          elif [ "$PACKAGE" = "d4rt" ]; then
+            dart analyze --no-fatal-infos
+            dart test
           else
             flutter analyze
             flutter test
