@@ -523,6 +523,11 @@
   "mstreamNoStreams": "ಈ ಸಂಚಿಕೆಗಾಗಿ ಯಾವುದೇ ಸ್ಟ್ರೀಮ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
   "mstreamEpisodeNumber": "ಸಂಚಿಕೆ {number}",
   "mstreamSearchHint": "ಈ ಮೂಲದಲ್ಲಿ ಹುಡುಕಿ",
-  "mstreamManageProviders": "ಪ್ರೊವೈಡರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+  "mstreamManageProviders": "ಪ್ರೊವೈಡರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+  "mstreamAllDisabled": "ಸ್ಥಾಪಿಸಲಾದ ಎಲ್ಲಾ ಮೂಲಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. ಬ್ರೌಸ್ ಮಾಡಲು ಒಂದನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.",
+  "installAll": "ಎಲ್ಲವನ್ನೂ ಸ್ಥಾಪಿಸಿ",
+  "installAllDone": "{count, plural, =1{1 ಮೂಲ ಸ್ಥಾಪಿಸಲಾಗಿದೆ} other{{count} ಮೂಲಗಳನ್ನು ಸ್ಥಾಪಿಸಲಾಗಿದೆ}}",
+  "enable": "ಸಕ್ರಿಯಗೊಳಿಸಿ",
+  "disable": "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ"
 }
 

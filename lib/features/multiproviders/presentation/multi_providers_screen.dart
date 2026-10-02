@@ -1,9 +1,11 @@
 import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:skystream/l10n/generated/app_localizations.dart';
 
+import '../../../core/network/http_defaults.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/layout_constants.dart';
 import '../data/multiprovider_bridge.dart';
@@ -21,6 +23,8 @@ const List<({String id, String name})> _backends = [
 /// Manages the AnymeX extension runtime bridge: the Runtime Host download,
 /// the repositories sources come from, and installing/removing those sources.
 ///
+/// Installed sources can be toggled off without uninstalling them, and the
+/// Available tab installs either one at a time or all of them in sequence.
 /// Playback of what gets installed here lives in the MStream tab.
 class MultiProvidersScreen extends ConsumerStatefulWidget {
   const MultiProvidersScreen({super.key});
@@ -86,6 +90,11 @@ class _MultiProvidersScreenState extends ConsumerState<MultiProvidersScreen>
                 ? () => ref.read(multiProviderBridgeProvider.notifier).refresh()
                 : null,
           ),
+          IconButton(
+            tooltip: l10n.installAll,
+            icon: const Icon(Icons.download_for_offline_rounded),
+            onPressed: state.isUsable ? () => _installAll() : null,
+          ),
         ],
         bottom: TabBar(
           controller: _tabs,
@@ -149,6 +158,59 @@ class _MultiProvidersScreenState extends ConsumerState<MultiProvidersScreen>
     await controller.addRepo(added.url, _type, added.backend);
     await controller.refresh();
   }
+
+  /// Installs every still-uninstalled source of the current type, one at a
+  /// time, with a progress sheet that can cancel the run midway.
+  Future<void> _installAll() async {
+    final l10n = AppLocalizations.of(context)!;
+    final async = ref.read(availableSourcesProvider(_type));
+    final installedAsync = ref.read(installedSourcesProvider(_type));
+    final available = async.value ?? const <Source>[];
+    final installedIds = <String>{
+      for (final s in installedAsync.value ?? const <Source>[]) s.uniqueId,
+    };
+    final queue = [
+      for (final s in available)
+        if (!installedIds.contains(s.uniqueId)) s,
+    ];
+    if (queue.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.multiProvidersNoAvailable)),
+      );
+      return;
+    }
+
+    final progress = ValueNotifier<(int, int)>((0, queue.length));
+    var cancelled = false;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _InstallProgressDialog(
+        progress: progress,
+        onCancel: () {
+          cancelled = true;
+          // showDialog pushes on the root navigator; pop the same one.
+          Navigator.of(context, rootNavigator: true).pop();
+        },
+      ),
+    );
+
+    final controller = ref.read(multiProviderBridgeProvider.notifier);
+    final succeeded = await controller.installAll(
+      queue,
+      onProgress: (done, total) => progress.value = (done, total),
+      isCancelled: () => cancelled,
+    );
+    if (!mounted) return;
+    if (!cancelled) {
+      // The dialog closes only when the queue was not cancelled: a cancel
+      // pops it from inside the button handler above.
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.installAllDone(succeeded))),
+    );
+  }
 }
 
 /// What the add-repository dialog hands back.
@@ -157,9 +219,9 @@ typedef _NewRepository = ({String url, String backend});
 /// Asks for a repository address and which extension system it belongs to.
 ///
 /// A widget of its own so that the controller is owned by a `State`: the dialog
-/// is still mounted for its exit transition after `await showDialog` returns, and
-/// a controller disposed by the caller at that point is disposed under a live
-/// `TextField` (the lifetime bug that crashed the iOS build).
+/// is still mounted for its exit transition after `await showDialog` returns,
+/// and a controller disposed by the caller at that point is disposed under a
+/// live `TextField` (the lifetime bug that crashed the iOS build).
 class _AddRepositoryDialog extends StatefulWidget {
   const _AddRepositoryDialog();
 
@@ -218,6 +280,43 @@ class _AddRepositoryDialogState extends State<_AddRepositoryDialog> {
           child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
         ),
         FilledButton(onPressed: _submit, child: Text(l10n.add)),
+      ],
+    );
+  }
+}
+
+/// Modal progress for the "install all" queue: how far along it is and a way
+/// to stop it without losing what already installed.
+class _InstallProgressDialog extends StatelessWidget {
+  const _InstallProgressDialog({required this.progress, required this.onCancel});
+
+  final ValueNotifier<(int, int)> progress;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.installAll),
+      content: ValueListenableBuilder<(int, int)>(
+        valueListenable: progress,
+        builder: (context, value, _) {
+          final (done, total) = value;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LinearProgressIndicator(
+                value: total == 0 ? 0 : done / total,
+              ),
+              const SizedBox(height: LayoutConstants.spacingMd),
+              Text(l10n.sourceAttempt(done.clamp(1, total), total)),
+            ],
+          );
+        },
+      ),
+      actions: [
+        TextButton(onPressed: onCancel, child: Text(l10n.cancel)),
       ],
     );
   }
@@ -299,7 +398,11 @@ class _RuntimeCard extends ConsumerWidget {
                   onPressed: () => ref
                       .read(multiProviderBridgeProvider.notifier)
                       .setupRuntime(force: state.hasRuntimeHost),
-                  child: Text(state.hasRuntimeHost ? l10n.update : l10n.install),
+                  child: Text(switch (state.stage) {
+                    MultiProviderStage.error => l10n.retry,
+                    MultiProviderStage.ready => l10n.update,
+                    _ => l10n.install,
+                  }),
                 ),
             ],
           ),
@@ -318,15 +421,49 @@ class _SourceList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final bridgeState = ref.watch(multiProviderBridgeProvider);
     final async = installed
         ? ref.watch(installedSourcesProvider(type))
         : ref.watch(availableSourcesProvider(type));
+    // The Available tab hides what is already installed: the same extension
+    // listed twice - once with a trash can, once with a download button - is
+    // the sort of thing people report as "install is broken".
+    final installedIds = ref
+            .watch(installedSourcesProvider(type))
+            .value
+            ?.map((s) => s.uniqueId)
+            .toSet() ??
+        const <String>{};
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('$e')),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(LayoutConstants.spacingLg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('$e', textAlign: TextAlign.center),
+              const SizedBox(height: LayoutConstants.spacingMd),
+              FilledButton.tonal(
+                onPressed: () {
+                  ref.invalidate(installedSourcesProvider);
+                  ref.invalidate(availableSourcesProvider);
+                },
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
+        ),
+      ),
       data: (sources) {
-        if (sources.isEmpty) {
+        final visible = installed
+            ? sources
+            : [
+                for (final s in sources)
+                  if (!installedIds.contains(s.uniqueId)) s,
+              ];
+        if (visible.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(LayoutConstants.spacingLg),
@@ -343,32 +480,38 @@ class _SourceList extends ConsumerWidget {
           padding: EdgeInsets.only(
             bottom: LayoutConstants.shellBottomContentPadding(context),
           ),
-          itemCount: sources.length,
+          itemCount: visible.length,
           itemBuilder: (context, i) {
-            final source = sources[i];
+            final source = visible[i];
             final controller = ref.read(multiProviderBridgeProvider.notifier);
+            final disabled = bridgeState.isDisabled(source.uniqueId);
             return ListTile(
-              leading: (source.iconUrl ?? '').isEmpty
-                  ? const Icon(Icons.extension_rounded)
-                  : Image.network(
-                      source.iconUrl!,
-                      width: 32,
-                      height: 32,
-                      errorBuilder: (_, _, _) =>
-                          const Icon(Icons.extension_rounded),
-                    ),
+              leading: _SourceIcon(iconUrl: source.iconUrl),
               title: Text(source.name ?? l10n.unknown),
               subtitle: Text(
                 [
                   source.lang?.toUpperCase() ?? '',
                   'v${source.version ?? '?'}',
                   source.managerId ?? '',
+                  if (disabled) l10n.disabled,
                 ].where((s) => s.isNotEmpty).join(' · '),
               ),
               trailing: installed
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Keep the source installed but out of MStream and its
+                        // search until it is switched back on.
+                        Tooltip(
+                          message: disabled ? l10n.enable : l10n.disable,
+                          child: Switch(
+                            value: !disabled,
+                            onChanged: (enabled) => controller.setSourceEnabled(
+                              source,
+                              enabled,
+                            ),
+                          ),
+                        ),
                         if (source.hasUpdate ?? false)
                           IconButton(
                             tooltip: l10n.update,
@@ -391,6 +534,30 @@ class _SourceList extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// A source's icon, fetched like a poster (browser UA, cached) because plenty
+/// of repository CDNs refuse the bare Dart client's requests.
+class _SourceIcon extends StatelessWidget {
+  const _SourceIcon({required this.iconUrl});
+
+  final String? iconUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = iconUrl ?? '';
+    if (url.isEmpty) return const Icon(Icons.extension_rounded);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: CachedNetworkImage(
+        imageUrl: url,
+        width: 32,
+        height: 32,
+        httpHeaders: const {'User-Agent': kDefaultBrowserUserAgent},
+        errorWidget: (_, _, _) => const Icon(Icons.extension_rounded),
+      ),
     );
   }
 }

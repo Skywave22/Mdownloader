@@ -131,4 +131,63 @@ void main() {
       expect(answer, isTrue, reason: 'the default is portrait');
     });
   });
+
+  group('ImageUtils.resolveRemoteUrl', () {
+    test('keeps absolute http(s) URLs untouched', () {
+      expect(
+        ImageUtils.resolveRemoteUrl(
+          'https://cdn.example/x.jpg',
+          baseUrl: 'https://site.test',
+        ),
+        'https://cdn.example/x.jpg',
+      );
+      expect(
+        ImageUtils.resolveRemoteUrl(
+          'http://cdn.example/x.jpg',
+          baseUrl: 'https://site.test',
+        ),
+        'http://cdn.example/x.jpg',
+      );
+    });
+
+    test('resolves protocol-relative URLs with the base scheme', () {
+      expect(
+        ImageUtils.resolveRemoteUrl(
+          '//cdn.example/x.jpg',
+          baseUrl: 'http://site.test',
+        ),
+        'http://cdn.example/x.jpg',
+      );
+      expect(
+        ImageUtils.resolveRemoteUrl('//cdn.example/x.jpg'),
+        'https://cdn.example/x.jpg',
+      );
+    });
+
+    test('resolves site-relative URLs against the source base', () {
+      expect(
+        ImageUtils.resolveRemoteUrl(
+          '/covers/x.jpg',
+          baseUrl: 'https://site.test/some/path',
+        ),
+        'https://site.test/covers/x.jpg',
+      );
+    });
+
+    test('returns empty input unchanged', () {
+      expect(ImageUtils.resolveRemoteUrl('  '), '');
+    });
+
+    test('leaves relative URLs alone when there is no usable base', () {
+      expect(ImageUtils.resolveRemoteUrl('covers/x.jpg'), 'covers/x.jpg');
+      expect(
+        ImageUtils.resolveRemoteUrl('covers/x.jpg', baseUrl: 'relative-base'),
+        'covers/x.jpg',
+      );
+      expect(
+        ImageUtils.resolveRemoteUrl('covers/x.jpg', baseUrl: 'http://['),
+        'covers/x.jpg',
+      );
+    });
+  });
 }

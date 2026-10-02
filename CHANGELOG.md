@@ -1,3 +1,19 @@
+# Changelogs - Unreleased
+
+### ✨ *New Features & Enhancements*
+- **MStream switches sources like Home** – A pill in the top-right corner names the active source and opens a selector dialog (filter chips plus a source list), the same affordance and behaviour as the provider switcher on Home. The last picked source is remembered across restarts.
+- **Install all / install one** – MultiProviders' Available tab can install every still-uninstalled source of the selected type in sequence (with progress and a cancel button), or a single source at a time.
+- **Enable / disable sources** – Installed sources can be toggled off without uninstalling: they stay installed and updatable but disappear from MStream and its search until re-enabled.
+- **MStream pagination and refresh** – Popular and search results load further pages as you scroll, the grid pulls to refresh, and failures show a Retry button instead of a bare error string.
+
+### 🐞 *Bug Fixes & System Stability*
+- 🛠️ **Fixed: MStream posters failing to load** – Extension covers are now cached and fetched with a browser User-Agent and the source's Referer (many CDNs reject the bare Dart client), and site-relative / protocol-relative cover URLs are resolved against the source instead of failing silently.
+- 🛠️ **Fixed: MStream "nothing loads" on some sources** – When a source's popular feed is missing or errors, the tab falls back to its latest feed instead of leaving the grid empty; stale responses from an earlier search or source switch no longer overwrite the current results.
+- 🛠️ **Fixed: MultiProviders Available tab listing already-installed sources** – Installed extensions are hidden from the available list (they stay visible under Installed, with update/uninstall).
+- 🛠️ **Fixed: CI "Package d4rt" leg dying on exit code 64** – `dart analyze` has no `--no-fatal-infos` option (the flag cannot be negated); the leg now runs plain `dart analyze`, whose defaults match its intent.
+
+---
+
 # Changelogs - v2.8.1
 
 ### ✨ *New Features & Enhancements*

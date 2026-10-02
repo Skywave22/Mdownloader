@@ -277,8 +277,13 @@ jobs:
   # upstream's own 80-file suite, unchanged: it is what says the port still
   # interprets Dart correctly, and what goes red if an analyzer bump breaks it.
   # Pure Dart, so `dart test`, not `flutter test`. The infos it carries are
-  # upstream's own style and deprecation notices, so this leg runs with
-  # --no-fatal-infos too: errors and warnings are what it gates.
+  # upstream's own style and deprecation notices, so this leg runs plain
+  # `dart analyze` - whose defaults are exactly "errors and warnings are what
+  # it gates" (fatal-warnings on, fatal-infos off). NOT
+  # `dart analyze --no-fatal-infos`: unlike flutter's analyzer wrapper, dart's
+  # `fatal-infos` flag is `negatable: false` (pkg/dartdev analyze.dart), so the
+  # `--no-` spelling is a usage error and the whole leg died on exit code 64
+  # before a single test ran.
   #
   # Serial (-j 1) on purpose. Several of upstream's test files write and delete
   # the same `<systemTemp>/test.txt`, so run in parallel they race, and a file
@@ -316,7 +321,10 @@ jobs:
           if [ "$PACKAGE" = "flutter_js_ng" ]; then
             flutter analyze --no-fatal-infos
           elif [ "$PACKAGE" = "d4rt" ]; then
-            dart analyze --no-fatal-infos
+            # Plain `dart analyze`, not `--no-fatal-infos`: dart's fatal-infos
+            # flag cannot be negated (see the comment above), and its default
+            # is already infos-not-fatal, warnings-fatal.
+            dart analyze
             dart test -j 1
           else
             flutter analyze

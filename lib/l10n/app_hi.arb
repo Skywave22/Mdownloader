@@ -523,6 +523,11 @@
   "mstreamNoStreams": "इस एपिसोड के लिए कोई स्ट्रीम नहीं मिली।",
   "mstreamEpisodeNumber": "एपिसोड {number}",
   "mstreamSearchHint": "इस स्रोत में खोजें",
-  "mstreamManageProviders": "प्रदाता प्रबंधित करें"
+  "mstreamManageProviders": "प्रदाता प्रबंधित करें",
+  "mstreamAllDisabled": "इंस्टॉल किए गए सभी स्रोत अक्षम हैं. ब्राउज़ करने के लिए किसी एक को सक्षम करें.",
+  "installAll": "सभी इंस्टॉल करें",
+  "installAllDone": "{count, plural, =1{1 स्रोत इंस्टॉल किया गया} other{{count} स्रोत इंस्टॉल किए गए}}",
+  "enable": "सक्षम करें",
+  "disable": "अक्षम करें"
 }
 
