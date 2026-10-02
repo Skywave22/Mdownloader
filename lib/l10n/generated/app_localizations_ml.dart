@@ -1928,4 +1928,28 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get mstreamManageProviders => 'Manage providers';
+
+  @override
+  String get mstreamAllDisabled =>
+      'All installed sources are disabled. Enable one to browse.';
+
+  @override
+  String get installAll => 'Install all';
+
+  @override
+  String installAllDone(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Installed $count sources',
+      one: 'Installed 1 source',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get enable => 'Enable';
+
+  @override
+  String get disable => 'Disable';
 }

@@ -1923,4 +1923,28 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get mstreamManageProviders => 'प्रदाता प्रबंधित करें';
+
+  @override
+  String get mstreamAllDisabled =>
+      'इंस्टॉल किए गए सभी स्रोत अक्षम हैं. ब्राउज़ करने के लिए किसी एक को सक्षम करें.';
+
+  @override
+  String get installAll => 'सभी इंस्टॉल करें';
+
+  @override
+  String installAllDone(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count स्रोत इंस्टॉल किए गए',
+      one: '1 स्रोत इंस्टॉल किया गया',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get enable => 'सक्षम करें';
+
+  @override
+  String get disable => 'अक्षम करें';
 }

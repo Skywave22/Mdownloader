@@ -1937,4 +1937,28 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get mstreamManageProviders => 'ಪ್ರೊವೈಡರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ';
+
+  @override
+  String get mstreamAllDisabled =>
+      'ಸ್ಥಾಪಿಸಲಾದ ಎಲ್ಲಾ ಮೂಲಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. ಬ್ರೌಸ್ ಮಾಡಲು ಒಂದನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.';
+
+  @override
+  String get installAll => 'ಎಲ್ಲವನ್ನೂ ಸ್ಥಾಪಿಸಿ';
+
+  @override
+  String installAllDone(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ಮೂಲಗಳನ್ನು ಸ್ಥಾಪಿಸಲಾಗಿದೆ',
+      one: '1 ಮೂಲ ಸ್ಥಾಪಿಸಲಾಗಿದೆ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get enable => 'ಸಕ್ರಿಯಗೊಳಿಸಿ';
+
+  @override
+  String get disable => 'ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ';
 }

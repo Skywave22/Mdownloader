@@ -3494,6 +3494,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage providers'**
   String get mstreamManageProviders;
+
+  /// MStream tab, empty state when sources are installed but every one of them has been toggled off in MultiProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'All installed sources are disabled. Enable one to browse.'**
+  String get mstreamAllDisabled;
+
+  /// MultiProviders: tooltip of the button that installs every still-uninstalled source of the selected type, one at a time.
+  ///
+  /// In en, this message translates to:
+  /// **'Install all'**
+  String get installAll;
+
+  /// MultiProviders: snackbar after the install-all queue finishes. count is how many installs succeeded, which can be fewer than attempted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Installed 1 source} other{Installed {count} sources}}'**
+  String installAllDone(num count);
+
+  /// MultiProviders: tooltip of the toggle that turns a disabled source back on.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get enable;
+
+  /// MultiProviders: tooltip of the toggle that hides a source from MStream without uninstalling it.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get disable;
 }
 
 class _AppLocalizationsDelegate
