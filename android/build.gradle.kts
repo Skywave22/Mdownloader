@@ -30,6 +30,21 @@ extra["projectTargetSdk"] = 36
 extra["projectNdk"] = "29.0.14206865"
 val projectJvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
 
+// The engine revision of the Flutter SDK this build runs on. Flutter's Gradle plugin
+// constrains every io.flutter:flutter_embedding_* request to exactly "1.0.0-<this>";
+// the bridge hook inside `subprojects` below needs the same string. Read the way
+// settings.gradle.kts finds the SDK; null (no rewrite) if the file is ever not there.
+val flutterEmbeddingVersion: String? =
+    runCatching {
+        val props = java.util.Properties()
+        rootProject.file("local.properties").inputStream().use { props.load(it) }
+        File(props.getProperty("flutter.sdk"), "bin/internal/engine.version")
+            .readText()
+            .trim()
+            .takeIf { it.isNotEmpty() }
+            ?.let { "1.0.0-$it" }
+    }.getOrNull()
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
@@ -43,6 +58,42 @@ subprojects {
 
     // Ensure :app is evaluated first for dependency resolution
     project.evaluationDependsOn(":app")
+
+    /**
+     * anymex_extension_runtime_bridge's Android plugin
+     *
+     * Its android/build.gradle was written to build inside the AnymeX app and leans on
+     * that build for two things this one does not provide:
+     *
+     *  1. It declares `compileOnly io.flutter:flutter_embedding_debug:1.0.0-<hash>`, the
+     *     engine of whichever Flutter it was last built with (ef0cd00... in v2.6.0).
+     *     Flutter's Gradle plugin puts a *strict* constraint on that artifact at this
+     *     SDK's own engine, and a pinned, different version beside a strict constraint
+     *     is a resolution failure, not a preference - the build stops at
+     *     :anymex_extension_runtime_bridge:compileDebugKotlin. Every request for the
+     *     embedding is therefore rewritten to this SDK's engine. It is compile-only API
+     *     in the plugin, and the plugin uses nothing that has moved.
+     *  2. Its Kotlin imports kotlinx.coroutines (a CoroutineScope is built in the
+     *     plugin's constructor, so registration itself needs the classes at runtime)
+     *     and its build script declares no dependency on it.
+     */
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "io.flutter" &&
+                requested.name.startsWith("flutter_embedding_")
+            ) {
+                flutterEmbeddingVersion?.let { useVersion(it) }
+            }
+        }
+    }
+    if (project.name == "anymex_extension_runtime_bridge") {
+        pluginManager.withPlugin("com.android.library") {
+            dependencies.add(
+                "implementation",
+                "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2",
+            )
+        }
+    }
 
     /**
      * Unified SDK & Toolchain Enforcement
