@@ -1,0 +1,8 @@
+{
+ "Static Extension Members Static getter returning computed value": [
+  "Runtime Error: Cannot increment/decrement property on non-instance object of type 'InterpretedExtension'."
+ ],
+ "Interpreter Core Feature Tests NullAwareElement (?element)": [
+  "SourceCodeException: Parsing errors in module package:test/main.dart:\\n- This requires the 'null-aware-elements' language feature to be enabled. (ligne 1, colonne 38)\\n- This requires the 'null-aware-elements' language feature to be enabled. (ligne 1, colonne 42)"
+ ]
+}

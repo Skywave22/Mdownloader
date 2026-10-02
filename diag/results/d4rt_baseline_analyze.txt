@@ -1,0 +1,7 @@
+Analyzing base...
+
+   info - lib/src/security/permissions.dart:28:9 - Library names are not necessary. Remove the library name. - unnecessary_library_name
+   info - lib/src/security/permissions.dart:184:23 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+   info - lib/src/security/permissions.dart:184:32 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+
+3 issues found.

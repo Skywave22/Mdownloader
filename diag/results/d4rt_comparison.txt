@@ -1,0 +1,5 @@
+REGRESSIONS on the port (fail there, pass on baseline): 2
+  - Interpreter Core Feature Tests NullAwareElement (?element): ["SourceCodeException: Parsing errors in module package:test/main.dart:\\n- This requires the 'null-aware-elements' language feature to be enabled. (ligne 1, colonne 38)\\n- This requires the 'null-aware-elements' language feature to be enabled. (ligne 1, colonne 42)"]
+  - Static Extension Members Static getter returning computed value: ["Runtime Error: Cannot increment/decrement property on non-instance object of type 'InterpretedExtension'."]
+FAIL ON BOTH (pre-existing): 0
+FAIL ONLY ON BASELINE: 0
