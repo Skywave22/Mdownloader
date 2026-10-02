@@ -17,11 +17,6 @@ name: l10n codegen
 
 on:
   workflow_dispatch:
-  # TEMPORARY: branch-only workflows cannot be dispatched via `gh workflow
-  # run`. Remove this trigger before merge.
-  push:
-    branches:
-      - arena/01a0fb7d-mdownloader
 
 permissions:
   contents: write
