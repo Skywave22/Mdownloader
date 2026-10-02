@@ -492,7 +492,7 @@
   "playerSourceUnplayable": "ಪ್ಲೇ ಆಗಲಿಲ್ಲ",
   "playerSourceCannotSeek": "ಸೀಕ್ ಆಗುವುದಿಲ್ಲ",
   "playerSourceNotVideo": "ವೀಡಿಯೊ ಅಲ್ಲ",
-"addonSourcesSearchTooltip": "Search links",
+  "addonSourcesSearchTooltip": "Search links",
   "addonSourcesCloseSearchTooltip": "Close search",
   "addonSourcesSearchHint": "Add-on, provider, quality…",
   "addonSourcesNoMatchFilter": "No links match. Clear search or try \"All\".",
@@ -534,6 +534,8 @@
   "downloadUnsupportedSource": "ಈ ಮೂಲವು ನೇರ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ ಅಥವಾ ಪ್ರಸ್ತುತ ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಬೇರೆ ಮೂಲವನ್ನು ಪ್ರಯತ್ನಿಸಿ.",
   "downloadStartFailed": "ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಲು ವಿಫಲವಾಗಿದೆ. ಸಂಗ್ರಹಣೆ ಅನುಮತಿಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
   "noDownloadSourcesFound": "ಈ ಐಟಂಗೆ ಯಾವುದೇ ಡೌನ್‌ಲೋಡ್ ಮೂಲಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
-  "extensionRuntimeCredit": "ಎಕ್ಸ್‌ಟೆನ್ಶನ್ ರನ್‌ಟೈಮ್ ಬ್ರಿಡ್ಜ್: AnymeXExtensionRuntimeBridge · RyanYuuki ಅವರಿಂದ"
+  "extensionRuntimeCredit": "ಎಕ್ಸ್‌ಟೆನ್ಶನ್ ರನ್‌ಟೈಮ್ ಬ್ರಿಡ್ಜ್: AnymeXExtensionRuntimeBridge · RyanYuuki ಅವರಿಂದ",
+  "mstreamPopular": "ಜನಪ್ರಿಯ",
+  "mstreamLatest": "ಇತ್ತೀಚಿನ ನವೀಕರಣಗಳು",
+  "multiProvidersFilterHint": "ಎಕ್ಸ್‌ಟೆನ್ಶನ್‌ಗಳನ್ನು ಹುಡುಕಿ"
 }
-

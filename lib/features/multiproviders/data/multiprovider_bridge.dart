@@ -162,6 +162,9 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
       await AnymeXRuntimeBridge.checkAndInitialize();
       await _manager?.onRuntimeBridgeInitialization();
       await _publishStage();
+      // Self-heal: a cold-start race can leave a backend publishing an empty
+      // installed list; re-read everything once initialization has settled.
+      await _manager?.refreshInstalled();
     } catch (e, st) {
       talker.error('MultiProviders: bridge initialization failed', e, st);
       state = state.copyWith(
@@ -210,6 +213,11 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
       _manager?.refreshExtensions(
         refreshAvailableSource: refreshAvailableSource,
       );
+
+  /// Re-reads installed sources from every backend's store without touching
+  /// the repositories. Heals a transient empty publish (see the vendored
+  /// bridge's `refreshInstalled`); safe to call on every screen open.
+  Future<void> refreshInstalled() async => _manager?.refreshInstalled();
 
   Future<void> install(Source source) async =>
       _withManager(source, (m) => m.installSource(source));
@@ -279,18 +287,33 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
   }) async {
     final queue = List<Source>.of(sources);
     var succeeded = 0;
-    for (var i = 0; i < queue.length; i++) {
-      if (isCancelled?.call() ?? false) break;
-      final source = queue[i];
-      try {
-        await install(source);
-        succeeded++;
-      } catch (e, st) {
-        // One bad extension must not abort the run: log it and keep going.
-        talker.error('MultiProviders: install failed for ${source.name}', e, st);
+    var next = 0;
+    var done = 0;
+
+    // Three installs at a time: installs are network + host-parse bound, and a
+    // strict serial queue made "Install All" crawl on slower links. One bad
+    // extension must not abort the run: log it and keep going.
+    Future<void> worker() async {
+      while (true) {
+        if (isCancelled?.call() ?? false) return;
+        final i = next++;
+        if (i >= queue.length) return;
+        try {
+          await install(queue[i]);
+          succeeded++;
+        } catch (e, st) {
+          talker.error(
+            'MultiProviders: install failed for ${queue[i].name}',
+            e,
+            st,
+          );
+        }
+        done++;
+        onProgress?.call(done, queue.length);
       }
-      onProgress?.call(i + 1, queue.length);
     }
+
+    await Future.wait([worker(), worker(), worker()]);
     return succeeded;
   }
 }

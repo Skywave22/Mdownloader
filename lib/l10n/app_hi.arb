@@ -492,7 +492,7 @@
   "playerSourceUnplayable": "चल नहीं सका",
   "playerSourceCannotSeek": "सीक नहीं हो सकता",
   "playerSourceNotVideo": "वीडियो नहीं",
-"addonSourcesSearchTooltip": "Search links",
+  "addonSourcesSearchTooltip": "Search links",
   "addonSourcesCloseSearchTooltip": "Close search",
   "addonSourcesSearchHint": "Add-on, provider, quality…",
   "addonSourcesNoMatchFilter": "No links match. Clear search or try \"All\".",
@@ -534,6 +534,8 @@
   "downloadUnsupportedSource": "यह स्रोत सीधे डाउनलोडिंग का समर्थन नहीं करता या वर्तमान में अनुपलब्ध है। कृपया कोई अन्य स्रोत आज़माएँ।",
   "downloadStartFailed": "डाउनलोड शुरू करने में विफल। स्टोरेज अनुमतियाँ जाँचें।",
   "noDownloadSourcesFound": "इस आइटम के लिए कोई डाउनलोड स्रोत नहीं मिला।",
-  "extensionRuntimeCredit": "एक्सटेंशन रनटाइम ब्रिज: AnymeXExtensionRuntimeBridge · RyanYuuki द्वारा"
+  "extensionRuntimeCredit": "एक्सटेंशन रनटाइम ब्रिज: AnymeXExtensionRuntimeBridge · RyanYuuki द्वारा",
+  "mstreamPopular": "लोकप्रिय",
+  "mstreamLatest": "नवीनतम अपडेट",
+  "multiProvidersFilterHint": "एक्सटेंशन खोजें"
 }
-

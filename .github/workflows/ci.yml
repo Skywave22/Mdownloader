@@ -166,7 +166,10 @@ jobs:
           # The last four, and libtorrent_flutter below, are the AnymeX runtime
           # bridge's set (see dependency_overrides in pubspec.yaml). Each is wired
           # in because the published package cannot be built or resolved here.
-          for pkg in ('flutter_js_ng', 'vlc_player', 'flutter_torrent_server',
+          # anymex_extension_runtime_bridge itself is vendored with product fixes
+          # (see packages/anymex_extension_runtime_bridge/README.md).
+          for pkg in ('anymex_extension_runtime_bridge',
+                      'flutter_js_ng', 'vlc_player', 'flutter_torrent_server',
                       'screen_brightness_windows',
                       'd4rt', 'device_apps', 'install_plugin', 'flutter_qjs'):
               m = re.search(r'^  %s:\n(?:.*\n)*?    source: (\w+)' % pkg, lock, re.M)

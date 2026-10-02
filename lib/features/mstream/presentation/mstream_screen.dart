@@ -6,25 +6,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skystream/l10n/generated/app_localizations.dart';
 
+import '../../../core/domain/entity/multimedia_item.dart';
 import '../../../core/logger/app_logger.dart';
 import '../../../core/network/http_defaults.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../../core/utils/layout_constants.dart';
 import '../../../shared/widgets/cards_wrapper.dart';
-import '../../../shared/widgets/multimedia_card.dart';
+import '../../explore/presentation/view_all_screen.dart';
+import '../../explore/presentation/widgets/explore_carousel.dart';
+import '../../explore/presentation/widgets/media_horizontal_list.dart';
 import '../../multiproviders/data/multiprovider_bridge.dart';
 import 'mstream_details_screen.dart';
+import 'mstream_feed_grid.dart';
 
 /// Browses and plays the sources installed through MultiProviders.
 ///
-/// Everything here goes through the runtime bridge's unified [SourceMethods],
-/// so an Aniyomi source, a CloudStream plugin and a Mangayomi/Sora script are
-/// all driven by the same four calls: popular, search, detail, video list.
-///
-/// The extension-change affordance mirrors Home's: a pill in the top-right
-/// corner naming the active source opens a selector dialog, and picking a
-/// source reloads the tab.
+/// The layout is Home's, adapted to extension feeds: the same app-bar chrome
+/// (title, circular search button, provider pill in the right corner), the
+/// same hero carousel of top titles, and the same horizontal rails with
+/// "View All". Everything here goes through the runtime bridge's unified
+/// [SourceMethods], so an Aniyomi source, a CloudStream plugin and a
+/// Mangayomi/Sora script are all driven by the same calls.
 class MStreamScreen extends ConsumerStatefulWidget {
   const MStreamScreen({super.key});
 
@@ -36,158 +39,190 @@ class MStreamScreen extends ConsumerStatefulWidget {
 }
 
 class _MStreamScreenState extends ConsumerState<MStreamScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-
   Source? _source;
-  String _query = '';
 
-  final List<DMedia> _items = <DMedia>[];
+  /// The source's popular feed (page 1). The carousel and the Popular rail
+  /// render from it; the rail's "View All" pages it in full.
+  List<DMedia> _popular = const <DMedia>[];
+
+  /// The source's latest-updates feed (page 1) for its rail. Empty (and the
+  /// rail hidden) when the source has only one listing and both feeds return
+  /// the same items.
+  List<DMedia> _latest = const <DMedia>[];
+
   bool _loading = false;
-  bool _loadingMore = false;
-  bool _hasNextPage = false;
-  int _page = 1;
-
-  /// Bumped on every new request; late responses from a superseded request
-  /// see a different number and drop themselves instead of overwriting the
-  /// list with stale results.
   int _generation = 0;
-
   Object? _error;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(multiProviderBridgeProvider.notifier).initialize();
     });
   }
 
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    _searchController.dispose();
-    super.dispose();
-  }
+  String get _referer => _source?.baseUrl ?? '';
 
-  void _onScroll() {
-    if (_loading || _loadingMore || !_hasNextPage) return;
-    final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - 320) {
-      unawaited(_fetch(append: true));
-    }
-  }
+  Map<String, String> get _imageHeaders => {
+        'User-Agent': kDefaultBrowserUserAgent,
+        if (_referer.isNotEmpty) 'Referer': _referer,
+      };
 
-  /// Fetches the current page from the active source.
-  ///
-  /// With no query this is the source's popular feed, falling back to its
-  /// latest feed when popular is missing or fails (several extension families
-  /// implement only one of the two, and an unguarded popular call is the
-  /// classic "the grid never loads" report). With a query it is search.
-  Future<Pages> _request(SourceMethods methods, int page) async {
-    final query = _query;
-    if (query.isEmpty) {
-      try {
-        return await methods.getPopular(page);
-      } catch (_) {
-        return methods.getLatestUpdates(page);
-      }
-    }
-    return methods.search(query, page, const <dynamic>[]);
-  }
-
-  /// Replaces ([append] false) or extends ([append] true) the grid.
-  Future<void> _fetch({bool append = false}) async {
+  /// Loads both feeds for the active source at once. Each feed falls back to
+  /// the other listing when the source implements only one of the two (a
+  /// common extension shape), so browse mode never comes up empty just
+  /// because `getPopular` is missing.
+  Future<void> _loadFeeds() async {
     final source = _source;
     if (source == null) return;
-    final methods = ref
-        .read(multiProviderBridgeProvider.notifier)
-        .methodsFor(source);
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
     if (methods == null) return;
 
     final generation = ++_generation;
     setState(() {
+      _loading = true;
       _error = null;
-      if (append) {
-        _loadingMore = true;
-      } else {
-        _loading = true;
-        _hasNextPage = false;
-        _page = 1;
-      }
     });
 
-    final page = append ? _page + 1 : 1;
+    List<DMedia> popular = const <DMedia>[];
+    List<DMedia> latest = const <DMedia>[];
+    Object? error;
     try {
-      final pages = await _request(methods, page);
-      if (!mounted || generation != _generation) return;
-      setState(() {
-        if (append) {
-          _items.addAll(pages.list);
-          _page = page;
-        } else {
-          _items
-            ..clear()
-            ..addAll(pages.list);
-          _page = 1;
-        }
-        _hasNextPage = pages.hasNextPage && pages.list.isNotEmpty;
-        _loading = false;
-        _loadingMore = false;
-      });
-    } catch (e, st) {
-      talker.error('MStream: fetch failed for ${source.name}', e, st);
-      if (!mounted || generation != _generation) return;
-      setState(() {
-        _loading = false;
-        _loadingMore = false;
-        if (append) {
-          // Keep what is on screen; the retry is a plain scroll back into the
-          // gap. A full-grid error would throw away results that loaded fine.
-          _hasNextPage = true;
-        } else {
-          _error = e;
-        }
-      });
+      popular = (await methods.getPopular(1)).list;
+      if (popular.isEmpty) {
+        popular = (await methods.getLatestUpdates(1)).list;
+      }
+    } catch (e) {
+      error = e;
+      try {
+        popular = (await methods.getLatestUpdates(1)).list;
+        error = null;
+      } catch (_) {/* keep the first error */}
     }
+    try {
+      latest = (await methods.getLatestUpdates(1)).list;
+      if (latest.isEmpty) {
+        latest = (await methods.getPopular(1)).list;
+      }
+    } catch (e) {
+      error ??= e;
+      try {
+        latest = (await methods.getPopular(1)).list;
+        error = null;
+      } catch (_) {/* keep the first error */}
+    }
+
+    if (!mounted || generation != _generation) return;
+
+    // A source with a single listing answers both feeds identically; show it
+    // once instead of two identical rails.
+    final sameFeed = popular.length == latest.length &&
+        popular.isNotEmpty &&
+        List.generate(popular.length, (i) => popular[i].url == latest[i].url)
+            .every((same) => same);
+
+    talker.debug(
+      'MStream: ${source.name} feeds — popular=${popular.length} '
+      'latest=${latest.length} error=$error',
+    );
+
+    setState(() {
+      _popular = popular;
+      _latest = sameFeed ? const <DMedia>[] : latest;
+      _loading = false;
+      _error = (popular.isEmpty && latest.isEmpty) ? error : null;
+    });
   }
 
   void _selectSource(Source source) {
     setState(() {
       _source = source;
-      _query = '';
-      _items.clear();
+      _popular = const <DMedia>[];
+      _latest = const <DMedia>[];
       _error = null;
-      _hasNextPage = false;
-      _page = 1;
     });
-    _searchController.clear();
     unawaited(
       ref.read(multiProviderBridgeProvider.notifier).setLastSourceId(
         source.uniqueId,
       ),
     );
-    unawaited(_fetch());
+    unawaited(_loadFeeds());
   }
 
-  void _submitQuery(String raw) {
-    final query = raw.trim();
-    if (query == _query) {
-      // Re-submitting the same query is the "try again" gesture for search.
-      unawaited(_fetch());
-      return;
-    }
-    setState(() => _query = query);
-    unawaited(_fetch());
+  void _openMedia(DMedia media) {
+    final source = _source;
+    if (source == null) return;
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
+    if (methods == null) return;
+
+    // Home's opening experience: a full details page with the poster banner,
+    // metadata, synopsis and episode list.
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => MStreamDetailsScreen(
+          media: media,
+          methods: methods,
+          source: source,
+        ),
+      ),
+    );
   }
 
-  void _clearQuery() {
-    _searchController.clear();
-    if (_query.isEmpty) return;
-    setState(() => _query = '');
-    unawaited(_fetch());
+  void _openAll(String title, MStreamFeed feed) {
+    final source = _source;
+    if (source == null) return;
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
+    if (methods == null) return;
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => MStreamAllScreen(
+          title: title,
+          methods: methods,
+          source: source,
+          feed: feed,
+        ),
+      ),
+    );
+  }
+
+  /// Home's search affordance: the same circular button opens the same search
+  /// UI — scoped to the active extension instead of the global catalog.
+  void _openSearch() {
+    final source = _source;
+    if (source == null) return;
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
+    if (methods == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    unawaited(
+      showSearch<void>(
+        context: context,
+        delegate: _SourceSearchDelegate(
+          methods: methods,
+          source: source,
+          hint: l10n.mstreamSearchHint,
+        ),
+        useRootNavigator: false,
+        maintainState: true,
+      ),
+    );
+  }
+
+  MultimediaItem _toItem(DMedia media) {
+    return MultimediaItem(
+      title: media.title ?? '',
+      url: media.url ?? '',
+      posterUrl: ImageUtils.resolveRemoteUrl(
+        media.cover ?? '',
+        baseUrl: _referer,
+      ),
+      description: media.description,
+      provider: _source?.name ?? MStreamScreen.title,
+    );
   }
 
   @override
@@ -200,13 +235,28 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
       appBar: AppBar(
         title: const Text(MStreamScreen.title),
         actions: [
-          IconButton(
-            tooltip: l10n.mstreamManageProviders,
-            icon: const Icon(Icons.extension_rounded),
-            onPressed: () => const MultiProvidersRoute().go(context),
+          // 1. Search Action Button — Home's exact button.
+          Padding(
+            padding: const EdgeInsets.only(right: LayoutConstants.spacingSm),
+            child: CardsWrapper(
+              onTap: _openSearch,
+              borderRadius: BorderRadius.circular(50),
+              child: CircleAvatar(
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.1),
+                radius: 18,
+                child: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  size: 18,
+                ),
+              ),
+            ),
           ),
-          // Extension pill selector, right corner — the same affordance
-          // Home carries, so switching source works the same way in both.
+
+          // 2. Source pill — Home's provider pill, right corner.
           sourcesAsync.when(
             loading: () => const SizedBox.shrink(),
             error: (_, _) => const SizedBox.shrink(),
@@ -224,70 +274,184 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
         child: Column(
           children: [
             if (state.isBusy) const LinearProgressIndicator(),
-            sourcesAsync.when(
-              loading: () => const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (e, _) => Expanded(
-                child: _EmptyState(
+            Expanded(
+              child: sourcesAsync.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) => _EmptyState(
                   message: '$e',
                   actionLabel: l10n.retry,
-                  onAction: () =>
-                      ref.invalidate(installedSourcesProvider),
+                  onAction: () => ref.invalidate(installedSourcesProvider),
                 ),
-              ),
-              data: (sources) {
-                final installed = _enabledSources(sources, state);
-                if (sources.isEmpty) {
-                  return Expanded(
-                    child: _EmptyState(
+                data: (sources) {
+                  final installed = _enabledSources(sources, state);
+                  if (sources.isEmpty) {
+                    return _EmptyState(
                       message: l10n.mstreamNoSources,
                       actionLabel: l10n.mstreamManageProviders,
-                      onAction: () => const MultiProvidersRoute().go(context),
-                    ),
-                  );
-                }
-                if (installed.isEmpty) {
-                  return Expanded(
-                    child: _EmptyState(
+                      onAction: () =>
+                          const MultiProvidersRoute().go(context),
+                    );
+                  }
+                  if (installed.isEmpty) {
+                    return _EmptyState(
                       message: l10n.mstreamAllDisabled,
                       actionLabel: l10n.mstreamManageProviders,
-                      onAction: () => const MultiProvidersRoute().go(context),
-                    ),
-                  );
-                }
+                      onAction: () =>
+                          const MultiProvidersRoute().go(context),
+                    );
+                  }
 
-                // Keep the selection valid: remember the user's pick across
-                // restarts, then survive uninstalls/disables by falling back.
-                final selected = _selectedSource(installed);
-                if (selected.uniqueId != _source?.uniqueId) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    if (_source == null) {
-                      _selectSource(selected);
-                    } else {
-                      setState(() => _source = selected);
-                      unawaited(_fetch());
-                    }
-                  });
-                }
+                  // Keep the selection valid: remember the user's pick across
+                  // restarts, then survive uninstalls/disables by falling back.
+                  final selected = _selectedSource(installed);
+                  if (selected.uniqueId != _source?.uniqueId) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      if (_source == null) {
+                        _selectSource(selected);
+                      } else {
+                        setState(() => _source = selected);
+                        unawaited(_loadFeeds());
+                      }
+                    });
+                  }
 
-                return _Toolbar(
-                  controller: _searchController,
-                  onSubmitted: _submitQuery,
-                  onClear: _clearQuery,
-                  onRefresh: () => unawaited(_fetch()),
-                );
-              },
+                  return _buildContent(l10n);
+                },
+              ),
             ),
-            Expanded(child: _buildResults(l10n)),
           ],
         ),
       ),
     );
   }
 
-  List<Source> _enabledSources(List<Source> sources, MultiProviderBridgeState s) {
+  Widget _buildContent(AppLocalizations l10n) {
+    final source = _source;
+    if (source == null) {
+      return _EmptyState(message: l10n.mstreamPickSource);
+    }
+
+    final error = _error;
+    if (error != null) {
+      return RefreshIndicator(
+        onRefresh: _loadFeeds,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.5,
+              child: _EmptyState(
+                message: '${l10n.failedToLoadContent}\n$error',
+                actionLabel: l10n.retry,
+                onAction: () => unawaited(_loadFeeds()),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_loading && _popular.isEmpty && _latest.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_popular.isEmpty && _latest.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _loadFeeds,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.5,
+              child: _EmptyState(
+                message: l10n.mstreamNothingFound,
+                actionLabel: l10n.retry,
+                onAction: () => unawaited(_loadFeeds()),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final popularItems = [for (final m in _popular) _toItem(m)];
+    final latestItems = [for (final m in _latest) _toItem(m)];
+    return RefreshIndicator(
+      onRefresh: _loadFeeds,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          if (popularItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: ExploreCarousel(
+                movies: popularItems.take(7).toList(),
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = _popular.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+              ),
+            ),
+          if (popularItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: MediaHorizontalList(
+                title: l10n.mstreamPopular,
+                mediaList: popularItems,
+                category: ViewAllCategory.providerContent,
+                showViewAll: true,
+                heroTagPrefix: 'mstream',
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = _popular.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+                onViewAll: () => _openAll(
+                  l10n.mstreamPopular,
+                  MStreamFeed.popular,
+                ),
+              ),
+            ),
+          if (latestItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: MediaHorizontalList(
+                title: l10n.mstreamLatest,
+                mediaList: latestItems,
+                category: ViewAllCategory.providerContent,
+                showViewAll: true,
+                heroTagPrefix: 'mstream',
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = _latest.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+                onViewAll: () => _openAll(
+                  l10n.mstreamLatest,
+                  MStreamFeed.latest,
+                ),
+              ),
+            ),
+          SliverPadding(
+            padding: EdgeInsets.only(
+              bottom: LayoutConstants.shellBottomContentPadding(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Source> _enabledSources(
+    List<Source> sources,
+    MultiProviderBridgeState s,
+  ) {
     return sources
         .where((source) => !s.isDisabled(source.uniqueId))
         .toList(growable: false);
@@ -309,138 +473,76 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     return enabled.first;
   }
 
-  Widget _buildResults(AppLocalizations l10n) {
-    final source = _source;
-    if (source == null) {
-      return _EmptyState(message: l10n.mstreamPickSource);
-    }
-
-    final error = _error;
-    if (error != null) {
-      return _EmptyState(
-        message: '${l10n.failedToLoadContent}\n$error',
-        actionLabel: l10n.retry,
-        onAction: () => unawaited(_fetch()),
-      );
-    }
-
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_items.isEmpty) {
-      return _EmptyState(
-        message: l10n.mstreamNothingFound,
-        actionLabel: l10n.retry,
-        onAction: () => unawaited(_fetch()),
-      );
-    }
-
-    final referer = source.baseUrl ?? '';
-    return RefreshIndicator(
-      onRefresh: () => _fetch(),
-      child: GridView.builder(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(
-          LayoutConstants.spacingMd,
-          LayoutConstants.spacingMd,
-          LayoutConstants.spacingMd,
-          LayoutConstants.shellBottomContentPadding(context),
-        ),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 160,
-          childAspectRatio: 0.58,
-          crossAxisSpacing: LayoutConstants.spacingSm,
-          mainAxisSpacing: LayoutConstants.spacingSm,
-        ),
-        itemCount: _items.length + (_loadingMore ? 1 : 0),
-        itemBuilder: (context, i) {
-          if (i >= _items.length) {
-            return const Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            );
-          }
-          return _MediaCard(
-            media: _items[i],
-            referer: referer,
-            onTap: () => _openMedia(_items[i]),
-          );
+  void _showSourceSelector(List<Source> enabled, List<Source> all) {
+    final selected = _source;
+    if (selected == null) return;
+    showDialog<void>(
+      context: context,
+      builder: (context) => _SourceSelectorDialog(
+        sources: enabled,
+        activeId: selected.uniqueId,
+        onSelected: (source) {
+          Navigator.of(context).pop();
+          _selectSource(source);
         },
       ),
     );
   }
+}
 
-  void _showSourceSelector(List<Source> enabled, List<Source> installed) {
-    final l10n = AppLocalizations.of(context)!;
-    if (installed.isEmpty) {
-      _showManageDialog(l10n.mstreamNoSources);
-      return;
-    }
-    if (enabled.isEmpty) {
-      _showManageDialog(l10n.mstreamAllDisabled);
-      return;
-    }
-    showDialog<void>(
-      context: context,
-      builder: (_) => _SourceSelectorDialog(
-        sources: enabled,
-        activeId: _source?.uniqueId,
-        // The dialog pops itself through its own context - showDialog pushes
-        // on the root navigator, so popping with this screen's context would
-        // hit the shell navigator instead and leave the dialog on screen.
-        onSelected: _selectSource,
-      ),
-    );
-  }
+/// Home's search experience, scoped to the active extension: the same
+/// delegate-driven search UI, results paginated in the same poster grid.
+class _SourceSearchDelegate extends SearchDelegate<void> {
+  _SourceSearchDelegate({
+    required this.methods,
+    required this.source,
+    required this.hint,
+  });
 
-  void _showManageDialog(String message) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.mstreamManageProviders),
-        content: Text(message, textAlign: TextAlign.center),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.close),
-          ),
-          FilledButton.icon(
-            icon: const Icon(Icons.extension, size: 18),
-            label: Text(l10n.mstreamManageProviders),
-            onPressed: () {
-              Navigator.pop(context);
-              const MultiProvidersRoute().go(context);
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  final SourceMethods methods;
+  final Source source;
+  final String hint;
 
-  Future<void> _openMedia(DMedia media) async {
-    final source = _source;
-    if (source == null) return;
-    final methods =
-        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
-    if (methods == null) return;
+  @override
+  String? get searchFieldLabel => hint;
 
-    // Home's opening experience: a full details page with the poster banner,
-    // metadata, synopsis and episode list — not a bottom sheet.
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (context) => MStreamDetailsScreen(
-          media: media,
-          methods: methods,
-          source: source,
+  @override
+  ThemeData appBarTheme(BuildContext context) => Theme.of(context);
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+          icon: const Icon(Icons.clear),
+          onPressed: () => query = '',
         ),
-      ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back_rounded),
+      onPressed: () => close(context, null),
     );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return MStreamFeedGrid(
+      key: ValueKey('search_${source.uniqueId}_$query'),
+      methods: methods,
+      source: source,
+      feed: MStreamFeed.search,
+      query: query,
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return buildResults(context);
   }
 }
 
@@ -493,95 +595,6 @@ class _SourcePill extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Toolbar extends StatelessWidget {
-  const _Toolbar({
-    required this.controller,
-    required this.onSubmitted,
-    required this.onClear,
-    required this.onRefresh,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String> onSubmitted;
-  final VoidCallback onClear;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.all(LayoutConstants.spacingMd),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search_rounded),
-                hintText: l10n.mstreamSearchHint,
-                border: const OutlineInputBorder(),
-                isDense: true,
-                suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: controller,
-                  builder: (context, value, _) => value.text.isEmpty
-                      ? const SizedBox.shrink()
-                      : IconButton(
-                          tooltip: l10n.discoverClearSearch,
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: onClear,
-                        ),
-                ),
-              ),
-              onSubmitted: onSubmitted,
-            ),
-          ),
-          const SizedBox(width: LayoutConstants.spacingSm),
-          IconButton(
-            tooltip: l10n.refresh,
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: onRefresh,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MediaCard extends StatelessWidget {
-  const _MediaCard({
-    required this.media,
-    required this.referer,
-    required this.onTap,
-  });
-
-  final DMedia media;
-  final String referer;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cover = ImageUtils.resolveRemoteUrl(
-      media.cover ?? '',
-      baseUrl: referer,
-    );
-    // The exact card Home renders — same shimmer, error fallback, decode
-    // bound, title-position setting and focus scale — with extension posters
-    // additionally carrying the source's Referer. The hero tag is shared with
-    // the details banner so the poster flies up on open, like Home.
-    return MultimediaCard(
-      imageUrl: cover,
-      title: media.title ?? '',
-      heroTag: 'mstream_poster_${media.url}',
-      httpHeaders: {
-        'User-Agent': kDefaultBrowserUserAgent,
-        if (referer.isNotEmpty) 'Referer': referer,
-      },
-      onTap: onTap,
     );
   }
 }

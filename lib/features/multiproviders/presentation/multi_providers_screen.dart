@@ -422,148 +422,308 @@ class _RuntimeCard extends ConsumerWidget {
   }
 }
 
-class _SourceList extends ConsumerWidget {
+class _SourceList extends ConsumerStatefulWidget {
   const _SourceList({required this.type, required this.installed});
 
   final ItemType type;
   final bool installed;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SourceList> createState() => _SourceListState();
+}
+
+class _SourceListState extends ConsumerState<_SourceList> {
+  final TextEditingController _filter = TextEditingController();
+
+  @override
+  void dispose() {
+    _filter.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bridgeState = ref.watch(multiProviderBridgeProvider);
-    final async = installed
-        ? ref.watch(installedSourcesProvider(type))
-        : ref.watch(availableSourcesProvider(type));
+    final async = widget.installed
+        ? ref.watch(installedSourcesProvider(widget.type))
+        : ref.watch(availableSourcesProvider(widget.type));
     // The Available tab hides what is already installed: the same extension
     // listed twice - once with a trash can, once with a download button - is
     // the sort of thing people report as "install is broken".
     final installedIds = ref
-            .watch(installedSourcesProvider(type))
+            .watch(installedSourcesProvider(widget.type))
             .value
             ?.map((s) => s.uniqueId)
             .toSet() ??
         const <String>{};
 
-    return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(LayoutConstants.spacingLg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('$e', textAlign: TextAlign.center),
-              const SizedBox(height: LayoutConstants.spacingMd),
-              FilledButton.tonal(
-                onPressed: () {
-                  ref.invalidate(installedSourcesProvider);
-                  ref.invalidate(availableSourcesProvider);
-                },
-                child: Text(l10n.retry),
-              ),
-            ],
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            LayoutConstants.spacingMd,
+            LayoutConstants.spacingSm,
+            LayoutConstants.spacingMd,
+            0,
           ),
-        ),
-      ),
-      data: (sources) {
-        final visible = installed
-            ? sources
-            : [
-                for (final s in sources)
-                  if (!installedIds.contains(s.uniqueId)) s,
-              ];
-        if (visible.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(LayoutConstants.spacingLg),
-              child: Text(
-                installed
-                    ? l10n.multiProvidersNoInstalled
-                    : l10n.multiProvidersNoAvailable,
-                textAlign: TextAlign.center,
+          child: TextField(
+            controller: _filter,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: l10n.multiProvidersFilterHint,
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              suffixIcon: _filter.text.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18),
+                      onPressed: () {
+                        _filter.clear();
+                        setState(() {});
+                      },
+                    ),
+              isDense: true,
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(50),
+                borderSide: BorderSide.none,
               ),
             ),
-          );
-        }
-        return Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
+          ),
+        ),
+        Expanded(
+          child: async.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(LayoutConstants.spacingLg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('$e', textAlign: TextAlign.center),
+                    const SizedBox(height: LayoutConstants.spacingMd),
+                    FilledButton.tonal(
+                      onPressed: () {
+                        ref.invalidate(installedSourcesProvider);
+                        ref.invalidate(availableSourcesProvider);
+                      },
+                      child: Text(l10n.retry),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            data: (sources) {
+              final installed = widget.installed
+                  ? sources
+                  : [
+                      for (final s in sources)
+                        if (!installedIds.contains(s.uniqueId)) s,
+                    ];
+              final needle = _filter.text.trim().toLowerCase();
+              final visible = needle.isEmpty
+                  ? installed
+                  : [
+                      for (final s in installed)
+                        if ((s.name ?? '').toLowerCase().contains(needle) ||
+                            (s.lang ?? '').toLowerCase().contains(needle) ||
+                            (s.managerId ?? '').toLowerCase().contains(needle))
+                          s,
+                    ];
+              if (visible.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.all(LayoutConstants.spacingLg),
+                    child: Text(
+                      needle.isEmpty
+                          ? (widget.installed
+                              ? l10n.multiProvidersNoInstalled
+                              : l10n.multiProvidersNoAvailable)
+                          : l10n.mstreamNothingFound,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+              return ListView.builder(
                 padding: EdgeInsets.zero,
                 itemCount: visible.length,
                 itemBuilder: (context, i) {
                   final source = visible[i];
-                  final controller =
-                      ref.read(multiProviderBridgeProvider.notifier);
-                  final disabled = bridgeState.isDisabled(source.uniqueId);
-                  return ListTile(
-                    leading: _SourceIcon(
-                      iconUrl: source.iconUrl,
-                      baseUrl: source.baseUrl,
-                    ),
-                    title: Text(source.name ?? l10n.unknown),
-                    subtitle: Text(
-                      [
-                        source.lang?.toUpperCase() ?? '',
-                        'v${source.version ?? '?'}',
-                        source.managerId ?? '',
-                        if (disabled) l10n.disabled,
-                      ].where((s) => s.isNotEmpty).join(' · '),
-                    ),
-                    trailing: installed
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Keep the source installed but out of MStream
-                              // and its search until it is switched back on.
-                              Tooltip(
-                                message: disabled ? l10n.enable : l10n.disable,
-                                child: Switch(
-                                  value: !disabled,
-                                  onChanged: (enabled) =>
-                                      controller.setSourceEnabled(
-                                    source,
-                                    enabled,
-                                  ),
-                                ),
-                              ),
-                              if (source.hasUpdate ?? false)
-                                IconButton(
-                                  tooltip: l10n.update,
-                                  icon: const Icon(Icons.upgrade_rounded),
-                                  onPressed: () => controller.update(source),
-                                ),
-                              IconButton(
-                                tooltip: l10n.uninstall,
-                                icon: const Icon(Icons.delete_outline_rounded),
-                                onPressed: () => controller.uninstall(source),
-                              ),
-                            ],
-                          )
-                        : IconButton(
-                            tooltip: l10n.install,
-                            icon: const Icon(Icons.download_rounded),
-                            onPressed: () => controller.install(source),
-                          ),
+                  return _SourceCard(
+                    source: source,
+                    installed: widget.installed,
+                    disabled: bridgeState.isDisabled(source.uniqueId),
                   );
                 },
-              ),
+              );
+            },
+          ),
+        ),
+        // Credit where it is due: the runtime that executes every
+        // extension installed from this screen.
+        const Padding(
+          padding: EdgeInsets.fromLTRB(
+            LayoutConstants.spacingLg,
+            LayoutConstants.spacingSm,
+            LayoutConstants.spacingLg,
+            LayoutConstants.spacingLg,
+          ),
+          child: BridgeCredit(),
+        ),
+      ],
+    );
+  }
+}
+
+/// One extension row: rounded card with the icon, name, a metadata chip row
+/// and the action buttons — the same visual language as the rest of the app.
+class _SourceCard extends ConsumerWidget {
+  const _SourceCard({
+    required this.source,
+    required this.installed,
+    required this.disabled,
+  });
+
+  final Source source;
+  final bool installed;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = ref.read(multiProviderBridgeProvider.notifier);
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: LayoutConstants.spacingMd,
+        vertical: 4,
+      ),
+      child: Material(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            if (!installed) controller.install(source);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                _SourceIcon(
+                  iconUrl: source.iconUrl,
+                  baseUrl: source.baseUrl,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              source.name ?? l10n.unknown,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          if (source.hasUpdate ?? false) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: Text(
+                                l10n.update,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if ((source.lang ?? '').isNotEmpty)
+                            _chip(context, source.lang!.toUpperCase()),
+                          _chip(context, 'v${source.version ?? '?'}'),
+                          if ((source.managerId ?? '').isNotEmpty)
+                            _chip(context, source.managerId!),
+                          if (disabled) _chip(context, l10n.disabled),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (installed)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Keep the source installed but out of MStream and its
+                      // search until it is switched back on.
+                      Tooltip(
+                        message: disabled ? l10n.enable : l10n.disable,
+                        child: Switch(
+                          value: !disabled,
+                          onChanged: (enabled) =>
+                              controller.setSourceEnabled(source, enabled),
+                        ),
+                      ),
+                      if (source.hasUpdate ?? false)
+                        IconButton(
+                          tooltip: l10n.update,
+                          icon: const Icon(Icons.upgrade_rounded),
+                          onPressed: () => controller.update(source),
+                        ),
+                      IconButton(
+                        tooltip: l10n.uninstall,
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        onPressed: () => controller.uninstall(source),
+                      ),
+                    ],
+                  )
+                else
+                  FilledButton.tonalIcon(
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: Text(l10n.install),
+                    onPressed: () => controller.install(source),
+                  ),
+              ],
             ),
-            // Credit where it is due: the runtime that executes every
-            // extension installed from this screen.
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
-                LayoutConstants.spacingLg,
-                LayoutConstants.spacingSm,
-                LayoutConstants.spacingLg,
-                LayoutConstants.spacingLg,
-              ),
-              child: BridgeCredit(),
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _chip(BuildContext context, String label) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        ),
+      ),
     );
   }
 }
@@ -585,11 +745,11 @@ class _SourceIcon extends StatelessWidget {
     );
     if (url.isEmpty) return const Icon(Icons.extension_rounded);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: CachedNetworkImage(
         imageUrl: url,
-        width: 32,
-        height: 32,
+        width: 44,
+        height: 44,
         httpHeaders: const {'User-Agent': kDefaultBrowserUserAgent},
         errorWidget: (_, _, _) => const Icon(Icons.extension_rounded),
       ),

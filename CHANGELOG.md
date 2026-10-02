@@ -1,6 +1,9 @@
 # Changelogs - Unreleased
 
 ### ✨ *New Features & Enhancements*
+- **MStream is laid out like Home** – Same chrome (title, circular search button, source pill in the right corner), the same hero carousel of top titles, and the same horizontal rails ("Popular", "Latest updates") with "View All" opening a paginated grid. In-source search opens the same search UI Home uses, scoped to the active extension.
+- **MultiProviders redesigned** – Extensions are now rich rounded cards (large icon, name, update badge, language/version/backend chips) with a search filter over the lists and a styled install button on the Available tab.
+- **Faster "Install All"** – Installs now run three at a time, and no longer re-download every repository manifest after each individual install (that alone made installs take minutes).
 - **MStream opens like Home** – Tapping a title now opens a full details page with the same layout as Home: poster banner with legibility scrims and a shared-element poster flight, title, metadata pills (genres, author, artist, episode count), Play/Download actions, expandable synopsis, and a full episode list with thumbnails and per-episode play/download buttons.
 - **MStream posters are Home posters** – The grid now renders the exact Home card (same shimmer placeholder, error fallback, decode bounds, title-position setting and focus scale), with extension-required Referer/User-Agent headers layered on top.
 - **Extension runtime credit** – The AnymeX Extension Runtime Bridge by RyanYuuki is credited in-product: a small credit line appears under the add-repository dialog, the install-all progress dialog, the MultiProviders list and the MStream details page.
@@ -10,6 +13,10 @@
 - **MStream pagination and refresh** – Popular and search results load further pages as you scroll, the grid pulls to refresh, and failures show a Retry button instead of a bare error string.
 
 ### 🐞 *Bug Fixes & System Stability*
+- 🛠️ **Fixed: "Nothing found" for every CloudStream extension (root cause found in the runtime bridge)** – The bridge's Android CloudStream adapter shipped hard-coded *empty* `getPopular`/`getLatestUpdates` stubs (the desktop adapter already fell back to an empty-query search). The bridge is now vendored (`packages/anymex_extension_runtime_bridge`) with the fix: browse mode lists the source catalogue like it always should have.
+- 🛠️ **Fixed: installed extensions "disappearing" after a restart** – A cold-start race could make a backend publish an empty installed list before its plugins finished loading, and nothing re-read the store afterwards. The vendored bridge reloads persisted plugins and re-queries before ever publishing empty, and the app re-reads installed lists whenever MultiProviders opens.
+- 🛠️ **Fixed: slow extension installs** – Installing an extension re-downloaded every repository manifest afterwards; it now updates the local list only. "Install All" additionally installs three extensions concurrently instead of one-by-one.
+- 🛠️ **Fixed: episode order flipping between sources** – The bridge's CloudStream adapter (`DMedia.fromCs`) reversed episode order on a condition that is always true; episodes are now sorted deterministically by number (fixed in the vendored bridge, and sorted again at the app layer).
 - 🛠️ **Fixed: Downloads of extension content resolving through the wrong provider** – Downloading from MStream used to fall back to the active SkyStream plugin and download an unrelated URL. Extension streams are now passed to the download flow already resolved (with their headers), and "Select Another Source" keeps them instead of re-resolving.
 - 🛠️ **Fixed: Downloads refused on hosts without Content-Length** – Sources whose size probe fails no longer get rejected as "doesn't support direct downloading"; only HLS playlists (`.m3u8`) are refused, with a localized message.
 - 🛠️ **Fixed: Download filenames like "S0-E3 name"** – Extension episodes carry no season; the season segment only appears when there is one, and empty episode names no longer leave a stray space.
