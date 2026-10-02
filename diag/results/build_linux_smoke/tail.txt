@@ -7,7 +7,7 @@ Building Linux application...
 ::endgroup::
 ::group::✅ the desktop startup brightness call is harmless
 [38;5;3m┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
-[38;5;3m│ [warning] | 4:34:41 499ms | Bootstrap: could not disable brightness auto-reset[0m
+[38;5;3m│ [warning] | 4:49:43 569ms | Bootstrap: could not disable brightness auto-reset[0m
 [38;5;3m│ MissingPluginException(No implementation found for method setAutoReset on channel github.com/aaassseee/screen_brightness)[0m
 [38;5;3m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
 ::endgroup::
