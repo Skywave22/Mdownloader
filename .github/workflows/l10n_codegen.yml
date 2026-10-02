@@ -17,6 +17,12 @@ name: l10n codegen
 
 on:
   workflow_dispatch:
+  # TEMPORARY: branch-only workflows cannot be dispatched via `gh workflow
+  # run` (they 404 until merged to the default branch). This push trigger is
+  # how the codegen gets kicked from a feature branch — remove it before merge.
+  push:
+    branches:
+      - arena/01a0fb7d-mdownloader
 
 permissions:
   contents: write
