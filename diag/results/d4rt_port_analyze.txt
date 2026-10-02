@@ -1,0 +1,10 @@
+Analyzing d4rt...
+
+   info - lib/src/callable.dart:225:35 - 'isAbstract' is deprecated and shouldn't be used. Use isComplete instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib/src/interpreter_visitor.dart:5903:28 - 'isAbstract' is deprecated and shouldn't be used. Use isComplete instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib/src/interpreter_visitor.dart:6244:24 - 'isAbstract' is deprecated and shouldn't be used. Use isComplete instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib/src/security/permissions.dart:28:9 - Library names are not necessary. Remove the library name. - unnecessary_library_name
+   info - lib/src/security/permissions.dart:184:23 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+   info - lib/src/security/permissions.dart:184:32 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+
+6 issues found.
