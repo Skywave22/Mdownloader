@@ -1,4 +1,49 @@
-rc=1 seconds=306
+rc=0 seconds=324
+Resolving dependencies...
+Downloading packages...
+  background_downloader 9.5.9 (9.6.3 available)
+  built_collection 5.1.1 (5.1.2 available)
+  cached_network_image 4.0.0 (4.0.4 available)
+  cached_network_image_platform_interface 5.0.0 (5.0.3 available)
+  cached_network_image_web 2.0.0 (2.0.3 available)
+  connectivity_plus 7.3.1 (7.3.2 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  cupertino_ui 1.1.0 (retracted, 1.1.1 available)
+! d4rt 0.1.7+1 from path packages/d4rt (overridden)
+  dbus 0.7.15 (0.8.0 available)
+! device_apps 2.2.0+1 from path packages/device_apps (overridden)
+  device_info_plus 13.2.0 (13.3.0 available)
+  dynamic_color 1.9.0 (2.1.0 available)
+! file_picker 13.1.0 (overridden)
+  file_picker_darwin 2.1.0 (2.1.2 available)
+  file_picker_linux 2.0.0 (2.0.1 available)
+! flutter_inappwebview 6.1.5 (overridden)
+! flutter_qjs 0.0.1+1 from path packages/flutter_qjs (overridden)
+  go_router 18.0.1 (18.0.2 available)
+  http_interceptor 2.0.0 (3.0.0 available)
+! install_plugin 2.1.0+1 from path packages/install_plugin (overridden)
+  isar_community 3.3.0-dev.3 (3.3.2 available)
+  isar_community_flutter_libs 3.3.0-dev.3 (3.3.2 available)
+  jni 1.0.3 (1.1.0 available)
+! libtorrent_flutter 1.8.5 from git https://github.com/RyanYuuki/AnymeXExtensionRuntimeBridge.git at 7f5f88 in packages/libtorrent_flutter (overridden)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  material_ui 1.3.0 (retracted, 1.5.0 available)
+  nm 0.5.0 (0.6.0 available)
+  objective_c 9.6.0 (9.6.2 available)
+  octo_image 2.1.0 (2.1.2 available)
+  package_info_plus 10.2.1 (10.2.2 available)
+  permission_handler_apple 9.6.1 (9.6.2 available)
+  petitparser 7.0.2 (7.1.0 available)
+! pointycastle 4.0.0 (overridden)
+  qr 3.0.2 (4.0.0 available)
+! screen_brightness_windows 2.1.2 from path packages/screen_brightness_windows (overridden)
+  share_plus 13.3.0 (13.3.1 available)
+  test_api 0.7.12 (0.7.14 available)
+  wakelock_plus 1.8.0 (1.8.1 available)
+  xml 6.6.1 (7.1.0 available)
+Got dependencies!
+31 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
 
 ::group::✅ Passing tests
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/focus/app_focus_test.dart: FocusVisibility starts hidden: nothing has been driven yet
@@ -35,11 +80,11 @@ rc=1 seconds=306
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/app_scaffold_test.dart: the television cursor the next movement brings it straight back
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/app_scaffold_test.dart: the television cursor something animating under a stationary pointer is not movement
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/app_scaffold_test.dart: the television cursor a click that arrives without a nudge brings it back
-✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/loading_dialog_test.dart: LoadingDialog dismissal Back cancels and pops
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/app_scaffold_test.dart: the television cursor off a television the cursor is left alone
+✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/app_scaffold_test.dart: the television cursor the shell lets go of the cursor while the player owns the screen
+✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/loading_dialog_test.dart: LoadingDialog dismissal Back cancels and pops
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/loading_dialog_test.dart: LoadingDialog dismissal Escape cancels and pops
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/loading_dialog_test.dart: LoadingDialog dismissal the Cancel button takes focus on open
-✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/app_scaffold_test.dart: the television cursor the shell lets go of the cursor while the player owns the screen
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/loading_dialog_test.dart: LoadingDialog dismissal the Cancel button still cancels and pops
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/tv_logical_scale_test.dart: a television is handed the logical width it asks for
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/tv_logical_scale_test.dart: and every physical pixel is still covered
@@ -103,53 +148,114 @@ Repo Mini contains 1 included repos
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extension_collections_test.dart: a plugin a repository lists for the first time is not news when it is already installed
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extension_collections_test.dart: a plugin a repository lists for the first time is not news again after missing from one launch
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extension_collections_test.dart: a plugin a repository lists for the first time is not news in a repository the user has just added
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: ExtensionsScreen displays 2 tabs and guided empty state when no plugins installed
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: ExtensionsScreen displays Installed plugin list when extensions installed
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: plugin row focus affordance focusing one plugin row rings that row and leaves its neighbour plain
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: plugin row focus affordance the section card stays quiet while a row inside it holds the focus
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: plugin row focus affordance a repository card still lights for its own header, then hands over
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: under a thumb or a mouse a repository card never lights up for focus a tap or the code put there
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: TV dead ends Browse Repositories carries focus into the tab it opens
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_screen_test.dart: TV dead ends adding the first repository does not strand the remote
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_auto_update_test.dart: the check only finds updates; installing is its own step
+✅ /home/runner/work/Mdownloader/Mdownloader/test/shared/text_editing_controller_ownership_test.dart: dialog-lifetime controllers in lib/ are owned by a State
+... [23782 lines elided] ...
+[PROXY] Incoming Request for: http://127.0.0.1:44153/a.ts
+[PROXY] Response Status: 200, Content-Type: text/plain; charset=utf-8
+[PROXY] Detected isM3u8: false for http://127.0.0.1:44153/a.ts
+LocalProxyService: shut down cleanly
+LocalProxyService: Started on port 36049
+[PROXY] Incoming Request for: http://127.0.0.1:44153/b.ts
+[PROXY] Response Status: 200, Content-Type: text/plain; charset=utf-8
+[PROXY] Detected isM3u8: false for http://127.0.0.1:44153/b.ts
+LocalProxyService: shut down cleanly
 ::endgroup::
-::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_auto_update_test.dart: what the check found is installed, and named
-ExtensionsController: Asset loading disabled
+::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/local_proxy_service_test.dart: TLS validation refuses an upstream whose certificate does not validate
+LocalProxyService: Started on port 35389
+[PROXY] Incoming Request for: https://127.0.0.1:36101/movie.mp4
+LocalProxyService: Proxy Request Error: HandshakeException: Handshake error in client (OS Error: 
+	CERTIFICATE_VERIFY_FAILED: self signed certificate(handshake.cc:320))
+LocalProxyService: shut down cleanly
 ::endgroup::
-::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_auto_update_test.dart: a plugin that will not install stays offered and holds nobody back
-Background plugin install failed: SocketException: Connection reset by peer
-ExtensionsController: Asset loading disabled
+::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/local_proxy_service_test.dart: ClearKey DASH path rewrites the manifest and reuses one connection across refreshes
+LocalProxyService: Started on port 38765
+[CENC] serving http://127.0.0.1:33843/stream.mpd via proxy
+[CENC] manifest 419 bytes <- http://127.0.0.1:33843/stream.mpd
+[CENC] manifest 419 bytes <- http://127.0.0.1:33843/stream.mpd
+[CENC] manifest 419 bytes <- http://127.0.0.1:33843/stream.mpd
+[CENC] manifest 419 bytes <- http://127.0.0.1:33843/stream.mpd
+LocalProxyService: shut down cleanly
+::endgroup::
+::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/download_service_test.dart: the notification permission is asked in context, not at launch init() completes without ever asking for it
+Configuration result = [(requestTimeout, ), (holdingQueue, ), (runInForeground, )]
+::endgroup::
+::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/download_service_test.dart: the notification permission is asked in context, not at launch the first startDownload asks for it
+Configuration result = [(requestTimeout, ), (holdingQueue, ), (runInForeground, )]
+[DownloadService] startDownload called
+[DownloadService] - URL: https://example.com/a.mp4
+[DownloadService] - Tracking URL: null
+[DownloadService] - Filename: a.mp4
+[DownloadService] - Directory: /tmp/download_service_testKHGJJH/out
+[DownloadService] Enqueuing task...
+[DownloadService] Enqueue result: true
+::endgroup::
+::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/download_service_test.dart: the notification permission is asked in context, not at launch a granted permission is not re-requested
+Configuration result = [(requestTimeout, ), (holdingQueue, ), (runInForeground, )]
+[DownloadService] startDownload called
+[DownloadService] - URL: https://example.com/a.mp4
+[DownloadService] - Tracking URL: null
+[DownloadService] - Filename: a.mp4
+[DownloadService] - Directory: /tmp/download_service_testZLCIYV/out
+[DownloadService] Enqueuing task...
+[DownloadService] Enqueue result: true
+::endgroup::
+::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/download_service_test.dart: the notification permission is asked in context, not at launch a second download does not prompt again
+Configuration result = [(requestTimeout, ), (holdingQueue, ), (runInForeground, )]
+[DownloadService] startDownload called
+[DownloadService] - URL: https://example.com/a.mp4
+[DownloadService] - Tracking URL: null
+[DownloadService] - Filename: a.mp4
+[DownloadService] - Directory: /tmp/download_service_testBQHCQP/out
+[DownloadService] Enqueuing task...
+[DownloadService] Enqueue result: true
+[DownloadService] startDownload called
+[DownloadService] - URL: https://example.com/a.mp4
+[DownloadService] - Tracking URL: null
+[DownloadService] - Filename: a.mp4
+[DownloadService] - Directory: /tmp/download_service_testBQHCQP/out2
+[DownloadService] Enqueuing task...
+[DownloadService] Enqueue result: true
 ::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_auto_update_test.dart: nothing newer means nothing offered
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/download_service_test.dart: the notification permission is asked in context, not at launch iOS does not ask a second time from AppDelegate
 ::endgroup::
-::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_auto_update_test.dart: a launch straight after another still checks
-ExtensionsController: Asset loading disabled
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_auto_update_test.dart: no repositories means no work at all
-✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/extensions_auto_update_test.dart: repositories are fetched concurrently, not one after another
-::endgroup::
-::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/remove_repository_test.dart: takes the plugins installed from it, and only those
-ExtensionsController: Asset loading disabled
-::endgroup::
-::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/remove_repository_test.dart: drops the updates it was offering for them
-ExtensionsController: Asset loading disabled
-::endgroup::
-::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/remove_repository_test.dart: keeps them while the same repository is listed at another address
-ExtensionsController: Asset loading disabled
-::endgroup::
-::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/features/extensions/remove_repository_test.dart: one plugin that will not delete does not keep the rest
-Could not uninstall com.example.alpha: FileSystemException: Permission denied, path = ''
-ExtensionsController: Asset loading disabled
-::endgroup::
-::group::❌ /home/runner/work/Mdownloader/Mdownloader/test/shared/text_editing_controller_ownership_test.dart: dialog-lifetime controllers in lib/ are owned by a State (failed)
-Expected: empty
-  Actual: [
-            'lib/features/multiproviders/presentation/multi_providers_screen.dart:142: assigned to a local, not a State field\n'
-              '    final urlController = TextEditingController();',
-            'lib/features/multiproviders/presentation/multi_providers_screen.dart:199: TextEditingController disposed outside dispose(); the widget tree may still be mounted\n'
-... [24236 lines elided] ...
+::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/services/download_service_test.dart: startDownload reports its own failures a directory it cannot create is logged and rethrown
+Configuration result = [(requestTimeout, ), (holdingQueue, ), (runInForeground, )]
+[DownloadService] startDownload called
+[DownloadService] - URL: https://example.com/a.mp4
+[DownloadService] - Tracking URL: null
+[DownloadService] - Filename: a.mp4
+[DownloadService] - Directory: /tmp/download_service_testWPIKTU/not-a-directory/Skystream/A Movie
+[DownloadService] Enqueuing task...
+[38;5;1m┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+[38;5;1m│ [error] | 4:54:37 709ms | DownloadService.startDownload failed for "a.mp4" in "/tmp/download_service_testWPIKTU/not-a-directory/Skystream/A Movie"[0m
+[38;5;1m│ FileSystemException: Creation failed, path = '/tmp/download_service_testWPIKTU/not-a-directory' (OS Error: Not a directory, errno = 20)[0m
+[38;5;1m│ StackTrace: #0      _checkForErrorResponse (dart:io/common.dart:58:9)[0m
+[38;5;1m│ #1      _Directory.create.<anonymous closure> (dart:io/directory_impl.dart:121:9)[0m
+[38;5;1m│ #2      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)[0m
+[38;5;1m│ #3      StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)[0m
+[38;5;1m│ #4      StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)[0m
+[38;5;1m│ #5      _rootRunUnary (dart:async/zone_root.dart:48:47)[0m
+[38;5;1m│ #6      _CustomZone.runUnary (dart:async/zone.dart:816:35)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #7      _Directory.create.<anonymous closure>.<anonymous closure> (dart:io/directory_impl.dart:109:54)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #8      _Directory.create.<anonymous closure>.<anonymous closure> (dart:io/directory_impl.dart:109:54)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #9      DownloadService.startDownload (package:skystream/core/services/download_service.dart:746:9)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #10     Throws._matchFuture (package:matcher/src/expect/throws_matcher.dart:103:19)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #11     _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #12     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #13     expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #14     main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/Mdownloader/Mdownloader/test/core/services/download_service_test.dart:219:7)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #15     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)[0m
+[38;5;1m│ <asynchronous suspension>[0m
 [38;5;1m│ #16     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)[0m
 [38;5;1m│ <asynchronous suspension>[0m
 [38;5;1m│ #17     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)[0m
@@ -163,7 +269,7 @@ Configuration result = [(requestTimeout, ), (holdingQueue, ), (runInForeground, 
 [DownloadService] - URL: https://example.com/a.mp4
 [DownloadService] - Tracking URL: null
 [DownloadService] - Filename: a.mp4
-[DownloadService] - Directory: /tmp/download_service_testVRTABA/out
+[DownloadService] - Directory: /tmp/download_service_testMOYXQW/out
 [DownloadService] Enqueuing task...
 [DownloadService] Enqueue result: true
 ::endgroup::
@@ -287,16 +393,16 @@ Skip: Hits live third-party add-on hosts; run with --run-skipped --tags live
 ::group::✅ Passing tests
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_repository_update_test.dart: every add-on is fetched again, and the ones that moved named
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_repository_update_test.dart: loading the add-ons does not start a refresh of its own
-✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_label_test.dart: player label carries add-on, provider and resolution
-✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_label_test.dart: single-provider add-on keeps add-on as providerName
 ::endgroup::
 ::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_budget_test.dart: per-add-on budget a hanging add-on is abandoned at the budget, not after the chain
 [AddonStreamService] hang series/kitsu:40724:1:3: TimeoutException after 0:00:00.900000: Future not completed
 [AddonStreamService] hang series/kitsu:1:3: TimeoutException after 0:00:00.900000: Future not completed
-[AddonStreamService] hang series/tt5592146:1:3: TimeoutException after 0:00:00.185971: Future not completed
+[AddonStreamService] hang series/tt5592146:1:3: TimeoutException after 0:00:00.191037: Future not completed
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_budget_test.dart: per-add-on budget every stream add-on is asked, and fast ones are not gated by slow ones
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_label_test.dart: player label carries add-on, provider and resolution
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_label_test.dart: single-provider add-on keeps add-on as providerName
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/media/cenc_test.dart: parseInitSegment reads the protection scheme from a real encrypted init
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/media/cenc_test.dart: parseInitSegment returns null for an init segment that is not encrypted
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/media/cenc_test.dart: rewriteInitSegment relabels encv to the real codec and neuters sinf
@@ -317,116 +423,12 @@ Skip: Hits live third-party add-on hosts; run with --run-skipped --tags live
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: selectors cheerio and Nuvio accept a step tries every ancestor and sibling, not the nearest
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: selectors cheerio and Nuvio accept find keeps a selector inside its context
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: selectors cheerio and Nuvio accept and narrows a selection through filter
-::endgroup::
-::group::❌ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment a node from get() has the tag name cheerio gives it (failed)
-Invalid argument(s): Failed to load dynamic library 'libquickjs_c_bridge_plugin.so': libquickjs_c_bridge_plugin.so: cannot open shared object file: No such file or directory
-dart:ffi                                                   new DynamicLibrary.open
-package:flutter_js_ng/quickjs/ffi.dart 132:30              _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart                     _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart 175:19              _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart                     _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart 220:14              jsNewRuntime
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 61:16  QuickJsRuntime2._ensureEngine
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 207:5  QuickJsRuntime2.evaluate
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 290:9  QuickJsRuntime2.initChannelFunctions
-package:flutter_js_ng/javascript_runtime.dart 68:5         JavascriptRuntime.init
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 56:5   new QuickJsRuntime2
-package:flutter_js_ng/flutter_js.dart 53:15                getJavascriptRuntime
-package:skystream/core/nuvio/data/nuvio_engine.dart 94:21  NuvioEngine.execute
-test/core/nuvio/nuvio_runtime_parity_test.dart 120:37      main.<fn>.run
-test/core/nuvio/nuvio_runtime_parity_test.dart 140:28      main.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment URL setters change the address as the standard ones do (failed)
-Invalid argument(s): Failed to load dynamic library 'libquickjs_c_bridge_plugin.so': libquickjs_c_bridge_plugin.so: cannot open shared object file: No such file or directory
-dart:ffi                                                   new DynamicLibrary.open
-package:flutter_js_ng/quickjs/ffi.dart 132:30              _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart                     _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart 175:19              _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart                     _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart 220:14              jsNewRuntime
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 61:16  QuickJsRuntime2._ensureEngine
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 207:5  QuickJsRuntime2.evaluate
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 290:9  QuickJsRuntime2.initChannelFunctions
-package:flutter_js_ng/javascript_runtime.dart 68:5         JavascriptRuntime.init
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 56:5   new QuickJsRuntime2
-package:flutter_js_ng/flutter_js.dart 53:15                getJavascriptRuntime
-package:skystream/core/nuvio/data/nuvio_engine.dart 94:21  NuvioEngine.execute
-test/core/nuvio/nuvio_runtime_parity_test.dart 120:37      main.<fn>.run
-test/core/nuvio/nuvio_runtime_parity_test.dart 169:28      main.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment :contains works from inside a scraper (failed)
-Invalid argument(s): Failed to load dynamic library 'libquickjs_c_bridge_plugin.so': libquickjs_c_bridge_plugin.so: cannot open shared object file: No such file or directory
-dart:ffi                                                   new DynamicLibrary.open
-package:flutter_js_ng/quickjs/ffi.dart 132:30              _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart                     _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart 175:19              _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart                     _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart 220:14              jsNewRuntime
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 61:16  QuickJsRuntime2._ensureEngine
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 207:5  QuickJsRuntime2.evaluate
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 290:9  QuickJsRuntime2.initChannelFunctions
-package:flutter_js_ng/javascript_runtime.dart 68:5         JavascriptRuntime.init
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 56:5   new QuickJsRuntime2
-package:flutter_js_ng/flutter_js.dart 53:15                getJavascriptRuntime
-package:skystream/core/nuvio/data/nuvio_engine.dart 94:21  NuvioEngine.execute
-test/core/nuvio/nuvio_runtime_parity_test.dart 120:37      main.<fn>.run
-test/core/nuvio/nuvio_runtime_parity_test.dart 205:28      main.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment a request that cannot be made resolves as status 0 (failed)
-Invalid argument(s): Failed to load dynamic library 'libquickjs_c_bridge_plugin.so': libquickjs_c_bridge_plugin.so: cannot open shared object file: No such file or directory
-dart:ffi                                                   new DynamicLibrary.open
-package:flutter_js_ng/quickjs/ffi.dart 132:30              _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart                     _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart 175:19              _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart                     _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart 220:14              jsNewRuntime
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 61:16  QuickJsRuntime2._ensureEngine
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 207:5  QuickJsRuntime2.evaluate
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 290:9  QuickJsRuntime2.initChannelFunctions
-package:flutter_js_ng/javascript_runtime.dart 68:5         JavascriptRuntime.init
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 56:5   new QuickJsRuntime2
-package:flutter_js_ng/flutter_js.dart 53:15                getJavascriptRuntime
-package:skystream/core/nuvio/data/nuvio_engine.dart 94:21  NuvioEngine.execute
-test/core/nuvio/nuvio_runtime_parity_test.dart 120:37      main.<fn>.run
-test/core/nuvio/nuvio_runtime_parity_test.dart 225:28      main.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment against a server json() of a page that is not JSON is null (failed)
-Invalid argument(s): Failed to load dynamic library 'libquickjs_c_bridge_plugin.so': libquickjs_c_bridge_plugin.so: cannot open shared object file: No such file or directory
-dart:ffi                                                   new DynamicLibrary.open
-package:flutter_js_ng/quickjs/ffi.dart 132:30              _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart                     _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart 175:19              _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart                     _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart 220:14              jsNewRuntime
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 61:16  QuickJsRuntime2._ensureEngine
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 207:5  QuickJsRuntime2.evaluate
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 290:9  QuickJsRuntime2.initChannelFunctions
-package:flutter_js_ng/javascript_runtime.dart 68:5         JavascriptRuntime.init
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 56:5   new QuickJsRuntime2
-package:flutter_js_ng/flutter_js.dart 53:15                getJavascriptRuntime
-package:skystream/core/nuvio/data/nuvio_engine.dart 94:21  NuvioEngine.execute
-test/core/nuvio/nuvio_runtime_parity_test.dart 120:37      main.<fn>.run
-test/core/nuvio/nuvio_runtime_parity_test.dart 256:30      main.<fn>.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment against a server headers and search params iterate as the standard ones do (failed)
-Invalid argument(s): Failed to load dynamic library 'libquickjs_c_bridge_plugin.so': libquickjs_c_bridge_plugin.so: cannot open shared object file: No such file or directory
-dart:ffi                                                   new DynamicLibrary.open
-package:flutter_js_ng/quickjs/ffi.dart 132:30              _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart                     _qjsLib
-package:flutter_js_ng/quickjs/ffi.dart 175:19              _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart                     _jsNewRuntime
-package:flutter_js_ng/quickjs/ffi.dart 220:14              jsNewRuntime
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 61:16  QuickJsRuntime2._ensureEngine
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 207:5  QuickJsRuntime2.evaluate
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 290:9  QuickJsRuntime2.initChannelFunctions
-package:flutter_js_ng/javascript_runtime.dart 68:5         JavascriptRuntime.init
-package:flutter_js_ng/quickjs/quickjs_runtime2.dart 56:5   new QuickJsRuntime2
-package:flutter_js_ng/flutter_js.dart 53:15                getJavascriptRuntime
-package:skystream/core/nuvio/data/nuvio_engine.dart 94:21  NuvioEngine.execute
-test/core/nuvio/nuvio_runtime_parity_test.dart 120:37      main.<fn>.run
-test/core/nuvio/nuvio_runtime_parity_test.dart 275:32      main.<fn>.<fn>.<fn>
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment a node from get() has the tag name cheerio gives it
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment URL setters change the address as the standard ones do
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment :contains works from inside a scraper
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment a request that cannot be made resolves as status 0
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment against a server json() of a page that is not JSON is null
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the scraper environment against a server headers and search params iterate as the standard ones do
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the plugin HTTP layer never asks for an encoding it cannot decode
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_runtime_parity_test.dart: the plugin HTTP layer stops reading a large body at the cap
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/nuvio/nuvio_test.dart: manifest parses a real repository manifest
@@ -535,6 +537,8 @@ test/core/nuvio/nuvio_runtime_parity_test.dart 275:32      main.<fn>.<fn>.<fn>
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/core/widgets/m3_toast_overlay_test.dart: kPlayerRoutePath is the location PlayerRoute actually navigates to
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/platform/native_plugin_surface_test.dart: every platform registers exactly the native plugins we expect
 ✅ /home/runner/work/Mdownloader/Mdownloader/test/compile_smoke_test.dart: every screen touched by plugin work still compiles
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_budget_test.dart: per-add-on budget a slow scraper (~22s) still lands inside the default budget
+✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_budget_test.dart: per-add-on budget a healthy add-on still costs exactly one request
 ::endgroup::
 ::group::✅ /home/runner/work/Mdownloader/Mdownloader/test/app_boot_test.dart: a launch loads the installed plugins first, then checks for updates
 [Lifecycle] Starting _checkAppUpdates after 5s delay...
@@ -544,9 +548,5 @@ ExtensionsController: Asset loading disabled
 [Lifecycle] Starting _checkAppUpdates after 5s delay...
 ExtensionsController: Asset loading disabled
 ::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_budget_test.dart: per-add-on budget a slow scraper (~22s) still lands inside the default budget
-✅ /home/runner/work/Mdownloader/Mdownloader/test/core/addons/addon_stream_budget_test.dart: per-add-on budget a healthy add-on still costs exactly one request
-::endgroup::
 
-::error::2112 tests passed, 27 failed, 5 skipped.
+🎉 2139 tests passed, 5 skipped.

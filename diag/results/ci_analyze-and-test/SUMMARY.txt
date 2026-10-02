@@ -1,8 +1,8 @@
-04  rc=0       78s  Install Dependencies
-05  rc=1        0s  Check gen-l10n Output Is Committed
+04  rc=0       79s  Install Dependencies
+05  rc=0        0s  Check gen-l10n Output Is Committed
 06  rc=0        0s  Translation Coverage
 07  rc=0        0s  Vendored Forks Resolve From Path
-08  rc=0       80s  Analyze
-09  rc=0       44s  Riverpod Lint
-10  rc=141     25s  Build QuickJS Test Bridge
-11  rc=1      306s  Test
+08  rc=0       70s  Analyze
+09  rc=0       41s  Riverpod Lint
+10  rc=0       11s  Build QuickJS Test Bridge
+11  rc=0      324s  Test

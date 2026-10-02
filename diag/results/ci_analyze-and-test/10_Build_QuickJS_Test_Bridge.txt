@@ -1,2 +1,2 @@
-rc=141 seconds=25
+rc=0 seconds=11
 

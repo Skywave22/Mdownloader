@@ -1,9 +1,6 @@
-rc=0 seconds=78
+rc=0 seconds=79
 Resolving dependencies...
 Downloading packages...
-+ antlr4 4.13.2
-+ anymex_extension_runtime_bridge 1.6.1 from git https://github.com/RyanYuuki/AnymeXExtensionRuntimeBridge.git at 7f5f88
-+ asn1lib 1.6.5
   background_downloader 9.5.9 (9.6.3 available)
   built_collection 5.1.1 (5.1.2 available)
   cached_network_image 4.0.0 (4.0.4 available)
@@ -17,24 +14,17 @@ Downloading packages...
 ! device_apps 2.2.0+1 from path packages/device_apps (overridden)
   device_info_plus 13.2.0 (13.3.0 available)
   dynamic_color 1.9.0 (2.1.0 available)
-+ encrypt 5.0.3
-+ epubx 4.0.3 from git https://github.com/kodjodevf/epubx.dart.git at c8203a
-+ expressions 0.2.5+3
 ! file_picker 13.1.0 (overridden)
   file_picker_darwin 2.1.0 (2.1.2 available)
   file_picker_linux 2.0.0 (2.0.1 available)
 ! flutter_inappwebview 6.1.5 (overridden)
 ! flutter_qjs 0.0.1+1 from path packages/flutter_qjs (overridden)
-+ get 4.7.3
   go_router 18.0.1 (18.0.2 available)
-+ http_interceptor 2.0.0 (3.0.0 available)
-+ image 4.10.1
+  http_interceptor 2.0.0 (3.0.0 available)
 ! install_plugin 2.1.0+1 from path packages/install_plugin (overridden)
-+ isar_community 3.3.0-dev.3 (3.3.2 available)
-+ isar_community_flutter_libs 3.3.0-dev.3 (3.3.2 available)
+  isar_community 3.3.0-dev.3 (3.3.2 available)
+  isar_community_flutter_libs 3.3.0-dev.3 (3.3.2 available)
   jni 1.0.3 (1.1.0 available)
-+ js 0.7.2
-+ js_packer 0.0.6
 ! libtorrent_flutter 1.8.5 from git https://github.com/RyanYuuki/AnymeXExtensionRuntimeBridge.git at 7f5f88 in packages/libtorrent_flutter (overridden)
   material_color_utilities 0.13.0 (0.13.1 available)
   material_ui 1.3.0 (retracted, 1.5.0 available)
@@ -45,17 +35,13 @@ Downloading packages...
   permission_handler_apple 9.6.1 (9.6.2 available)
   petitparser 7.0.2 (7.1.0 available)
 ! pointycastle 4.0.0 (overridden)
-+ pseudom 1.0.1
   qr 3.0.2 (4.0.0 available)
-+ quiver 3.2.2
 ! screen_brightness_windows 2.1.2 from path packages/screen_brightness_windows (overridden)
   share_plus 13.3.0 (13.3.1 available)
   test_api 0.7.12 (0.7.14 available)
   wakelock_plus 1.8.0 (1.8.1 available)
-< xml 6.6.1 (was 7.0.1) (7.1.0 available)
-+ xpath_selector 3.0.2
-+ xpath_selector_html_parser 3.0.1
-Changed 18 dependencies!
+  xml 6.6.1 (7.1.0 available)
+Got dependencies!
 31 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 Because l10n.yaml exists, the options defined there will be used instead.
@@ -63,20 +49,19 @@ To use the command line arguments, delete the l10n.yaml file in the Flutter proj
 
 
   compiling builders/aot
-  36s compiling builders/aot
+  27s compiling builders/aot
 W These options have been removed and were ignored: --delete-conflicting-outputs
   0s riverpod_generator on 531 inputs; integration_test/app_smoke_test.dart
-  2s riverpod_generator on 531 inputs: 1 no-op; spent 2s sdk; lib/core/addons/data/addon_client.dart
-  6s riverpod_generator on 531 inputs: 1 output, 1 no-op; spent 4s analyzing, 2s sdk; lib/core/addons/data/addon_playback_launcher.dart
-  12s riverpod_generator on 531 inputs: 3 output, 1 no-op; spent 8s analyzing, 2s sdk, 2s resolving; lib/core/addons/data/addon_repository.dart
-  14s riverpod_generator on 531 inputs: 7 output, 13 no-op; spent 10s analyzing, 2s resolving, 2s sdk; lib/core/extensions/engine/js_engine_worker.dart
-  16s riverpod_generator on 531 inputs: 13 output, 37 no-op; spent 12s analyzing, 2s resolving, 2s sdk; lib/core/nuvio/data/nuvio_runtime.dart
-  28s riverpod_generator on 531 inputs: 21 output, 38 no-op; spent 22s analyzing, 4s resolving, 2s sdk; lib/core/services/anilist_explore_service.dart
-  29s riverpod_generator on 531 inputs: 71 output, 460 no-op; spent 22s analyzing, 4s resolving, 2s sdk
+  1s riverpod_generator on 531 inputs: 1 no-op; spent 1s sdk; lib/core/addons/data/addon_client.dart
+  5s riverpod_generator on 531 inputs: 1 output, 1 no-op; spent 3s analyzing, 1s sdk; lib/core/addons/data/addon_playback_launcher.dart
+  9s riverpod_generator on 531 inputs: 3 output, 1 no-op; spent 7s analyzing, 1s resolving, 1s sdk; lib/core/addons/data/addon_repository.dart
+  11s riverpod_generator on 531 inputs: 7 output, 13 no-op; spent 8s analyzing, 2s resolving, 1s sdk; lib/core/extensions/engine/js_engine_worker.dart
+  13s riverpod_generator on 531 inputs: 13 output, 37 no-op; spent 10s analyzing, 2s resolving, 1s sdk; lib/core/nuvio/data/nuvio_runtime.dart
+  23s riverpod_generator on 531 inputs: 21 output, 38 no-op; spent 18s analyzing, 3s resolving, 1s sdk; lib/core/services/anilist_explore_service.dart
+  23s riverpod_generator on 531 inputs: 71 output, 460 no-op; spent 19s analyzing, 3s resolving, 1s sdk
   0s go_router_builder on 531 inputs; integration_test/app_smoke_test.dart
-  0s go_router_builder on 531 inputs: 1 output, 125 no-op; lib/features/explore/data/explore_filter_provider.dart
+  0s go_router_builder on 531 inputs: 1 output, 278 no-op; lib/l10n/generated/app_localizations_es.dart
   1s go_router_builder on 531 inputs: 1 output, 530 no-op
   0s source_gen:combining_builder on 531 inputs; integration_test/app_smoke_test.dart
-  0s source_gen:combining_builder on 531 inputs: 71 output, 449 no-op; test/shared/app_scaffold_test.dart
   0s source_gen:combining_builder on 531 inputs: 71 output, 460 no-op
-  Built with build_runner/aot in 67s; wrote 143 outputs.
+  Built with build_runner/aot in 52s; wrote 143 outputs.
