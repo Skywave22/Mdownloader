@@ -104,5 +104,10 @@ configurations.configureEach {
 
 dependencies {
     implementation("androidx.tvprovider:tvprovider:1.0.0")
+    // Older transitive Material versions reference AppCompat's removed
+    // DrawableWrapper class, which fails minifyReleaseWithR8. Use a compatible
+    // Material release (ShadowDrawableWrapper extends DrawableWrapperCompat)
+    // rather than hiding the missing class with -dontwarn or disabling R8.
+    implementation("com.google.android.material:material:1.14.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }

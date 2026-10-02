@@ -4,8 +4,9 @@
 #
 # WHAT GATES A MERGE, AND WHY IT IS SPLIT THIS WAY
 #   Every pull request:  analyze, test, the Riverpod Lint step, the three
-#     vendored Dart packages, the Go torrent server, a debug build of Android
-#     and Linux, and the Linux integration smoke test.
+#     vendored Dart packages, the Go torrent server, debug builds of Android
+#     and Linux, an Android release build (including R8), and the Linux
+#     integration smoke test.
 #     All of that is 1x-billed ubuntu and finishes inside ~20 minutes.
 #   Pull requests that touch anything a native toolchain compiles or links
 #     (packages/**, android/**, ios/**, macos/**, windows/**, linux/**,
@@ -442,10 +443,10 @@ jobs:
             echo "matrix=$CORE" >> "$GITHUB_OUTPUT"
           fi
 
-  # One debug build per shipping platform. Debug, and deliberately without
-  # --dart-define-from-file: these jobs only have to prove the platform
-  # toolchains still compile the tree, and fork pull requests cannot read
-  # secrets.
+  # One debug build per shipping platform, plus an Android release check below
+  # to exercise R8. Deliberately without --dart-define-from-file: these jobs
+  # prove the platform toolchains compile the tree, and fork pull requests
+  # cannot read secrets.
   build:
     name: Build ${{ matrix.name }}
     needs: changes
@@ -658,6 +659,16 @@ jobs:
           path: ci-artifacts/skystream-${{ matrix.name }}-debug.tar.gz
           retention-days: 7
           if-no-files-found: error
+
+      # Debug builds skip R8, so they cannot catch missing release-runtime
+      # classes such as Material's obsolete AppCompat DrawableWrapper reference.
+      # Exercise the same shrinking/ABI split as release.yml on every Android
+      # leg. No secrets or release keystore needed: this is a compile check,
+      # not a published APK. Keep it after the debug artifact is packaged so
+      # the release build cannot replace the output that artifact contains.
+      - name: Check Android Release Build (R8)
+        if: matrix.name == 'Android'
+        run: flutter build apk --release --split-per-abi
 
       # The only step in this workflow that RUNS the app. `flutter test` alone
       # executes on flutter_tester, where no plugin is registered, so nothing a
