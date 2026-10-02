@@ -17,8 +17,6 @@ name: l10n codegen
 
 on:
   workflow_dispatch:
-  push:
-    branches: [arena/01a0fb7d-mdownloader]
 
 permissions:
   contents: write
