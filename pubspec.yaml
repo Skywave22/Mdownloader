@@ -194,6 +194,15 @@ dependency_overrides:
   d4rt:
     path: packages/d4rt
 
+  # flutter_qjs, the QuickJS binding behind the bridge's JavaScript backends
+  # (Mangayomi, Sora, LnReader). Its FFI layer exports the same ~50 C symbols as
+  # flutter_js_ng's, and both are resolved with DynamicLibrary.process() on
+  # Linux/macOS/iOS, so one engine ends up calling the other's. This copy builds
+  # for Android and Windows - where each loads its own named library - and throws
+  # on the rest instead of crashing. See packages/flutter_qjs/README.md.
+  flutter_qjs:
+    path: packages/flutter_qjs
+
   # Android only, and both unbuildable as published under Gradle 9.1 / AGP 8.13:
   # device_apps calls jcenter(), which Gradle 9 removed, and neither declares a
   # namespace. Build scripts modernised, sources untouched. See each README.

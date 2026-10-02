@@ -1,0 +1,41 @@
+// Modernised copy of kodjodevf/flutter_qjs@f3cef51's build script. The original
+// pinned its own AGP 8.0.1 and Kotlin 1.7.10 in a buildscript block, which this
+// app's Gradle 9.1 / AGP 8.13 / Kotlin 2.4.20 build does not want a second copy
+// of. The Kotlin and C++ sources are untouched. See ../README.md.
+
+group = 'soko.ekibun.flutter_qjs'
+version = '1.0-SNAPSHOT'
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace = 'soko.ekibun.flutter_qjs'
+    // The app's root build.gradle.kts overrides compileSdk and ndkVersion for
+    // every subproject; this is the value for building the plugin on its own.
+    compileSdk = 36
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = 'src/main/cxx/CMakeLists.txt'
+            version = '3.18.1+'
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        minSdk = 21
+    }
+}
