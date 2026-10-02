@@ -3524,6 +3524,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disable'**
   String get disable;
+
+  /// No description provided for @author.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get author;
+
+  /// No description provided for @artist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get artist;
+
+  /// No description provided for @downloadUnsupportedSource.
+  ///
+  /// In en, this message translates to:
+  /// **'This source doesn\'t support direct downloading or is currently unavailable. Please try another source.'**
+  String get downloadUnsupportedSource;
+
+  /// No description provided for @downloadStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to start download. Check storage permissions.'**
+  String get downloadStartFailed;
+
+  /// No description provided for @noDownloadSourcesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No download sources found for this item.'**
+  String get noDownloadSourcesFound;
+
+  /// No description provided for @extensionRuntimeCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Extension runtime bridge: AnymeXExtensionRuntimeBridge · by RyanYuuki'**
+  String get extensionRuntimeCredit;
 }
 
 class _AppLocalizationsDelegate

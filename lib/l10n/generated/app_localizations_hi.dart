@@ -1947,4 +1947,26 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get disable => 'अक्षम करें';
+
+  @override
+  String get author => 'लेखक';
+
+  @override
+  String get artist => 'कलाकार';
+
+  @override
+  String get downloadUnsupportedSource =>
+      'यह स्रोत सीधे डाउनलोडिंग का समर्थन नहीं करता या वर्तमान में अनुपलब्ध है। कृपया कोई अन्य स्रोत आज़माएँ।';
+
+  @override
+  String get downloadStartFailed =>
+      'डाउनलोड शुरू करने में विफल। स्टोरेज अनुमतियाँ जाँचें।';
+
+  @override
+  String get noDownloadSourcesFound =>
+      'इस आइटम के लिए कोई डाउनलोड स्रोत नहीं मिला।';
+
+  @override
+  String get extensionRuntimeCredit =>
+      'एक्सटेंशन रनटाइम ब्रिज: AnymeXExtensionRuntimeBridge · RyanYuuki द्वारा';
 }

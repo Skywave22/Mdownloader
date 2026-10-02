@@ -1961,4 +1961,26 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get disable => 'ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ';
+
+  @override
+  String get author => 'ಲೇಖಕ';
+
+  @override
+  String get artist => 'ಕಲಾವಿದ';
+
+  @override
+  String get downloadUnsupportedSource =>
+      'ಈ ಮೂಲವು ನೇರ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ ಅಥವಾ ಪ್ರಸ್ತುತ ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಬೇರೆ ಮೂಲವನ್ನು ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get downloadStartFailed =>
+      'ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಲು ವಿಫಲವಾಗಿದೆ. ಸಂಗ್ರಹಣೆ ಅನುಮತಿಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.';
+
+  @override
+  String get noDownloadSourcesFound =>
+      'ಈ ಐಟಂಗೆ ಯಾವುದೇ ಡೌನ್‌ಲೋಡ್ ಮೂಲಗಳು ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  @override
+  String get extensionRuntimeCredit =>
+      'ಎಕ್ಸ್‌ಟೆನ್ಶನ್ ರನ್‌ಟೈಮ್ ಬ್ರಿಡ್ಜ್: AnymeXExtensionRuntimeBridge · RyanYuuki ಅವರಿಂದ';
 }
