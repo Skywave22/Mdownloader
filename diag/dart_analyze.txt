@@ -1,5 +1,0 @@
-Analyzing Mdownloader...
-
-   info - lib/features/multiproviders/presentation/multi_providers_screen.dart:185:5 - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited'. - unawaited_futures
-
-1 issue found.
