@@ -66,6 +66,19 @@ possible so they can be offered back as a PR.
    types (it throws a clear "add them from the Novel tab" error), and the
    app routes Legado links to the novel type automatically.
 
+9. **`Pages.fromJson` / `DMedia.fromJson` — tolerant mapping.** The page
+   envelope now accepts `list`/`results`/`items` shapes, one malformed
+   entry no longer takes down the whole page, unknown pagination assumes
+   more results when a page comes back full (feeds used to stop at page 1
+   at "1-2 items"), and `DMedia.fromJson` reads every alias the runtime
+   host and the script backends use for title/url/cover/description.
+
+10. **`Source.author`** — new field carrying the extension's developer
+    (manifests disagree between a plain string and an `{name, icon}`
+    object; both parse). Threaded through all five backend models and
+    their repository-parse paths so the manager UI can group a repo's
+    extensions by author.
+
 `prebuilt/` and `RuntimeBridges/` from upstream are not vendored (47+ MB of
 build-script artifacts; the Flutter build does not reference them).
 `dependency_overrides` in upstream's pubspec are stripped — the app root's

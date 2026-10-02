@@ -15,6 +15,10 @@ class Source {
   bool? supportsLatest;
   bool? supportsPopular;
 
+  /// The extension's developer, when the manifest declares one. Used to
+  /// group a repo's extensions by author in the manager UI.
+  String? author;
+
   Source({
     this.id = '',
     this.name = '',
@@ -31,6 +35,7 @@ class Source {
     this.isPrivate,
     this.supportsLatest = false,
     this.supportsPopular = false,
+    this.author,
   });
 
   Source.fromJson(Map<String, dynamic> json) {
@@ -48,6 +53,7 @@ class Source {
     isPrivate = json['isPrivate'] ?? (json['isShared'] != null ? !(json['isShared'] as bool) : null);
     supportsLatest = json['supportsLatest'] ?? false;
     supportsPopular = json['supportsPopular'] ?? false;
+    author = Source.authorNameFrom(json['author']);
 
     final isLnReader = json['site'] != null && json['url'] != null && json['sourceCodeLanguage'] == null;
     if (isLnReader) {
@@ -73,7 +79,15 @@ class Source {
         'isPrivate': isPrivate,
         'supportsLatest': supportsLatest,
         'supportsPopular': supportsPopular,
+        'author': author,
       };
+
+  /// Manifests disagree on the author's shape: a plain string or an
+  /// `{name, icon}` object. Accept both.
+  static String? _readAuthor(dynamic raw) {
+    if (raw is Map) return raw['name']?.toString();
+    return raw?.toString();
+  }
 
   String get uniqueId => id ?? '';
 }

@@ -20,7 +20,6 @@ import '../../../shared/widgets/expandable_text.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/thumbnail_error_placeholder.dart';
 import '../../details/presentation/download_launcher.dart';
-import '../widgets/bridge_credit.dart';
 
 /// The opening screen for extension media, modelled 1:1 on the Home details
 /// experience ([DetailsScreen]): the same banner-with-scrim app bar, the same
@@ -273,8 +272,6 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
                     ),
                     const SizedBox(height: 32),
                     _buildEpisodes(context, l10n),
-                    const SizedBox(height: 32),
-                    const BridgeCredit(),
                     const SizedBox(height: 50),
                   ],
                 ),
@@ -388,9 +385,24 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
     );
   }
 
-  Widget _buildActions(BuildContext context, AppLocalizations l10n) {
+  /// What the big Play/Download buttons act on: the first episode for
+  /// series, the media itself for movies and one-shots. Movies must behave
+  /// like Home — two buttons and nothing else.
+  DEpisode get _playable {
     final episodes = _detail?.episodes ?? const <DEpisode>[];
-    final firstEpisode = episodes.isNotEmpty ? episodes.first : null;
+    if (episodes.isNotEmpty) return episodes.first;
+    return DEpisode(
+      url: widget.media.url,
+      name: widget.media.title,
+      episodeNumber: '1',
+    );
+  }
+
+  /// Movies and one-shots: Home shows just Play/Download and no episode
+  /// strip. Only real multi-episode series get the episode list.
+  bool get _showEpisodeList => (_detail?.episodes?.length ?? 0) >= 2;
+
+  Widget _buildActions(BuildContext context, AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -400,11 +412,7 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            onPressed: _loading
-                ? null
-                : firstEpisode != null
-                    ? () => unawaited(_play(firstEpisode))
-                    : null,
+            onPressed: () => unawaited(_play(_playable)),
           ),
         ),
         const SizedBox(width: 12),
@@ -415,11 +423,7 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            onPressed: _loading
-                ? null
-                : firstEpisode != null
-                    ? () => unawaited(_download(firstEpisode))
-                    : null,
+            onPressed: () => unawaited(_download(_playable)),
           ),
         ),
       ],
@@ -428,6 +432,18 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
 
   Widget _buildEpisodes(BuildContext context, AppLocalizations l10n) {
     final episodes = _detail?.episodes ?? const <DEpisode>[];
+    // Movies/one-shots: no episode strip (Home shows just Play/Download).
+    if (!_showEpisodeList) {
+      // getDetail can still fail for metadata enrichment; the poster and
+      // title above always render, so just offer a compact retry here.
+      if (_error != null) {
+        return _DetailErrorNotice(
+          error: _error!,
+          onRetry: () => unawaited(_load()),
+        );
+      }
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -664,6 +680,43 @@ class _EpisodeTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Compact "couldn't load more details" note used where a full-page retry
+/// would hide the metadata and poster that are already on screen.
+class _DetailErrorNotice extends StatelessWidget {
+  const _DetailErrorNotice({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.errorPrefix(error.toString())),
+          const SizedBox(height: 8),
+          CustomButton(
+            isPrimary: true,
+            onPressed: onRetry,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(l10n.retry),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -99,39 +99,46 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     List<DMedia> popular = const <DMedia>[];
     List<DMedia> latest = const <DMedia>[];
     Object? error;
+
+    // Pages 1+2 per feed, deduped by URL: thin page-1 results used to leave
+    // the screen at "1-2 items and one row".
+    Future<List<DMedia>> twoPages(
+      Future<Pages> Function(int page) listing,
+    ) async {
+      final pages = await Future.wait([listing(1), listing(2)]);
+      final seen = <String>{};
+      return [
+        for (final m in [...pages[0].list, ...pages[1].list])
+          if (m.url == null || seen.add(m.url!)) m,
+      ];
+    }
+
     try {
-      popular = (await methods.getPopular(1)).list;
+      popular = await twoPages(methods.getPopular);
       if (popular.isEmpty) {
-        popular = (await methods.getLatestUpdates(1)).list;
+        popular = await twoPages(methods.getLatestUpdates);
       }
     } catch (e) {
       error = e;
       try {
-        popular = (await methods.getLatestUpdates(1)).list;
+        popular = await twoPages(methods.getLatestUpdates);
         error = null;
       } catch (_) {/* keep the first error */}
     }
     try {
-      latest = (await methods.getLatestUpdates(1)).list;
+      latest = await twoPages(methods.getLatestUpdates);
       if (latest.isEmpty) {
-        latest = (await methods.getPopular(1)).list;
+        latest = await twoPages(methods.getPopular);
       }
     } catch (e) {
       error ??= e;
       try {
-        latest = (await methods.getPopular(1)).list;
+        latest = await twoPages(methods.getPopular);
         error = null;
       } catch (_) {/* keep the first error */}
     }
 
     if (!mounted || generation != _generation) return;
-
-    // A source with a single listing answers both feeds identically; show it
-    // once instead of two identical rails.
-    final sameFeed = popular.length == latest.length &&
-        popular.isNotEmpty &&
-        List.generate(popular.length, (i) => popular[i].url == latest[i].url)
-            .every((same) => same);
 
     talker.debug(
       'MStream: ${source.name} feeds — popular=${popular.length} '
@@ -140,7 +147,9 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
 
     setState(() {
       _popular = popular;
-      _latest = sameFeed ? const <DMedia>[] : latest;
+      // Both rails always render (like Home); sources whose single listing
+      // answers both feeds show it under both labels rather than losing one.
+      _latest = latest;
       _loading = false;
       _error = (popular.isEmpty && latest.isEmpty) ? error : null;
     });
@@ -495,13 +504,10 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     if (selected == null) return;
     showDialog<void>(
       context: context,
-      builder: (context) => _SourceSelectorDialog(
+      builder: (_) => _SourceSelectorDialog(
         sources: enabled,
         activeId: selected.uniqueId,
-        onSelected: (source) {
-          Navigator.of(context).pop();
-          _selectSource(source);
-        },
+        onSelected: _selectSource,
       ),
     );
   }

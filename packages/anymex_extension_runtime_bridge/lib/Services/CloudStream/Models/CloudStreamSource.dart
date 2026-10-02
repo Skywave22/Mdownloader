@@ -21,6 +21,7 @@ class CloudStreamSource extends Source {
     super.hasUpdate,
     super.supportsLatest = false,
     super.supportsPopular = false,
+    super.author,
     this.internalName,
     this.pluginUrl,
     this.jarUrl,
@@ -31,6 +32,10 @@ class CloudStreamSource extends Source {
     final language = json['language'] as String?;
     final rawVersion = json['version']?.toString() ?? json['versionLast']?.toString();
     final versionStr = (rawVersion != null && rawVersion.isNotEmpty) ? rawVersion : "1.0.0";
+    // CloudStream repo entries carry either `author` or an `authors` list.
+    final authors = json['authors'];
+    final rawAuthor = json['author'] ??
+        (authors is List && authors.isNotEmpty ? authors.first : null);
 
     return CloudStreamSource(
       id: json['id']?.toString().toLowerCase() ??
@@ -49,6 +54,7 @@ class CloudStreamSource extends Source {
       supportsLatest: json['supportsLatest'] ?? false,
       supportsPopular: json['supportsPopular'] ?? false,
       itemType: ItemType.anime,
+      author: Source.authorNameFrom(rawAuthor),
       jarUrl: json['jarUrl'] ?? json['jar'],
       internalName: json['internalName'] ?? json['name'],
       pluginUrl: json['pluginUrl'] ?? json['plugin'] ?? json['url'],

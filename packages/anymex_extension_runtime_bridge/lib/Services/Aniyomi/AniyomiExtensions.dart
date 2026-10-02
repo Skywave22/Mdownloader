@@ -283,6 +283,7 @@ class AniyomiExtensions extends Extension {
             iconUrl: rawIconUrl.startsWith('http')
                 ? rawIconUrl
                 : "$baseIconUrl/icon/${map['pkg']}.png",
+            author: Source.authorNameFrom(map['author']),
           )..managerId = managerId,
         );
       }

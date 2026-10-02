@@ -244,6 +244,7 @@ class SoraExtensions extends Extension {
             baseUrl: ext['baseUrl'],
             sourceCodeUrl: ext['scriptUrl'] ?? ext['scriptURL'],
             repo: repoUrl,
+            author: Source.authorNameFrom(ext['author']),
           )..managerId = managerId,
         );
       }

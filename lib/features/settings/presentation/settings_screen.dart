@@ -86,7 +86,6 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsTile(
                       icon: Icons.system_update_alt_rounded,
                       title: l10n.multiProvidersRuntimeBridge,
-                      subtitle: l10n.extensionRuntimeCredit,
                       isLast: true,
                       onTap: () =>
                           _showExtensionRuntimeDialog(context, ref, l10n),
@@ -135,11 +134,6 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(status, style: theme.textTheme.bodyMedium),
-                  const SizedBox(height: LayoutConstants.spacingMd),
-                  Text(
-                    l10n.extensionRuntimeCredit,
-                    style: theme.textTheme.bodySmall,
-                  ),
                 ],
               ),
               actions: [

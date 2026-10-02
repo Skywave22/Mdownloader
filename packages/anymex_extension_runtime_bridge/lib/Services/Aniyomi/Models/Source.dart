@@ -20,6 +20,7 @@ class ASource extends Source {
     super.isPrivate,
     super.supportsLatest,
     super.supportsPopular,
+    super.author,
     this.pkgName,
     this.apkName,
   });
@@ -39,6 +40,7 @@ class ASource extends Source {
       supportsLatest: json['supportsLatest'] ?? false,
       supportsPopular: json['supportsPopular'] ?? false,
       itemType: ItemType.values[json['itemType'] ?? 0],
+      author: Source.authorNameFrom(json['author']),
       pkgName: json['pkgName'],
       apkName: json['apkName'],
     );

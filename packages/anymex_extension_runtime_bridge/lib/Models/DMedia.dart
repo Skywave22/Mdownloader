@@ -28,15 +28,20 @@ class DMedia {
             .map((e) => DEpisode.fromJson(Map<String, dynamic>.from(e)))
             .toList()
         : <DEpisode>[];
-    final poster = json['cover'] ?? json['posterUrl'] ?? json['thumbnail_url'];    
 
+    // Unified and CloudStream-shaped payloads both land here; accept the
+    // aliases either side uses so nothing degrades to "title only".
     return DMedia(
       title: json['title'] ?? json['name'],
-      url: json['url'],
-      cover: json['thumbnail_url'] ?? poster,
-      description: json['description'],
+      url: json['url'] ?? json['link'],
+      cover: json['cover'] ??
+          json['posterUrl'] ??
+          json['thumbnail_url'] ??
+          json['image'] ??
+          json['poster'],
+      description: json['description'] ?? json['synopsis'] ?? json['plot'],
       artist: json['artist'],
-      author: json['author'],
+      author: json['author'] is Map ? (json['author'] as Map)['name']?.toString() : json['author']?.toString(),
       genre: json['genre'] != null ? List<String>.from(json['genre']) : [],
       episodes: parsedEpisodes,
     );

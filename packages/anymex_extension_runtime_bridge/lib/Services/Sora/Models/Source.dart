@@ -18,6 +18,7 @@ class SSource extends Source {
     super.hasUpdate,
     super.supportsLatest = false,
     super.supportsPopular = false,
+    super.author,
     this.sourceCode,
     this.sourceCodeUrl,
   });
@@ -39,6 +40,7 @@ class SSource extends Source {
       hasUpdate: base.hasUpdate,
       supportsLatest: base.supportsLatest ?? false,
       supportsPopular: base.supportsPopular ?? false,
+      author: base.author,
       sourceCode: json['sourceCode'],
       sourceCodeUrl: json['sourceCodeUrl'],
     );
