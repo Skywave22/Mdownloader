@@ -1,0 +1,55 @@
+# TEMPORARY (remove before merge): runs the analyzer gates and commits the
+# raw output to the branch so findings are readable in environments where the
+# Actions log/artifact hosts are unreachable.
+
+name: Diag (temporary)
+
+on:
+  push:
+    branches: [arena/01a0fb7d-mdownloader]
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: 3.47.5
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Cache Pub Dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock', 'packages/*/pubspec.yaml') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: Analyze
+        run: |
+          set -euo pipefail
+          mkdir -p diag
+          flutter pub get
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+          flutter analyze > diag/flutter_analyze.txt 2>&1 || true
+          dart analyze --fatal-infos > diag/dart_analyze.txt 2>&1 || true
+          wc -l diag/*.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diag
+          if git diff --cached --quiet; then
+            echo 'no diag output'
+          else
+            git commit -m 'diag: analyzer output'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
