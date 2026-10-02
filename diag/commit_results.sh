@@ -6,7 +6,15 @@ set -u
 msg="$1"; shift
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-git add -f -- "$@" 2>/dev/null
+# Only the results folder is force-added (some of its files match .gitignore).
+# Everything else is a regenerated tracked file and must obey .gitignore: a forced
+# add of linux/flutter once committed the whole ephemeral/ build directory.
+for p in "$@"; do
+  case "$p" in
+    diag/results*) git add -f -- "$p" 2>/dev/null ;;
+    *)             git add -- "$p" 2>/dev/null ;;
+  esac
+done
 if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
 git commit -q -m "$msg [skip ci]"
 git reset -q --hard HEAD          # drop other build output so the rebase is clean
