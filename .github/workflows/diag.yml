@@ -88,6 +88,12 @@ jobs:
         run: rm -f packages/flutter_torrent_server/assets/torrserver/TorrServer-*
       - name: Build
         run: python3 diag/build_log.py android "flutter build apk --debug"
+      - name: Probe - engine version, and which coroutines the app already carries
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 diag/build_log.py android_engine "cat \"\$(dirname \"\$(dirname \"\$(which flutter)\")\")/bin/internal/engine.version\"; flutter --version"
+          python3 diag/build_log.py android_coroutines "cd android && ./gradlew -q :app:dependencyInsight --dependency kotlinx-coroutines --configuration debugRuntimeClasspath"
       - name: Commit results
         if: always()
         run: |
