@@ -3,10 +3,12 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  anymex_extension_runtime_bridge
   dynamic_color
   flutter_js_ng
   flutter_secure_storage_linux
   flutter_volume_controller
+  isar_community_flutter_libs
   open_file_linux
   screen_retriever_linux
   url_launcher_linux
@@ -16,6 +18,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   jni
+  libtorrent_flutter
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

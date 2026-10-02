@@ -1,0 +1,44 @@
+rc=1 seconds=0
+ lib/l10n/generated/app_localizations.dart    | 156 +++++++++++++++++++++++++++
+ lib/l10n/generated/app_localizations_ar.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_as.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_az.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_be.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_bg.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_bn.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_cs.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_de.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_el.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_en.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_es.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_fr.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_gu.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_he.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_hi.dart |  88 +++++++++++++++
+ lib/l10n/generated/app_localizations_hr.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_hu.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_id.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_it.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_ja.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_kn.dart |  91 ++++++++++++++++
+ lib/l10n/generated/app_localizations_ko.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_lv.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_mk.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_ml.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_mr.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_nl.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_pa.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_pl.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_pt.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_ro.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_ru.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_sv.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_ta.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_te.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_tr.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_uk.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_ur.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_vi.dart |  87 +++++++++++++++
+ lib/l10n/generated/app_localizations_zh.dart |  87 +++++++++++++++
+ 41 files changed, 3641 insertions(+)
+::error::lib/l10n/generated is stale. Run 'flutter gen-l10n' and commit the result.

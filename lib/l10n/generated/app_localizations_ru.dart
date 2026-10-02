@@ -1846,4 +1846,91 @@ class AppLocalizationsRu extends AppLocalizations {
   String addonManageNoMatch(String query) {
     return 'No installed add-on matches \"$query\".';
   }
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get uninstall => 'Uninstall';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get available => 'Available';
+
+  @override
+  String get manga => 'Manga';
+
+  @override
+  String get novel => 'Novel';
+
+  @override
+  String get multiProvidersSubtitle =>
+      'Manage aggregated multi-source providers';
+
+  @override
+  String get multiProvidersBackend => 'Backend';
+
+  @override
+  String get multiProvidersRepositoryUrl => 'Repository URL';
+
+  @override
+  String get multiProvidersRuntimeBridge => 'Runtime bridge';
+
+  @override
+  String get multiProvidersStageStarting => 'Starting the extension bridge…';
+
+  @override
+  String get multiProvidersStageInstalling => 'Installing the Runtime Host…';
+
+  @override
+  String get multiProvidersStageNoHost =>
+      'Runtime Host not installed — Aniyomi and CloudStream sources are unavailable until it is.';
+
+  @override
+  String get multiProvidersStageReady =>
+      'Runtime Host loaded — all backends available';
+
+  @override
+  String get multiProvidersStageUnsupported =>
+      'Extension runtimes are not available on this platform.';
+
+  @override
+  String get multiProvidersNoInstalled =>
+      'No sources installed yet. Add a repository, then install from Available.';
+
+  @override
+  String get multiProvidersNoAvailable =>
+      'No sources available. Add a repository with the link button above.';
+
+  @override
+  String get mstreamNoSources =>
+      'No stream sources installed.\nOpen Settings → Extensions → MultiProviders to add a repository and install one.';
+
+  @override
+  String get mstreamPickSource => 'Pick a source to start browsing.';
+
+  @override
+  String get mstreamNothingFound => 'Nothing found.';
+
+  @override
+  String get mstreamNoEpisodes => 'No episodes listed.';
+
+  @override
+  String get mstreamNoStreams => 'No streams found for this episode.';
+
+  @override
+  String mstreamEpisodeNumber(String number) {
+    return 'Episode $number';
+  }
+
+  @override
+  String get mstreamSearchHint => 'Search this source';
+
+  @override
+  String get mstreamManageProviders => 'Manage providers';
 }

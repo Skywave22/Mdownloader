@@ -3,12 +3,15 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  anymex_extension_runtime_bridge
   connectivity_plus
   dynamic_color
   flutter_inappwebview_windows
   flutter_js_ng
+  flutter_qjs
   flutter_secure_storage_windows
   flutter_volume_controller
+  isar_community_flutter_libs
   permission_handler_windows
   screen_brightness_windows
   screen_retriever_windows
@@ -20,6 +23,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   jni
+  libtorrent_flutter
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)
