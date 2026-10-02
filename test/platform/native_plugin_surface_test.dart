@@ -48,8 +48,22 @@ import 'package:flutter_test/flutter_test.dart';
 const Map<String, Set<String>> _expected = <String, Set<String>>{
   'android': {
     'android_file_picker',
+    // anymex_extension_runtime_bridge, for MultiProviders / MStream. Read before
+    // adding: `onAttachedToEngine` creates six channels - anymeXBridge, and the
+    // aniyomi-, cloudstream- and kotatsuExtensionBridge ones, a cloudstream
+    // video-stream event channel and anymexLogger - and installs handlers. No
+    // I/O, no class loading. The Runtime Host APK is only DexClassLoader'd when
+    // Dart calls loadAnymeXRuntimeHost, from checkAndInitialize/setupRuntime,
+    // which the MultiProviders screen triggers on first open - not at startup.
+    'anymex_extension_runtime_bridge',
     'background_downloader',
     'connectivity_plus',
+    // From the bridge. Registrar: a method channel and an event channel. The
+    // package-install BroadcastReceiver is attached by `onListen`, i.e. only while
+    // Dart is subscribed to the app-change stream, which the bridge never is - it
+    // only calls isAppInstalled/uninstallApp. packages/device_apps, not upstream:
+    // the published build script calls jcenter(), which Gradle 9 removed.
+    'device_apps',
     'device_info_plus',
     'dynamic_color',
     'flutter_displaymode',
@@ -68,11 +82,33 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     'flutter_plugin_android_lifecycle',
     'flutter_inappwebview_android',
     'flutter_js_ng',
+    // QuickJS for the bridge's JavaScript backends. The registrar makes one
+    // `flutter_qjs` channel that answers getPlatformVersion; the engine is
+    // libqjs.so, loaded by name over FFI. packages/flutter_qjs exists so that
+    // Linux, macOS and iOS do not carry it - see the notes on those sets.
+    'flutter_qjs',
     'flutter_secure_storage',
     'flutter_torrent_server',
+    // From the bridge. The registrar adds a method channel and an
+    // ActivityResultListener and reads nothing; what it buys is in the merged
+    // manifest: REQUEST_INSTALL_PACKAGES, and an unexported FileProvider
+    // (`${applicationId}.installFileProvider.install`) whose path map spans the
+    // whole filesystem root. The system installer is only ever handed a URI the
+    // plugin minted for one APK. packages/install_plugin, Android only: upstream
+    // also registers an iOS plugin whose one method opens an App Store URL.
+    'install_plugin',
     'integration_test',
+    // Isar's native database binaries. Registration is an empty
+    // onAttachedToEngine; libisar loads when Dart opens a database, which the
+    // bridge does on first use (AnymeXExtensionBridge.init -> Isar.open).
+    'isar_community_flutter_libs',
     'jni',
     'jni_flutter',
+    // FFI plugin (`ffiPlugin: true`): no registrar at all. The libtorrent engine
+    // is loaded over FFI by TorrentStreamResolver when a torrent source plays.
+    // Resolved from the bridge's own copy, which carries the Android and Linux
+    // binaries and the `customLibraryPath` hook the hosted package lacks.
+    'libtorrent_flutter',
     'open_file_android',
     'package_info_plus',
     'permission_handler_android',
@@ -85,6 +121,10 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     'wakelock_plus',
   },
   'ios': {
+    // The bridge does not run on iOS at all (`isSupportedPlatform` is
+    // `!Platform.isIOS`), so this and the two below ride along only because a
+    // pub dependency cannot be made per-platform. Template channel only.
+    'anymex_extension_runtime_bridge',
     'background_downloader',
     'connectivity_plus',
     'device_info_plus',
@@ -94,6 +134,14 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     'flutter_secure_storage_darwin',
     'flutter_torrent_server',
     'integration_test',
+    // Empty `register`; `dummyMethodToEnforceBundling` exists so the linker keeps
+    // libisar.
+    'isar_community_flutter_libs',
+    // FFI plugin; the Swift class is a no-op placeholder ("all communication
+    // happens via Dart FFI"). `pod install` downloads the prebuilt static
+    // xcframework from the libtorrent_flutter GitHub release - dead weight on iOS,
+    // where the bridge does not run, but a dependency cannot opt out of a platform.
+    'libtorrent_flutter',
     'open_file_ios',
     'package_info_plus',
     'permission_handler_apple',
@@ -111,12 +159,22 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     'url_launcher_ios',
     'vlc_player',
     'wakelock_plus',
+    // Deliberately absent: flutter_qjs and install_plugin. Both are vendored
+    // under packages/ so they do not reach iOS - flutter_qjs because its FFI
+    // symbols collide with flutter_js_ng's under DynamicLibrary.process(),
+    // install_plugin because its iOS half only opens App Store URLs and the
+    // bridge never calls it. If either shows up here, a vendored pubspec had its
+    // platforms widened: read those READMEs first.
   },
   'macos': {
     // Channels only at `register`; the AVAudioSession work is in the
     // listener, which the player never starts on a desktop - see
     // volume_routing.dart, where desktop is `engineOnly`.
     'flutter_volume_controller',
+    // anymex_extension_runtime_bridge: the stock plugin template - one
+    // `anymex_extension_runtime_bridge` channel that answers getPlatformVersion.
+    // The bridge's real work is Dart, and on Android a separate registrar.
+    'anymex_extension_runtime_bridge',
     'connectivity_plus',
     'device_info_plus',
     'dynamic_color',
@@ -124,6 +182,11 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     'flutter_inappwebview_macos',
     'flutter_js_ng',
     'flutter_secure_storage_darwin',
+    // Template channel only; libisar is loaded when Dart opens a database.
+    'isar_community_flutter_libs',
+    // FFI plugin, no registrar; `pod install` downloads liblibtorrent_flutter.dylib
+    // from the libtorrent_flutter GitHub release.
+    'libtorrent_flutter',
     'open_file_mac',
     'package_info_plus',
     // Desktop has no touch rail, so nothing reaches brightness here. Kept only
@@ -138,20 +201,37 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     'vlc_player',
     'wakelock_plus',
     'window_manager',
+    // Deliberately absent: flutter_qjs. See packages/flutter_qjs/README.md - its
+    // FFI symbols collide with flutter_js_ng's under DynamicLibrary.process().
   },
   'linux': {
     // Channels only at `register_with_registrar`. ALSA is not touched until a
     // method call, and the player makes none on a desktop.
     'flutter_volume_controller',
+    // anymex_extension_runtime_bridge: the stock plugin template - one
+    // `anymex_extension_runtime_bridge` channel that answers getPlatformVersion.
+    // The bridge's real work is Dart, and on Android a separate registrar.
+    'anymex_extension_runtime_bridge',
     'dynamic_color',
     'flutter_js_ng',
     'flutter_secure_storage_linux',
+    // Template channel only. Bundles libisar.so, loaded when Dart opens a
+    // database.
+    'isar_community_flutter_libs',
     'jni',
+    // FFI plugin: it sits in FLUTTER_FFI_PLUGIN_LIST, so no registrant at all. The
+    // bridge's copy bundles liblibtorrent_flutter.so, so this build downloads
+    // nothing.
+    'libtorrent_flutter',
     'open_file_linux',
     'screen_retriever_linux',
     'url_launcher_linux',
     'vlc_player',
     'window_manager',
+    // Deliberately absent: flutter_qjs. Its FFI symbols collide with
+    // flutter_js_ng's - both are resolved with DynamicLibrary.process() here, and
+    // the plugin libraries are linked alphabetically, so it would call into the
+    // wrong engine. See packages/flutter_qjs/README.md.
     // Deliberately absent: there is no flutter_inappwebview_linux in 6.1.5, so
     // Linux has no Cloudflare bypass. If one appears here, a dependency bump
     // has endorsed the 6.2.0-beta line, whose CMake hard-fails without five
@@ -179,6 +259,10 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     // vlc_player instead, which already registers on both and would add no new
     // surface here at all.
     'flutter_volume_controller',
+    // anymex_extension_runtime_bridge: the stock plugin template - one
+    // `anymex_extension_runtime_bridge` channel that answers getPlatformVersion.
+    // The bridge's real work is Dart, and on Android a separate registrar.
+    'anymex_extension_runtime_bridge',
     'connectivity_plus',
     'dynamic_color',
     // The D3D11 device at registration. Kept on purpose: Windows Cloudflare
@@ -186,8 +270,18 @@ const Map<String, Set<String>> _expected = <String, Set<String>>{
     // cloudflare_bypass.dart.
     'flutter_inappwebview_windows',
     'flutter_js_ng',
+    // QuickJS for the bridge's JavaScript backends. The registrar is empty (the
+    // plugin class exists so CMake builds flutter_qjs_plugin.dll); the engine is
+    // that DLL, loaded by name over FFI, so it cannot meet flutter_js_ng's
+    // flutter_js_plugin.dll. packages/flutter_qjs.
+    'flutter_qjs',
     'flutter_secure_storage_windows',
+    // Template channel only; libisar is loaded when Dart opens a database.
+    'isar_community_flutter_libs',
     'jni',
+    // FFI plugin, no registrar. CMake downloads libtorrent_flutter.dll from the
+    // GitHub release at configure time.
+    'libtorrent_flutter',
     // Dead code on Windows — every Permission.* call site is Platform.isAndroid
     // gated — but its registrar only builds method and event channels, so it is
     // not worth a stub package to remove.
