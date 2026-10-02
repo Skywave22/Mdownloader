@@ -31,9 +31,9 @@ jobs:
           flutter --version
           dart --version
 
-      - name: d4rt vs analyzer 14 (independent of the app)
+      - name: d4rt port - analyze and run the upstream test suite
         continue-on-error: true
-        run: bash diag/probe_d4rt.sh
+        run: python3 diag/d4rt.py
 
       - name: Resolve - find the overrides that make pub get succeed
         id: resolve
