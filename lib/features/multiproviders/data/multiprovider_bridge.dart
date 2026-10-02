@@ -35,7 +35,7 @@ enum MultiProviderStage {
   unsupported,
 
   /// Initialization or the download failed; [MultiProviderBridgeState.message]
-  /// carries the reason.
+  /// carries the exception text.
   error,
 }
 
@@ -46,6 +46,11 @@ class MultiProviderBridgeState {
   });
 
   final MultiProviderStage stage;
+
+  /// The exception text when [stage] is [MultiProviderStage.error]. Every other
+  /// stage is worded by the screen from its localizations, so no prose lives
+  /// here: this layer cannot reach a `BuildContext`, and English hard-coded in
+  /// it would show up untranslated in every locale.
   final String? message;
 
   bool get isBusy =>
@@ -85,7 +90,6 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
       // is reported rather than treated as a failure.
       return const MultiProviderBridgeState(
         stage: MultiProviderStage.unsupported,
-        message: 'Extension runtimes are not available on this platform.',
       );
     }
     return const MultiProviderBridgeState();
@@ -167,10 +171,6 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
     final loaded = await AnymeXRuntimeBridge.isLoaded();
     state = MultiProviderBridgeState(
       stage: loaded ? MultiProviderStage.ready : MultiProviderStage.partial,
-      message: loaded
-          ? null
-          : 'Runtime Host not installed — Aniyomi and CloudStream sources are '
-              'unavailable until it is.',
     );
   }
 
