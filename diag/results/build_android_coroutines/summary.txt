@@ -1,4 +1,0 @@
-cmd=cd android && ./gradlew -q :app:dependencyInsight --dependency kotlinx-coroutines --configuration debugRuntimeClasspath
-rc=127
-seconds=0
-lines=1

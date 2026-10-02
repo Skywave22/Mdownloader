@@ -1,4 +1,0 @@
-cmd=cat "$(dirname "$(dirname "$(which flutter)")")/bin/internal/engine.version"; flutter --version
-rc=0
-seconds=0
-lines=5

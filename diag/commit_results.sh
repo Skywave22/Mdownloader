@@ -19,9 +19,12 @@ if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
 git commit -q -m "$msg [skip ci]"
 git reset -q --hard HEAD          # drop other build output so the rebase is clean
 for i in 1 2 3 4 5 6 7 8; do
-  if git pull --rebase -q origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME"; then
+  # -X theirs: while replaying my commit, a conflict (two runs adding the same
+  # results file) resolves to this run's copy, which is the newer one.
+  if git pull --rebase -X theirs -q origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME"; then
     echo "pushed on attempt $i"; exit 0
   fi
+  git rebase --abort 2>/dev/null || true
   sleep $((RANDOM % 10 + 3))
 done
 echo "could not push results"; exit 1

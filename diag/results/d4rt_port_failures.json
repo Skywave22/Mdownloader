@@ -1,8 +1,0 @@
-{
- "File methods - comprehensive existsSync": [
-  "Runtime Error: Native error during bridged method call 'deleteSync' on File: PathNotFoundException: Cannot delete file, path = '/tmp/test.txt' (OS Error: No such file or directory, errno = 2)"
- ],
- "File methods - comprehensive writeAsStringSync and readAsStringSync": [
-  "Runtime Error: Native error during bridged method call 'deleteSync' on File: PathNotFoundException: Cannot delete file, path = '/tmp/test.txt' (OS Error: No such file or directory, errno = 2)"
- ]
-}

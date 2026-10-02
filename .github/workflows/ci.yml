@@ -278,6 +278,10 @@ jobs:
   # Pure Dart, so `dart test`, not `flutter test`. The infos it carries are
   # upstream's own style and deprecation notices, so this leg runs with
   # --no-fatal-infos too: errors and warnings are what it gates.
+  #
+  # Serial (-j 1) on purpose. Several of upstream's test files write and delete
+  # the same `<systemTemp>/test.txt`, so run in parallel they race, and a file
+  # test fails on a good build one run in a few.
   packages:
     name: Package ${{ matrix.package }}
     runs-on: ubuntu-latest
@@ -312,7 +316,7 @@ jobs:
             flutter analyze --no-fatal-infos
           elif [ "$PACKAGE" = "d4rt" ]; then
             dart analyze --no-fatal-infos
-            dart test
+            dart test -j 1
           else
             flutter analyze
             flutter test

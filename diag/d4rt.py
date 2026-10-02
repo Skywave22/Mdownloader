@@ -27,7 +27,7 @@ def run_suite(pkg_dir, label):
     (RES / f'd4rt_{label}_analyze.txt').write_text(ana.stdout + ana.stderr)
     n_err = sum(1 for l in ana.stdout.splitlines() if ' error - ' in l)
     print(f'[{label}] dart analyze: rc={ana.returncode}, {n_err} errors')
-    t = sh(['dart', 'test', '--reporter=json', '-j', '4'], pkg_dir)
+    t = sh(['dart', 'test', '--reporter=json', '-j', '1'], pkg_dir)
     names, failed, passed, skipped = {}, {}, 0, 0
     errors = {}
     for line in t.stdout.splitlines():
