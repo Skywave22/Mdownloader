@@ -84,7 +84,7 @@ class Source {
 
   /// Manifests disagree on the author's shape: a plain string or an
   /// `{name, icon}` object. Accept both.
-  static String? _readAuthor(dynamic raw) {
+  static String? authorNameFrom(dynamic raw) {
     if (raw is Map) return raw['name']?.toString();
     return raw?.toString();
   }
