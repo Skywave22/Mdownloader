@@ -78,6 +78,10 @@ lib/generated_plugin_registrant.dart
 
 # Project Specific
 *.g.dart
+# Vendored forks commit their own generated files (e.g. the runtime bridge's
+# isar KvStore.g.dart) - the app's own *.g.dart are build_runner outputs and
+# stay ignored.
+!packages/**/*.g.dart
 *.sky
 assets/plugins/
 # Torrent Server Binaries (re-downloadable via scripts/download_torrserver.sh)

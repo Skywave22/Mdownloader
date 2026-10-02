@@ -1923,4 +1923,69 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get mstreamManageProviders => 'प्रदाता प्रबंधित करें';
+
+  @override
+  String get mstreamAllDisabled =>
+      'इंस्टॉल किए गए सभी स्रोत अक्षम हैं. ब्राउज़ करने के लिए किसी एक को सक्षम करें.';
+
+  @override
+  String get installAll => 'सभी इंस्टॉल करें';
+
+  @override
+  String installAllDone(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count स्रोत इंस्टॉल किए गए',
+      one: '1 स्रोत इंस्टॉल किया गया',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get enable => 'सक्षम करें';
+
+  @override
+  String get disable => 'अक्षम करें';
+
+  @override
+  String get author => 'लेखक';
+
+  @override
+  String get artist => 'कलाकार';
+
+  @override
+  String get downloadUnsupportedSource =>
+      'यह स्रोत सीधे डाउनलोडिंग का समर्थन नहीं करता या वर्तमान में अनुपलब्ध है। कृपया कोई अन्य स्रोत आज़माएँ।';
+
+  @override
+  String get downloadStartFailed =>
+      'डाउनलोड शुरू करने में विफल। स्टोरेज अनुमतियाँ जाँचें।';
+
+  @override
+  String get noDownloadSourcesFound =>
+      'इस आइटम के लिए कोई डाउनलोड स्रोत नहीं मिला।';
+
+  @override
+  String get extensionRuntimeCredit =>
+      'एक्सटेंशन रनटाइम ब्रिज: AnymeXExtensionRuntimeBridge · RyanYuuki द्वारा';
+
+  @override
+  String get mstreamPopular => 'लोकप्रिय';
+
+  @override
+  String get mstreamLatest => 'नवीनतम अपडेट';
+
+  @override
+  String get multiProvidersFilterHint => 'एक्सटेंशन खोजें';
+
+  @override
+  String repositoryAdded(Object url) {
+    return 'रिपॉज़िटरी $url जोड़ी गई।';
+  }
+
+  @override
+  String failedToAddRepository(Object error) {
+    return 'रिपॉज़िटरी नहीं जोड़ी गई: $error';
+  }
 }

@@ -132,6 +132,22 @@ class SettingsRepository {
     return _storageService.getSearchHistory();
   }
 
+  Future<void> setMstreamDisabledSources(List<String> sourceIds) async {
+    await _storageService.setMstreamDisabledSources(sourceIds);
+  }
+
+  List<String> getMstreamDisabledSources() {
+    return _storageService.getMstreamDisabledSources();
+  }
+
+  Future<void> setMstreamLastSourceId(String sourceId) async {
+    await _storageService.setMstreamLastSourceId(sourceId);
+  }
+
+  String? getMstreamLastSourceId() {
+    return _storageService.getMstreamLastSourceId();
+  }
+
   Future<void> setAlwaysOnTop(bool enabled) async {
     await _storageService.setAlwaysOnTop(enabled);
   }

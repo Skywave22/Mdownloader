@@ -24,6 +24,10 @@ class MediaHorizontalList extends StatefulWidget {
   final String? heroTagPrefix;
   final VoidCallback? onViewAll;
 
+  /// Extra HTTP headers for poster requests (extension-sourced covers need a
+  /// browser User-Agent and/or the source's Referer). Null on Home.
+  final Map<String, String>? httpHeaders;
+
   const MediaHorizontalList({
     super.key,
     required this.title,
@@ -33,6 +37,7 @@ class MediaHorizontalList extends StatefulWidget {
     this.showViewAll = true,
     this.heroTagPrefix,
     this.onViewAll,
+    this.httpHeaders,
   });
 
   @override
@@ -298,6 +303,7 @@ class _MediaHorizontalListState extends State<MediaHorizontalList> {
                       title: itemTitle,
                       heroTag: uniqueTag,
                       isPortrait: _isPortrait,
+                      httpHeaders: widget.httpHeaders,
                       onTap: () {
                         if (widget.onTap != null) {
                           widget.onTap!(item);

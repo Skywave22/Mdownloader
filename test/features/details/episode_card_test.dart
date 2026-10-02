@@ -74,6 +74,7 @@ class _RecordingLauncher extends DownloadLauncher {
     BuildContext context,
     MultimediaItem item, {
     String? episodeUrl,
+    List<StreamResult>? preloadedStreams,
   }) async {
     launched.add(episodeUrl);
   }

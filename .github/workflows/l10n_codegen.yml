@@ -1,0 +1,64 @@
+# Generates lib/l10n/generated from the ARB files and publishes it as an
+# artifact.
+#
+# Why this exists: lib/l10n/generated/** is COMMITTED (see the "Check
+# gen-l10n Output Is Committed" step in ci.yml - the app reads the generated
+# Dart, not the .arb files, so a stale commit ships nothing), and the output
+# is `dart format`-style formatted by the generator itself, so hand-editing it
+# is not a thing anyone should be doing. This workflow is the deterministic
+# way to produce it: same Flutter version ci.yml gates on, so what lands here
+# is byte-identical to what the CI drift check regenerates.
+#
+# Usage: Actions -> l10n codegen -> Run workflow (on your branch). The job
+# commits any regenerated output back to the branch it ran on, so all that is
+# left is pulling (or nothing, if it reported no changes).
+
+name: l10n codegen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: 3.47.5
+
+jobs:
+  gen:
+    name: Generate l10n
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          flutter gen-l10n
+
+      - name: Upload Generated Localizations
+        uses: actions/upload-artifact@v7
+        with:
+          name: l10n-generated
+          path: lib/l10n/generated
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Commit Generated Localizations
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/l10n/generated
+          if git diff --cached --quiet; then
+            echo 'lib/l10n/generated is already up to date.'
+          else
+            git commit -m 'chore(l10n): regenerate localization output'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

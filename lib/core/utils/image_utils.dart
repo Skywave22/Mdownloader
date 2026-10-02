@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 class ImageUtils {
   /// Width / height of a TMDB poster (`w500` is 500x750, `w780` is 780x1170).
   static const double posterAspectRatio = 2 / 3;
-
   /// Width / height of a TMDB backdrop (`w1280` is 1280x720, `original` is
   /// 1920x1080 or 3840x2160). Every TMDB backdrop is 16:9.
   static const double backdropAspectRatio = 16 / 9;
@@ -103,5 +102,46 @@ class ImageUtils {
 
     stream.addListener(listener);
     return completer.future;
+  }
+
+  /// Resolves an extension-supplied image reference into a fetchable URL.
+  ///
+  /// Sources from the MultiProviders runtime bridge hand back whatever the
+  /// upstream site emitted: absolute URLs, protocol-relative (`//host/x.jpg`)
+  /// or site-relative (`/covers/x.jpg`). The first is used as-is; the rest are
+  /// resolved against the source's own `baseUrl` - without that, every
+  /// relative cover silently becomes an unresolvable request and the poster
+  /// grid renders empty boxes.
+  ///
+  /// Returns '' for empty input. If the reference is relative and [baseUrl]
+  /// cannot be parsed or is itself missing, the reference is returned
+  /// unchanged - the caller's error placeholder takes over from there.
+  static String resolveRemoteUrl(String url, {String? baseUrl}) {
+    final raw = url.trim();
+    if (raw.isEmpty) return '';
+
+    final base = (baseUrl ?? '').trim();
+    Uri? baseUri;
+    if (base.isNotEmpty) {
+      baseUri = Uri.tryParse(base);
+    }
+
+    if (raw.startsWith('//')) {
+      final scheme = baseUri?.hasScheme == true ? baseUri!.scheme : 'https';
+      return '$scheme:$raw';
+    }
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return raw;
+    }
+    if (baseUri == null || !baseUri.hasScheme) return raw;
+    try {
+      return baseUri.resolve(raw).toString();
+    } catch (_) {
+      // Malformed relative path (spaces, brackets, control characters...):
+      // Uri.resolve throws. Never let a bad cover URL take down the widget
+      // tree - hand the raw string to the image loader and let its error
+      // placeholder deal with it.
+      return raw;
+    }
   }
 }

@@ -1916,4 +1916,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mstreamManageProviders => 'Manage providers';
+
+  @override
+  String get mstreamAllDisabled =>
+      'All installed sources are disabled. Enable one to browse.';
+
+  @override
+  String get installAll => 'Install all';
+
+  @override
+  String installAllDone(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Installed $count sources',
+      one: 'Installed 1 source',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get enable => 'Enable';
+
+  @override
+  String get disable => 'Disable';
+
+  @override
+  String get author => 'Author';
+
+  @override
+  String get artist => 'Artist';
+
+  @override
+  String get downloadUnsupportedSource =>
+      'This source doesn\'t support direct downloading or is currently unavailable. Please try another source.';
+
+  @override
+  String get downloadStartFailed =>
+      'Failed to start download. Check storage permissions.';
+
+  @override
+  String get noDownloadSourcesFound =>
+      'No download sources found for this item.';
+
+  @override
+  String get extensionRuntimeCredit =>
+      'Extension runtime bridge: AnymeXExtensionRuntimeBridge · by RyanYuuki';
+
+  @override
+  String get mstreamPopular => 'Popular';
+
+  @override
+  String get mstreamLatest => 'Latest updates';
+
+  @override
+  String get multiProvidersFilterHint => 'Search extensions';
+
+  @override
+  String repositoryAdded(Object url) {
+    return 'Repository $url added.';
+  }
+
+  @override
+  String failedToAddRepository(Object error) {
+    return 'Couldn\'t add repository: $error';
+  }
 }

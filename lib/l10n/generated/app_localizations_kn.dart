@@ -1937,4 +1937,69 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get mstreamManageProviders => 'ಪ್ರೊವೈಡರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ';
+
+  @override
+  String get mstreamAllDisabled =>
+      'ಸ್ಥಾಪಿಸಲಾದ ಎಲ್ಲಾ ಮೂಲಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. ಬ್ರೌಸ್ ಮಾಡಲು ಒಂದನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.';
+
+  @override
+  String get installAll => 'ಎಲ್ಲವನ್ನೂ ಸ್ಥಾಪಿಸಿ';
+
+  @override
+  String installAllDone(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ಮೂಲಗಳನ್ನು ಸ್ಥಾಪಿಸಲಾಗಿದೆ',
+      one: '1 ಮೂಲ ಸ್ಥಾಪಿಸಲಾಗಿದೆ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get enable => 'ಸಕ್ರಿಯಗೊಳಿಸಿ';
+
+  @override
+  String get disable => 'ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ';
+
+  @override
+  String get author => 'ಲೇಖಕ';
+
+  @override
+  String get artist => 'ಕಲಾವಿದ';
+
+  @override
+  String get downloadUnsupportedSource =>
+      'ಈ ಮೂಲವು ನೇರ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ ಅಥವಾ ಪ್ರಸ್ತುತ ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಬೇರೆ ಮೂಲವನ್ನು ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get downloadStartFailed =>
+      'ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಲು ವಿಫಲವಾಗಿದೆ. ಸಂಗ್ರಹಣೆ ಅನುಮತಿಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.';
+
+  @override
+  String get noDownloadSourcesFound =>
+      'ಈ ಐಟಂಗೆ ಯಾವುದೇ ಡೌನ್‌ಲೋಡ್ ಮೂಲಗಳು ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  @override
+  String get extensionRuntimeCredit =>
+      'ಎಕ್ಸ್‌ಟೆನ್ಶನ್ ರನ್‌ಟೈಮ್ ಬ್ರಿಡ್ಜ್: AnymeXExtensionRuntimeBridge · RyanYuuki ಅವರಿಂದ';
+
+  @override
+  String get mstreamPopular => 'ಜನಪ್ರಿಯ';
+
+  @override
+  String get mstreamLatest => 'ಇತ್ತೀಚಿನ ನವೀಕರಣಗಳು';
+
+  @override
+  String get multiProvidersFilterHint => 'ಎಕ್ಸ್‌ಟೆನ್ಶನ್‌ಗಳನ್ನು ಹುಡುಕಿ';
+
+  @override
+  String repositoryAdded(Object url) {
+    return '$url ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಿದೆ.';
+  }
+
+  @override
+  String failedToAddRepository(Object error) {
+    return 'ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಲಿಲ್ಲ: $error';
+  }
 }

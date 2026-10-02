@@ -1,22 +1,33 @@
+import 'dart:async';
+
 import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.dart'
     hide Video;
-import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.dart'
-    as bridge show Video;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skystream/l10n/generated/app_localizations.dart';
 
 import '../../../core/domain/entity/multimedia_item.dart';
 import '../../../core/logger/app_logger.dart';
+import '../../../core/network/http_defaults.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/image_utils.dart';
 import '../../../core/utils/layout_constants.dart';
+import '../../../shared/widgets/cards_wrapper.dart';
+import '../../explore/presentation/view_all_screen.dart';
+import '../../explore/presentation/widgets/explore_carousel.dart';
+import '../../explore/presentation/widgets/media_horizontal_list.dart';
 import '../../multiproviders/data/multiprovider_bridge.dart';
+import 'mstream_details_screen.dart';
+import 'mstream_feed_grid.dart';
 
 /// Browses and plays the sources installed through MultiProviders.
 ///
-/// Everything here goes through the runtime bridge's unified [SourceMethods],
-/// so an Aniyomi source, a CloudStream plugin and a Mangayomi/Sora script are
-/// all driven by the same four calls: popular, search, detail, video list.
+/// The layout is Home's, adapted to extension feeds: the same app-bar chrome
+/// (title, circular search button, provider pill in the right corner), the
+/// same hero carousel of top titles, and the same horizontal rails with
+/// "View All". Everything here goes through the runtime bridge's unified
+/// [SourceMethods], so an Aniyomi source, a CloudStream plugin and a
+/// Mangayomi/Sora script are all driven by the same calls.
 class MStreamScreen extends ConsumerStatefulWidget {
   const MStreamScreen({super.key});
 
@@ -28,10 +39,20 @@ class MStreamScreen extends ConsumerStatefulWidget {
 }
 
 class _MStreamScreenState extends ConsumerState<MStreamScreen> {
-  final _searchController = TextEditingController();
   Source? _source;
-  String _query = '';
-  Future<Pages>? _results;
+
+  /// The source's popular feed (page 1). The carousel and the Popular rail
+  /// render from it; the rail's "View All" pages it in full.
+  List<DMedia> _popular = const <DMedia>[];
+
+  /// The source's latest-updates feed (page 1) for its rail. Empty (and the
+  /// rail hidden) when the source has only one listing and both feeds return
+  /// the same items.
+  List<DMedia> _latest = const <DMedia>[];
+
+  bool _loading = false;
+  int _generation = 0;
+  Object? _error;
 
   @override
   void initState() {
@@ -41,30 +62,177 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  String get _referer => _source?.baseUrl ?? '';
+
+  Map<String, String> get _imageHeaders => {
+        'User-Agent': kDefaultBrowserUserAgent,
+        if (_referer.isNotEmpty) 'Referer': _referer,
+      };
+
+  /// Loads both feeds for the active source at once. Each feed falls back to
+  /// the other listing when the source implements only one of the two (a
+  /// common extension shape), so browse mode never comes up empty just
+  /// because `getPopular` is missing.
+  Future<void> _loadFeeds() async {
+    final source = _source;
+    if (source == null) return;
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
+    if (methods == null) {
+      // A source whose methods cannot be resolved (extension not registered/
+      // runtime not ready) is a load FAILURE - surface the retry state
+      // instead of leaving the screen silently blank.
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = AppLocalizations.of(context)!.failedToLoadContent;
+      });
+      return;
+    }
+
+    final generation = ++_generation;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    List<DMedia> popular = const <DMedia>[];
+    List<DMedia> latest = const <DMedia>[];
+    Object? error;
+    try {
+      popular = (await methods.getPopular(1)).list;
+      if (popular.isEmpty) {
+        popular = (await methods.getLatestUpdates(1)).list;
+      }
+    } catch (e) {
+      error = e;
+      try {
+        popular = (await methods.getLatestUpdates(1)).list;
+        error = null;
+      } catch (_) {/* keep the first error */}
+    }
+    try {
+      latest = (await methods.getLatestUpdates(1)).list;
+      if (latest.isEmpty) {
+        latest = (await methods.getPopular(1)).list;
+      }
+    } catch (e) {
+      error ??= e;
+      try {
+        latest = (await methods.getPopular(1)).list;
+        error = null;
+      } catch (_) {/* keep the first error */}
+    }
+
+    if (!mounted || generation != _generation) return;
+
+    // A source with a single listing answers both feeds identically; show it
+    // once instead of two identical rails.
+    final sameFeed = popular.length == latest.length &&
+        popular.isNotEmpty &&
+        List.generate(popular.length, (i) => popular[i].url == latest[i].url)
+            .every((same) => same);
+
+    talker.debug(
+      'MStream: ${source.name} feeds — popular=${popular.length} '
+      'latest=${latest.length} error=$error',
+    );
+
+    setState(() {
+      _popular = popular;
+      _latest = sameFeed ? const <DMedia>[] : latest;
+      _loading = false;
+      _error = (popular.isEmpty && latest.isEmpty) ? error : null;
+    });
   }
 
-  void _load() {
-    final source = _source;
-    if (source == null) {
-      setState(() => _results = null);
-      return;
-    }
-    final methods = ref.read(multiProviderBridgeProvider.notifier).methodsFor(
-          source,
-        );
-    if (methods == null) {
-      setState(() => _results = null);
-      return;
-    }
+  void _selectSource(Source source) {
     setState(() {
-      _results = _query.isEmpty
-          ? methods.getPopular(1)
-          : methods.search(_query, 1, const []);
+      _source = source;
+      _popular = const <DMedia>[];
+      _latest = const <DMedia>[];
+      _error = null;
     });
+    unawaited(
+      ref.read(multiProviderBridgeProvider.notifier).setLastSourceId(
+        source.uniqueId,
+      ),
+    );
+    unawaited(_loadFeeds());
+  }
+
+  void _openMedia(DMedia media) {
+    final source = _source;
+    if (source == null) return;
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
+    if (methods == null) return;
+
+    // Home's opening experience: a full details page with the poster banner,
+    // metadata, synopsis and episode list.
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => MStreamDetailsScreen(
+          media: media,
+          methods: methods,
+          source: source,
+        ),
+      ),
+    );
+  }
+
+  void _openAll(String title, MStreamFeed feed) {
+    final source = _source;
+    if (source == null) return;
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
+    if (methods == null) return;
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => MStreamAllScreen(
+          title: title,
+          methods: methods,
+          source: source,
+          feed: feed,
+        ),
+      ),
+    );
+  }
+
+  /// Home's search affordance: the same circular button opens the same search
+  /// UI — scoped to the active extension instead of the global catalog.
+  void _openSearch() {
+    final source = _source;
+    if (source == null) return;
+    final methods =
+        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
+    if (methods == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    unawaited(
+      showSearch<void>(
+        context: context,
+        delegate: _SourceSearchDelegate(
+          methods: methods,
+          source: source,
+          hint: l10n.mstreamSearchHint,
+        ),
+        useRootNavigator: false,
+        maintainState: true,
+      ),
+    );
+  }
+
+  MultimediaItem _toItem(DMedia media) {
+    return MultimediaItem(
+      title: media.title ?? '',
+      url: media.url ?? '',
+      posterUrl: ImageUtils.resolveRemoteUrl(
+        media.cover ?? '',
+        baseUrl: _referer,
+      ),
+      description: media.description,
+      provider: _source?.name ?? MStreamScreen.title,
+    );
   }
 
   @override
@@ -77,10 +245,38 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
       appBar: AppBar(
         title: const Text(MStreamScreen.title),
         actions: [
-          IconButton(
-            tooltip: l10n.mstreamManageProviders,
-            icon: const Icon(Icons.extension_rounded),
-            onPressed: () => const MultiProvidersRoute().go(context),
+          // 1. Search Action Button — Home's exact button.
+          Padding(
+            padding: const EdgeInsets.only(right: LayoutConstants.spacingSm),
+            child: CardsWrapper(
+              onTap: _openSearch,
+              borderRadius: BorderRadius.circular(50),
+              child: CircleAvatar(
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.1),
+                radius: 18,
+                child: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+
+          // 2. Source pill — Home's provider pill, right corner.
+          sourcesAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (sources) {
+              final enabled = _enabledSources(sources, state);
+              return _SourcePill(
+                name: _source?.name ?? l10n.none,
+                onTap: () => _showSourceSelector(enabled, sources),
+              );
+            },
           ),
         ],
       ),
@@ -88,345 +284,566 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
         child: Column(
           children: [
             if (state.isBusy) const LinearProgressIndicator(),
-            sourcesAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (e, _) => _Message('$e'),
-              data: (sources) {
-                if (sources.isEmpty) {
-                  return Expanded(child: _Message(l10n.mstreamNoSources));
-                }
-                // Keep the selection valid when a source is uninstalled.
-                final selected = sources.firstWhere(
-                  (s) => s.uniqueId == _source?.uniqueId,
-                  orElse: () => sources.first,
-                );
-                if (selected.uniqueId != _source?.uniqueId) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    setState(() => _source = selected);
-                    _load();
-                  });
-                }
-                return _Toolbar(
-                  sources: sources,
-                  selected: selected,
-                  controller: _searchController,
-                  onSourceChanged: (s) {
-                    setState(() => _source = s);
-                    _load();
-                  },
-                  onSubmitted: (q) {
-                    setState(() => _query = q.trim());
-                    _load();
-                  },
-                );
-              },
-            ),
-            Expanded(child: _buildResults()),
-          ],
-        ),
-      ),
-    );
-  }
+            Expanded(
+              child: sourcesAsync.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) => _EmptyState(
+                  message: '$e',
+                  actionLabel: l10n.retry,
+                  onAction: () => ref.invalidate(installedSourcesProvider),
+                ),
+                data: (sources) {
+                  final installed = _enabledSources(sources, state);
+                  if (sources.isEmpty) {
+                    return _EmptyState(
+                      message: l10n.mstreamNoSources,
+                      actionLabel: l10n.mstreamManageProviders,
+                      onAction: () =>
+                          const MultiProvidersRoute().go(context),
+                    );
+                  }
+                  if (installed.isEmpty) {
+                    return _EmptyState(
+                      message: l10n.mstreamAllDisabled,
+                      actionLabel: l10n.mstreamManageProviders,
+                      onAction: () =>
+                          const MultiProvidersRoute().go(context),
+                    );
+                  }
 
-  Widget _buildResults() {
-    final l10n = AppLocalizations.of(context)!;
-    final future = _results;
-    if (future == null) {
-      return _Message(l10n.mstreamPickSource);
-    }
-    return FutureBuilder<Pages>(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return _Message('${snapshot.error}');
-        }
-        final items = snapshot.data?.list ?? const <DMedia>[];
-        if (items.isEmpty) return _Message(l10n.mstreamNothingFound);
-        return GridView.builder(
-          padding: EdgeInsets.fromLTRB(
-            LayoutConstants.spacingMd,
-            LayoutConstants.spacingMd,
-            LayoutConstants.spacingMd,
-            LayoutConstants.shellBottomContentPadding(context),
-          ),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 160,
-            childAspectRatio: 0.58,
-            crossAxisSpacing: LayoutConstants.spacingSm,
-            mainAxisSpacing: LayoutConstants.spacingSm,
-          ),
-          itemCount: items.length,
-          itemBuilder: (context, i) => _MediaCard(
-            media: items[i],
-            onTap: () => _openMedia(items[i]),
-          ),
-        );
-      },
-    );
-  }
+                  // Keep the selection valid: remember the user's pick across
+                  // restarts, then survive uninstalls/disables by falling back.
+                  final selected = _selectedSource(installed);
+                  if (selected.uniqueId != _source?.uniqueId) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      if (_source == null) {
+                        _selectSource(selected);
+                      } else {
+                        setState(() => _source = selected);
+                        unawaited(_loadFeeds());
+                      }
+                    });
+                  }
 
-  Future<void> _openMedia(DMedia media) async {
-    final source = _source;
-    if (source == null) return;
-    final methods =
-        ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
-    if (methods == null) return;
-
-    final episode = await showModalBottomSheet<DEpisode>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => _EpisodeSheet(
-        title: media.title ?? '',
-        detail: methods.getDetail(media),
-      ),
-    );
-    if (episode == null || !mounted) return;
-    await _play(media, episode, methods, source);
-  }
-
-  /// Resolves the episode's streams and hands them to the player already
-  /// resolved: these come from an extension, not from a SkyStream plugin, so
-  /// the player must not try to resolve the URL again.
-  Future<void> _play(
-    DMedia media,
-    DEpisode episode,
-    SourceMethods methods,
-    Source source,
-  ) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    List<bridge.Video> videos;
-    try {
-      videos = await methods.getVideoList(episode);
-    } catch (e, st) {
-      talker.error('MStream: getVideoList failed', e, st);
-      messenger.showSnackBar(SnackBar(content: Text('$e')));
-      return;
-    }
-    if (!mounted) return;
-    if (videos.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.mstreamNoStreams)),
-      );
-      return;
-    }
-
-    final streams = [
-      for (final v in videos)
-        StreamResult(
-          url: v.url,
-          source: v.quality,
-          providerName: source.name ?? MStreamScreen.title,
-          headers: v.headers,
-          subtitles: [
-            for (final t in v.subtitles ?? const <Track>[])
-              if ((t.file ?? '').isNotEmpty)
-                SubtitleFile(url: t.file!, label: t.label ?? l10n.unknown),
-          ],
-        ),
-    ];
-
-    final title = media.title ?? '';
-    final epName =
-        episode.name ?? l10n.mstreamEpisodeNumber(episode.episodeNumber);
-    final item = MultimediaItem(
-      title: title,
-      url: media.url ?? '',
-      posterUrl: media.cover ?? '',
-      description: media.description,
-      provider: source.name ?? MStreamScreen.title,
-      episodes: [
-        Episode(
-          name: epName,
-          url: episode.url ?? '',
-          posterUrl: episode.thumbnail ?? media.cover ?? '',
-          episode: int.tryParse(episode.episodeNumber) ?? 0,
-        ),
-      ],
-    );
-
-    if (!mounted) return;
-    await PlayerRoute(
-      $extra: PlayerRouteExtra(
-        item: item,
-        videoUrl: streams.first.url,
-        episode: item.episodes!.first,
-        preloadedStreams: streams,
-      ),
-    ).push<void>(context);
-  }
-}
-
-class _Toolbar extends StatelessWidget {
-  const _Toolbar({
-    required this.sources,
-    required this.selected,
-    required this.controller,
-    required this.onSourceChanged,
-    required this.onSubmitted,
-  });
-
-  final List<Source> sources;
-  final Source selected;
-  final TextEditingController controller;
-  final ValueChanged<Source> onSourceChanged;
-  final ValueChanged<String> onSubmitted;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.all(LayoutConstants.spacingMd),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search_rounded),
-                hintText: l10n.mstreamSearchHint,
-                border: const OutlineInputBorder(),
-                isDense: true,
+                  return _buildContent(l10n);
+                },
               ),
-              onSubmitted: onSubmitted,
             ),
-          ),
-          const SizedBox(width: LayoutConstants.spacingSm),
-          DropdownButton<String>(
-            value: selected.uniqueId,
-            underline: const SizedBox.shrink(),
-            items: [
-              for (final s in sources)
-                DropdownMenuItem(
-                  value: s.uniqueId,
-                  child: Text(s.name ?? l10n.unknown),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(AppLocalizations l10n) {
+    final source = _source;
+    if (source == null) {
+      return _EmptyState(message: l10n.mstreamPickSource);
+    }
+
+    final error = _error;
+    if (error != null) {
+      return RefreshIndicator(
+        onRefresh: _loadFeeds,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.5,
+              child: _EmptyState(
+                message: '${l10n.failedToLoadContent}\n$error',
+                actionLabel: l10n.retry,
+                onAction: () => unawaited(_loadFeeds()),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_loading && _popular.isEmpty && _latest.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_popular.isEmpty && _latest.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _loadFeeds,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.5,
+              child: _EmptyState(
+                message: l10n.mstreamNothingFound,
+                actionLabel: l10n.retry,
+                onAction: () => unawaited(_loadFeeds()),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final popularItems = [for (final m in _popular) _toItem(m)];
+    final latestItems = [for (final m in _latest) _toItem(m)];
+    return RefreshIndicator(
+      onRefresh: _loadFeeds,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          if (popularItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: ExploreCarousel(
+                movies: popularItems.take(7).toList(),
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = _popular.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+              ),
+            ),
+          if (popularItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: MediaHorizontalList(
+                title: l10n.mstreamPopular,
+                mediaList: popularItems,
+                category: ViewAllCategory.providerContent,
+                showViewAll: true,
+                heroTagPrefix: 'mstream',
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = _popular.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+                onViewAll: () => _openAll(
+                  l10n.mstreamPopular,
+                  MStreamFeed.popular,
                 ),
-            ],
-            onChanged: (id) {
-              final next = sources.firstWhere((s) => s.uniqueId == id);
-              onSourceChanged(next);
-            },
+              ),
+            ),
+          if (latestItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: MediaHorizontalList(
+                title: l10n.mstreamLatest,
+                mediaList: latestItems,
+                category: ViewAllCategory.providerContent,
+                showViewAll: true,
+                heroTagPrefix: 'mstream',
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = _latest.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+                onViewAll: () => _openAll(
+                  l10n.mstreamLatest,
+                  MStreamFeed.latest,
+                ),
+              ),
+            ),
+          SliverPadding(
+            padding: EdgeInsets.only(
+              bottom: LayoutConstants.shellBottomContentPadding(context),
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class _MediaCard extends StatelessWidget {
-  const _MediaCard({required this.media, required this.onTap});
-
-  final DMedia media;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cover = media.cover ?? '';
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: cover.isEmpty
-                  ? const ColoredBox(
-                      color: Colors.black12,
-                      child: Center(child: Icon(Icons.movie_outlined)),
-                    )
-                  : Image.network(
-                      cover,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      errorBuilder: (_, _, _) => const ColoredBox(
-                        color: Colors.black12,
-                        child: Center(child: Icon(Icons.broken_image_outlined)),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            media.title ?? '',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
-    );
+  List<Source> _enabledSources(
+    List<Source> sources,
+    MultiProviderBridgeState s,
+  ) {
+    return sources
+        .where((source) => !s.isDisabled(source.uniqueId))
+        .toList(growable: false);
   }
-}
 
-/// Episode picker: loads the full detail, then lists what can be played.
-class _EpisodeSheet extends StatelessWidget {
-  const _EpisodeSheet({required this.title, required this.detail});
+  Source _selectedSource(List<Source> enabled) {
+    final bridge = ref.read(multiProviderBridgeProvider.notifier);
+    bool usable(Source s) => bridge.methodsFor(s) != null;
 
-  final String title;
-  final Future<DMedia> detail;
+    // Remember the user's pick across restarts, but only while its extension
+    // is actually reachable — a dead remembered/first source used to
+    // dead-end the whole screen ("first is not working").
+    final wantedId = _source?.uniqueId ??
+        ref.read(multiProviderBridgeProvider).lastSourceId;
+    if (wantedId != null) {
+      for (final source in enabled) {
+        if (source.uniqueId == wantedId && usable(source)) return source;
+      }
+    }
+    // Fall back to the first source whose extension resolves.
+    for (final source in enabled) {
+      if (usable(source)) return source;
+    }
+    // Nothing is resolvable yet (backend still starting) - keep the old
+    // behaviour so the retry state explains the failure.
+    return enabled.first;
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return FractionallySizedBox(
-      heightFactor: 0.8,
-      child: FutureBuilder<DMedia>(
-        future: detail,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) return _Message('${snapshot.error}');
-          final episodes = snapshot.data?.episodes ?? const <DEpisode>[];
-          if (episodes.isEmpty) return _Message(l10n.mstreamNoEpisodes);
-          return ListView.builder(
-            itemCount: episodes.length + 1,
-            itemBuilder: (context, i) {
-              if (i == 0) {
-                return ListTile(
-                  title: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                );
-              }
-              final ep = episodes[i - 1];
-              return ListTile(
-                leading: const Icon(Icons.play_circle_outline_rounded),
-                title: Text(
-                  ep.name ?? l10n.mstreamEpisodeNumber(ep.episodeNumber),
-                ),
-                subtitle: ep.episodeNumber.isEmpty
-                    ? null
-                    : Text(l10n.mstreamEpisodeNumber(ep.episodeNumber)),
-                onTap: () => Navigator.of(context).pop(ep),
-              );
-            },
-          );
+  void _showSourceSelector(List<Source> enabled, List<Source> all) {
+    final selected = _source;
+    if (selected == null) return;
+    showDialog<void>(
+      context: context,
+      builder: (context) => _SourceSelectorDialog(
+        sources: enabled,
+        activeId: selected.uniqueId,
+        onSelected: (source) {
+          Navigator.of(context).pop();
+          _selectSource(source);
         },
       ),
     );
   }
 }
 
-class _Message extends StatelessWidget {
-  const _Message(this.text);
+/// Home's search experience, scoped to the active extension: the same
+/// delegate-driven search UI, results paginated in the same poster grid.
+class _SourceSearchDelegate extends SearchDelegate<void> {
+  _SourceSearchDelegate({
+    required this.methods,
+    required this.source,
+    required this.hint,
+  });
 
-  final String text;
+  final SourceMethods methods;
+  final Source source;
+  final String hint;
 
   @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(LayoutConstants.spacingLg),
-          child: Text(text, textAlign: TextAlign.center),
+  String? get searchFieldLabel => hint;
+
+  @override
+  ThemeData appBarTheme(BuildContext context) => Theme.of(context);
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+          icon: const Icon(Icons.clear),
+          onPressed: () => query = '',
         ),
-      );
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back_rounded),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return MStreamFeedGrid(
+      key: ValueKey('search_${source.uniqueId}_$query'),
+      methods: methods,
+      source: source,
+      feed: MStreamFeed.search,
+      query: query,
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return buildResults(context);
+  }
+}
+
+/// The pill naming the active source. Same geometry and styling as the one on
+/// Home so the two tabs read as one product.
+class _SourcePill extends StatelessWidget {
+  const _SourcePill({required this.name, required this.onTap});
+
+  final String name;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: LayoutConstants.spacingMd),
+      child: CardsWrapper(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(50),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.extension,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 140),
+                child: Text(
+                  name,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The source picker, modelled on Home's provider selector: filter chips over
+/// the top, a radio list of sources below.
+class _SourceSelectorDialog extends StatefulWidget {
+  const _SourceSelectorDialog({
+    required this.sources,
+    required this.activeId,
+    required this.onSelected,
+  });
+
+  final List<Source> sources;
+  final String? activeId;
+  final ValueChanged<Source> onSelected;
+
+  @override
+  State<_SourceSelectorDialog> createState() => _SourceSelectorDialogState();
+}
+
+class _SourceSelectorDialogState extends State<_SourceSelectorDialog> {
+  final ScrollController _scrollController = ScrollController();
+  final ScrollController _chipsScrollController = ScrollController();
+
+  /// `null` is the "All" chip. Kept local to the dialog: it is a browse-time
+  /// filter, not a setting worth persisting.
+  ItemType? _filter;
+  bool _didInitialScroll = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _chipsScrollController.dispose();
+    super.dispose();
+  }
+
+  List<ItemType> get _presentTypes {
+    final types = <ItemType>{
+      for (final s in widget.sources)
+        if (s.itemType != null) s.itemType!,
+    };
+    return [
+      for (final type in ItemType.values)
+        if (types.contains(type)) type,
+    ];
+  }
+
+  List<Source> get _filtered => _filter == null
+      ? widget.sources
+      : widget.sources.where((s) => s.itemType == _filter).toList();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final filtered = _filtered;
+
+    return AlertDialog(
+      title: Text(l10n.selectProvider),
+      contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+      content: SizedBox(
+        width: 600,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_presentTypes.length > 1)
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  controller: _chipsScrollController,
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  children: [
+                    FilterChip(
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      label: Text(l10n.all),
+                      selected: _filter == null,
+                      onSelected: (_) => setState(() => _filter = null),
+                    ),
+                    const SizedBox(width: 8),
+                    for (final type in _presentTypes)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          label: Text(_typeLabel(type, l10n)),
+                          selected: _filter == type,
+                          onSelected: (_) => setState(() => _filter = type),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            if (_presentTypes.length > 1) const Divider(),
+            Flexible(
+                child: RadioGroup<String>(
+                  groupValue: widget.activeId,
+                  onChanged: (id) {
+                    if (id == null) return;
+                    for (final source in widget.sources) {
+                      if (source.uniqueId == id) {
+                        _pick(source);
+                        return;
+                      }
+                    }
+                  },
+                child: Material(
+                  color: Colors.transparent,
+                  clipBehavior: Clip.hardEdge,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      if (!_didInitialScroll) {
+                        _didInitialScroll = true;
+                        _scrollToActive(filtered);
+                      }
+                      final source = filtered[index];
+                      return SizedBox(
+                        height: 56,
+                        child: Center(
+                          child: ListTile(
+                            leading: Radio<String>(
+                              value: source.uniqueId,
+                            ),
+                            title: Text(
+                              source.name ?? l10n.unknown,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              [
+                                source.lang?.toUpperCase() ?? '',
+                                source.managerId ?? '',
+                              ].where((s) => s.isNotEmpty).join(' · '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onTap: () => _pick(source),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.close),
+        ),
+      ],
+    );
+  }
+
+  void _pick(Source source) {
+    // Pops through this dialog's own context: showDialog pushes on the root
+    // navigator, and this context hangs under it.
+    Navigator.of(context).pop();
+    widget.onSelected(source);
+  }
+
+  void _scrollToActive(List<Source> filtered) {
+    var targetIndex = filtered.indexWhere(
+      (s) => s.uniqueId == widget.activeId,
+    );
+    if (targetIndex == -1) targetIndex = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      const itemHeight = 56.0;
+      final itemTop = targetIndex * itemHeight;
+      final viewportHeight = _scrollController.position.viewportDimension;
+      final offset =
+          itemTop - (viewportHeight / 2) + (itemHeight / 2);
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      _scrollController.jumpTo(offset.clamp(0.0, maxScroll));
+    });
+  }
+
+  String _typeLabel(ItemType type, AppLocalizations l10n) {
+    switch (type) {
+      case ItemType.anime:
+        return l10n.anime;
+      case ItemType.manga:
+        return l10n.manga;
+      case ItemType.novel:
+        return l10n.novel;
+    }
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(LayoutConstants.spacingLg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: LayoutConstants.spacingMd),
+              FilledButton.tonal(
+                onPressed: onAction,
+                child: Text(actionLabel!),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -405,6 +405,40 @@ class StorageService {
     return raw.whereType<String>().toList(growable: false);
   }
 
+  // --- MStream (MultiProviders) Settings ---
+
+  /// MultiProviders sources the user has toggled off. They stay installed but
+  /// are hidden from MStream and its search until re-enabled.
+  ///
+  /// Stored in the settings box, so "Reset Data" clears the toggles along with
+  /// the rest of the settings - sources themselves live in the bridge's own
+  /// directory and are untouched.
+  static const String kMstreamDisabledSourcesKey = 'mstream_disabled_sources';
+
+  /// The `Source.uniqueId` the user last picked in MStream, so the tab reopens
+  /// on the source it was left on instead of resetting to the first.
+  static const String kMstreamLastSourceKey = 'mstream_last_source';
+
+  Future<void> setMstreamDisabledSources(List<String> sourceIds) async {
+    await _settingsBox.put(kMstreamDisabledSourcesKey, sourceIds);
+  }
+
+  /// Reads the disabled source ids, tolerating whatever Hive hands back.
+  List<String> getMstreamDisabledSources() {
+    final raw = _settingsBox.get(kMstreamDisabledSourcesKey);
+    if (raw is! List) return const [];
+    return raw.whereType<String>().toList(growable: false);
+  }
+
+  Future<void> setMstreamLastSourceId(String sourceId) async {
+    await _settingsBox.put(kMstreamLastSourceKey, sourceId);
+  }
+
+  String? getMstreamLastSourceId() {
+    final raw = _settingsBox.get(kMstreamLastSourceKey);
+    return raw is String && raw.isNotEmpty ? raw : null;
+  }
+
   // --- Window Settings ---
   Future<void> setAlwaysOnTop(bool enabled) async {
     await _settingsBox.put('always_on_top', enabled);

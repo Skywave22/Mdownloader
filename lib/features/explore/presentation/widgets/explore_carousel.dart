@@ -37,6 +37,10 @@ class ExploreCarousel extends ConsumerStatefulWidget {
   /// so the parent can drive prev/next from an external UI (e.g. header arrows).
   final void Function(HeroCarouselController controller)? onControllerReady;
 
+  /// Extra HTTP headers for slide images (extension-sourced backdrops need a
+  /// browser User-Agent and/or the source's Referer). Null on Home.
+  final Map<String, String>? httpHeaders;
+
   const ExploreCarousel({
     super.key,
     required this.movies,
@@ -44,6 +48,7 @@ class ExploreCarousel extends ConsumerStatefulWidget {
     this.onTap,
     this.onNavigateUp,
     this.onControllerReady,
+    this.httpHeaders,
   });
 
   @override
@@ -578,6 +583,7 @@ class _ExploreCarouselState extends ConsumerState<ExploreCarousel>
               builder: (context, constraints) => CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
+                httpHeaders: widget.httpHeaders,
                 // TV and desktop fetch `original` backdrops (tmdb_config.dart
                 // :78-80) — 1920x1080 at best, 3840x2160 for popular titles,
                 // i.e. 8.3-33 MB decoded each, seven of them cycling every

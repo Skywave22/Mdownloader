@@ -1226,7 +1226,9 @@
   "@nuvioScraperCount": {
     "description": "Pill in the Nuvio card header saying how many scrapers are switched on and supported on this platform. The card is hidden entirely when the count would be zero, so the zero case never renders.",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "stremioAddons": "Stremio add-ons",
@@ -1241,18 +1243,24 @@
   "@stremioSearchAddonsForEpisode": {
     "description": "Action inside the Stremio card on a SERIES. The card is a shortcut to one episode - the first of the selected season - and names it, because the episode list further down the page is how any other episode is reached. Replaced 'Play S1 E1', which claimed the tap would start playback when it opens a list of links.",
     "placeholders": {
-      "season": { "type": "int" },
-      "episode": { "type": "int" }
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
     }
   },
   "stremioAddonCount": "{count, plural, =1{1 add-on} other{{count} add-ons}}",
   "@stremioAddonCount": {
     "description": "Pill in the Stremio card header saying how many installed add-ons can answer a stream request. Catalog-only add-ons are not counted, and the card is hidden entirely when the count would be zero, so the zero case never renders.",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-"addonSourcesSearchTooltip": "Search links",
+  "addonSourcesSearchTooltip": "Search links",
   "@addonSourcesSearchTooltip": {
     "description": "Stremio sources sheet header: opens the free-text filter over add-on and provider names."
   },
@@ -1391,6 +1399,36 @@
   "mstreamManageProviders": "Manage providers",
   "@mstreamManageProviders": {
     "description": "MStream app bar: tooltip of the button that opens MultiProviders, where sources are installed."
-  }
+  },
+  "mstreamAllDisabled": "All installed sources are disabled. Enable one to browse.",
+  "@mstreamAllDisabled": {
+    "description": "MStream tab, empty state when sources are installed but every one of them has been toggled off in MultiProviders."
+  },
+  "installAll": "Install all",
+  "@installAll": {
+    "description": "MultiProviders: tooltip of the button that installs every still-uninstalled source of the selected type, one at a time."
+  },
+  "installAllDone": "{count, plural, =1{Installed 1 source} other{Installed {count} sources}}",
+  "@installAllDone": {
+    "description": "MultiProviders: snackbar after the install-all queue finishes. count is how many installs succeeded, which can be fewer than attempted."
+  },
+  "enable": "Enable",
+  "@enable": {
+    "description": "MultiProviders: tooltip of the toggle that turns a disabled source back on."
+  },
+  "disable": "Disable",
+  "@disable": {
+    "description": "MultiProviders: tooltip of the toggle that hides a source from MStream without uninstalling it."
+  },
+  "author": "Author",
+  "artist": "Artist",
+  "downloadUnsupportedSource": "This source doesn't support direct downloading or is currently unavailable. Please try another source.",
+  "downloadStartFailed": "Failed to start download. Check storage permissions.",
+  "noDownloadSourcesFound": "No download sources found for this item.",
+  "extensionRuntimeCredit": "Extension runtime bridge: AnymeXExtensionRuntimeBridge · by RyanYuuki",
+  "mstreamPopular": "Popular",
+  "mstreamLatest": "Latest updates",
+  "multiProvidersFilterHint": "Search extensions",
+  "repositoryAdded": "Repository {url} added.",
+  "failedToAddRepository": "Couldn't add repository: {error}"
 }
-
