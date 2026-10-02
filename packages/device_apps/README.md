@@ -24,7 +24,10 @@ AGP 8.13:
 * It declares **no `namespace`**, which AGP 8 requires of every library module.
 
 The Java source did not need to change: it uses plain Android APIs and
-`androidx.annotation`, and the v2 plugin embedding.
+`androidx.annotation`, and the v2 plugin embedding. Nor did the Dart: it still
+writes named-parameter defaults as `includeAppIcons: false`, which Dart 3 rejects,
+so `pubspec.yaml` keeps upstream's SDK lower bound (`>=2.12.0`) - that bound is the
+package's language version - rather than raising it to this app's.
 
 ## What changed
 

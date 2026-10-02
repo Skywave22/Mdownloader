@@ -7,9 +7,10 @@ version: 2.1.0+1
 publish_to: 'none'
 homepage: https://github.com/hui-z/flutter_install_plugin
 
+# The SDK bounds are upstream's, so the Dart sources keep their language version.
 environment:
-  sdk: ^3.5.0
-  flutter: '>=3.3.0'
+  sdk: '>=2.12.0 <4.0.0'
+  flutter: '>=1.17.0'
 
 dependencies:
   flutter:

@@ -29,7 +29,7 @@ same meaning, taken from the analyzer changelog:
 | analyzer | Before | After |
 | --- | --- | --- |
 | 8.0 | `NamedType.name2` | `NamedType.name` (a `Token`) |
-| 9.0 | `ErrorSeverity`, `Diagnostic.errorCode.errorSeverity` | `DiagnosticSeverity`, `diagnosticCode.diagnosticSeverity` |
+| 9.0 | `ErrorSeverity`, `Diagnostic.errorCode.errorSeverity` | `DiagnosticSeverity`, `diagnosticCode.severity` (the deprecation notice names a `diagnosticSeverity` getter that does not exist) |
 | 10-12 | `ClassDeclaration.name` / `.typeParameters` / `.members` | `namePart.typeName` / `namePart.typeParameters` / `body.members` |
 | 10-12 | `EnumDeclaration.name` / `.constants` / `.members` | `namePart.typeName` / `body.constants` / `body.members` |
 | 10-12 | `MixinDeclaration.members`, `ExtensionDeclaration.members` | `body.members` |
