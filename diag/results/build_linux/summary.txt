@@ -1,0 +1,4 @@
+cmd=flutter build linux --debug
+rc=0
+seconds=66
+lines=48
