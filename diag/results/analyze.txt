@@ -1,0 +1,12 @@
+Analyzing Mdownloader...                                        
+
+   info • Notifiers should not have public properties/getters. Instead, all their public API should be exposed through the `state` property • lib/features/multiproviders/data/multiprovider_bridge.dart:177:3 • avoid_public_notifier_properties
+  error • The method 'isRegistered' isn't defined for the type '_GetImpl'. Try correcting the name to the name of an existing method, or defining a method named 'isRegistered' • lib/features/multiproviders/data/multiprovider_bridge.dart:179:11 • undefined_method
+  error • The method 'isRegistered' isn't defined for the type '_GetImpl'. Try correcting the name to the name of an existing method, or defining a method named 'isRegistered' • lib/features/multiproviders/data/multiprovider_bridge.dart:179:11 • undefined_method
+  error • The method 'find' isn't defined for the type '_GetImpl'. Try correcting the name to the name of an existing method, or defining a method named 'find' • lib/features/multiproviders/data/multiprovider_bridge.dart:179:50 • undefined_method
+  error • The method 'find' isn't defined for the type '_GetImpl'. Try correcting the name to the name of an existing method, or defining a method named 'find' • lib/features/multiproviders/data/multiprovider_bridge.dart:179:50 • undefined_method
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/shared/widgets/custom_bottom_nav.dart:46:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/shared/widgets/custom_bottom_nav.dart:46:7 • prefer_const_constructors
+warning • The asset directory 'assets/plugins/' doesn't exist. Try creating the directory or fixing the path to the directory • pubspec.yaml:195:7 • asset_directory_does_not_exist
+
+8 issues found. (ran in 71.2s)
