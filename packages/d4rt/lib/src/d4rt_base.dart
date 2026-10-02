@@ -3,7 +3,6 @@ import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/error/error.dart';
 import 'package:d4rt/src/bridge/bridged_enum.dart';
 import 'package:d4rt/src/utils/logger/logger.dart';
-import 'package:pub_semver/pub_semver.dart';
 import 'package:d4rt/src/bridge/bridged_types.dart';
 import 'package:d4rt/src/runtime_types.dart';
 import 'package:analyzer/dart/ast/ast.dart';
@@ -211,18 +210,7 @@ class D4rt {
       final result = parseString(
         content: source,
         throwIfDiagnostics: false,
-        featureSet: FeatureSet.fromEnableFlags2(
-          sdkLanguageVersion: Version(3, 0, 0),
-          flags: [
-            'non-nullable',
-            'null-aware-elements',
-            'triple-shift',
-            'spread-collections',
-            'control-flow-collections',
-            'extension-methods',
-            'extension-types',
-          ],
-        ),
+        featureSet: FeatureSet.latestLanguageVersion(),
       );
 
       final errors = result.errors

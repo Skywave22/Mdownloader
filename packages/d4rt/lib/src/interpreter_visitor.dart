@@ -4923,6 +4923,46 @@ class InterpreterVisitor extends GeneralizingAstVisitor<Object?> {
 
             // Return the *new* value for prefix operators
             return newValue;
+          } else if (targetValue is InterpretedExtension) {
+            // Handle static field/getter increment/decrement on extension (prefix)
+            final extension = targetValue;
+
+            // Get current value via static getter or field
+            Object? currentValue;
+            final staticGetter = extension.findStaticGetter(propertyName);
+            if (staticGetter != null) {
+              currentValue = staticGetter.call(this, [], {});
+            } else if (extension.staticFields.containsKey(propertyName)) {
+              currentValue = extension.getStaticField(propertyName);
+            } else {
+              throw RuntimeError(
+                  "Extension '${extension.name}' has no static field or getter named '$propertyName'.");
+            }
+
+            // Calculate new value
+            Object? newValue;
+            if (currentValue is num) {
+              newValue = operatorType == TokenType.PLUS_PLUS
+                  ? currentValue + 1
+                  : currentValue - 1;
+            } else {
+              throw RuntimeError(
+                  "Cannot increment/decrement static property '$propertyName' of type '${currentValue?.runtimeType}': Expected number.");
+            }
+
+            // Set new value via static setter or field
+            final staticSetter = extension.findStaticSetter(propertyName);
+            if (staticSetter != null) {
+              staticSetter.call(this, [newValue], {});
+            } else if (extension.staticFields.containsKey(propertyName)) {
+              extension.setStaticField(propertyName, newValue);
+            } else {
+              throw RuntimeError(
+                  "Extension '${extension.name}' has no static setter or field named '$propertyName'.");
+            }
+
+            // Return the *new* value for prefix operators
+            return newValue;
           } else {
             throw RuntimeError(
                 "Cannot increment/decrement property on non-instance object of type '${targetValue?.runtimeType}'.");
@@ -5334,6 +5374,48 @@ class InterpreterVisitor extends GeneralizingAstVisitor<Object?> {
           setter.bind(targetValue).call(this, [newValue], {});
         } else {
           targetValue.set(propertyName, newValue, this);
+        }
+
+        // Return the *original* value for postfix operators
+        return originalValue;
+      } else if (targetValue is InterpretedExtension) {
+        // Handle static field/getter increment/decrement on extension
+        final extension = targetValue;
+
+        // Get current value via static getter or field
+        Object? currentValue;
+        final staticGetter = extension.findStaticGetter(propertyName);
+        if (staticGetter != null) {
+          currentValue = staticGetter.call(this, [], {});
+        } else if (extension.staticFields.containsKey(propertyName)) {
+          currentValue = extension.getStaticField(propertyName);
+        } else {
+          throw RuntimeError(
+              "Extension '${extension.name}' has no static field or getter named '$propertyName'.");
+        }
+
+        final originalValue = currentValue; // Save for return
+
+        // Calculate new value
+        Object? newValue;
+        if (currentValue is num) {
+          newValue = operatorType == TokenType.PLUS_PLUS
+              ? currentValue + 1
+              : currentValue - 1;
+        } else {
+          throw RuntimeError(
+              "Cannot increment/decrement static property '$propertyName' of type '${currentValue?.runtimeType}': Expected number.");
+        }
+
+        // Set new value via static setter or field
+        final staticSetter = extension.findStaticSetter(propertyName);
+        if (staticSetter != null) {
+          staticSetter.call(this, [newValue], {});
+        } else if (extension.staticFields.containsKey(propertyName)) {
+          extension.setStaticField(propertyName, newValue);
+        } else {
+          throw RuntimeError(
+              "Extension '${extension.name}' has no static setter or field named '$propertyName'.");
         }
 
         // Return the *original* value for postfix operators

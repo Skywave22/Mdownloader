@@ -22,9 +22,8 @@ compile: it reads the AST through accessors analyzer has since removed.
 
 ## What changed
 
-Only the calls into `package:analyzer`, 43 edits across six files in `lib/src/`.
-Interpreter behaviour is untouched. Each one is a rename or a re-shaping with the
-same meaning, taken from the analyzer changelog:
+Only the calls into `package:analyzer`, in `lib/src/`. Most are renames or
+re-shapings with the same meaning, taken from the analyzer changelog:
 
 | analyzer | Before | After |
 | --- | --- | --- |
@@ -37,6 +36,21 @@ same meaning, taken from the analyzer changelog:
 | 13 | record literal `NamedExpression` | `RecordLiteralNamedField` (`.name.lexeme`, `.fieldExpression`) |
 | 13 | `DefaultFormalParameter` wrapper + `NormalFormalParameter` | every `FormalParameter` carries `defaultClause`; no wrapper |
 | 13 | `Label.label.name`, `BreakStatement.label.name` | `Label.name.lexeme`, `LabelReference.name.lexeme` |
+
+Two edits are behavioural, and both were found by running upstream's suite
+against analyzer 14 rather than by reading the changelog:
+
+* **The parser's language version.** Upstream pins `FeatureSet.fromEnableFlags2(
+  sdkLanguageVersion: 3.0.0, flags: [..., 'null-aware-elements', ...])`. In
+  analyzer 7 an enable-flag forced a feature on whatever the language version; in
+  analyzer 14 a feature that has shipped follows the language version, so
+  `[?x]` stopped parsing. Both parse sites use `FeatureSet.latestLanguageVersion()`,
+  which is what upstream's own 0.2.x does.
+* **Static members of an extension under `++`/`--`.** `Ext.counter++` now reaches
+  the interpreter as a `PropertyAccess`, not a `PrefixedIdentifier`. The
+  `PropertyAccess` branches of the prefix and postfix handlers threw on an
+  extension target; they now handle it exactly as their `PrefixedIdentifier`
+  twins already did.
 
 ## How it is checked
 
