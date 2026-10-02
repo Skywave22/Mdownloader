@@ -54,23 +54,22 @@ To use the command line arguments, delete the l10n.yaml file in the Flutter proj
 exit=0
 === build_runner ===
   compiling builders/aot
-  34s compiling builders/aot
+  22s compiling builders/aot
 W These options have been removed and were ignored: --delete-conflicting-outputs
   0s riverpod_generator on 535 inputs; integration_test/app_smoke_test.dart
   1s riverpod_generator on 535 inputs: 1 no-op; spent 1s sdk; lib/core/addons/data/addon_client.dart
-  6s riverpod_generator on 535 inputs: 1 output, 1 no-op; spent 3s analyzing, 1s sdk; lib/core/addons/data/addon_playback_launcher.dart
-  11s riverpod_generator on 535 inputs: 3 output, 1 no-op; spent 8s analyzing, 2s resolving, 1s sdk; lib/core/addons/data/addon_repository.dart
-  13s riverpod_generator on 535 inputs: 7 output, 13 no-op; spent 10s analyzing, 2s resolving, 1s sdk; lib/core/extensions/engine/js_engine_worker.dart
-  15s riverpod_generator on 535 inputs: 13 output, 37 no-op; spent 11s analyzing, 2s resolving, 1s sdk; lib/core/nuvio/data/nuvio_runtime.dart
-  26s riverpod_generator on 535 inputs: 21 output, 38 no-op; spent 20s analyzing, 4s resolving, 1s sdk; lib/core/services/anilist_explore_service.dart
-  27s riverpod_generator on 535 inputs: 71 output, 464 no-op; spent 21s analyzing, 4s resolving, 1s sdk
+  4s riverpod_generator on 535 inputs: 1 output, 1 no-op; spent 2s analyzing, 1s sdk; lib/core/addons/data/addon_playback_launcher.dart
+  7s riverpod_generator on 535 inputs: 3 output, 1 no-op; spent 5s analyzing, 1s sdk; lib/core/addons/data/addon_repository.dart
+  9s riverpod_generator on 535 inputs: 7 output, 13 no-op; spent 7s analyzing, 1s resolving, 1s sdk; lib/core/extensions/engine/js_engine_worker.dart
+  11s riverpod_generator on 535 inputs: 13 output, 37 no-op; spent 8s analyzing, 1s resolving, 1s sdk; lib/core/nuvio/data/nuvio_runtime.dart
+  19s riverpod_generator on 535 inputs: 21 output, 38 no-op; spent 15s analyzing, 3s resolving, 1s sdk; lib/core/services/anilist_explore_service.dart
+  19s riverpod_generator on 535 inputs: 71 output, 464 no-op; spent 15s analyzing, 3s resolving, 1s sdk
   0s go_router_builder on 535 inputs; integration_test/app_smoke_test.dart
-  0s go_router_builder on 535 inputs: 1 output, 102 no-op; lib/features/details/presentation/download_launcher.dart
+  0s go_router_builder on 535 inputs: 1 output, 229 no-op; lib/features/player/presentation/widgets/hotstar_player_style.dart
   1s go_router_builder on 535 inputs: 1 output, 534 no-op
   0s source_gen:combining_builder on 535 inputs; integration_test/app_smoke_test.dart
-  0s source_gen:combining_builder on 535 inputs: 58 output, 181 no-op; lib/features/search/presentation/widgets/search_header_bar.dart
   0s source_gen:combining_builder on 535 inputs: 71 output, 464 no-op
-  Built with build_runner/aot in 64s; wrote 143 outputs.
+  Built with build_runner/aot in 43s; wrote 143 outputs.
 exit=0
 === gen-l10n drift ===
 === flutter analyze ===
@@ -121,21 +120,12 @@ Got dependencies!
 31 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 Analyzing Mdownloader...                                        
-
-  error • The method 'authorNameFrom' isn't defined for the type 'Source'. Try correcting the name to the name of an existing method, or defining a method named 'authorNameFrom' • test/features/multiproviders/bridge_mapping_test.dart:99:21 • undefined_method
-  error • The method 'authorNameFrom' isn't defined for the type 'Source'. Try correcting the name to the name of an existing method, or defining a method named 'authorNameFrom' • test/features/multiproviders/bridge_mapping_test.dart:100:21 • undefined_method
-  error • The method 'authorNameFrom' isn't defined for the type 'Source'. Try correcting the name to the name of an existing method, or defining a method named 'authorNameFrom' • test/features/multiproviders/bridge_mapping_test.dart:101:21 • undefined_method
-
-exit=1
+No issues found! (ran in 55.5s)
+exit=0
 === dart analyze --fatal-infos ===
 Analyzing Mdownloader...
-
-  error - test/features/multiproviders/bridge_mapping_test.dart:99:21 - The method 'authorNameFrom' isn't defined for the type 'Source'. Try correcting the name to the name of an existing method, or defining a method named 'authorNameFrom'. - undefined_method
-  error - test/features/multiproviders/bridge_mapping_test.dart:100:21 - The method 'authorNameFrom' isn't defined for the type 'Source'. Try correcting the name to the name of an existing method, or defining a method named 'authorNameFrom'. - undefined_method
-  error - test/features/multiproviders/bridge_mapping_test.dart:101:21 - The method 'authorNameFrom' isn't defined for the type 'Source'. Try correcting the name to the name of an existing method, or defining a method named 'authorNameFrom'. - undefined_method
-
-3 issues found.
-exit=3
+No issues found!
+exit=0
 === flutter test (mapping test only) ===
 Resolving dependencies...
 Downloading packages...
@@ -184,35 +174,18 @@ Got dependencies!
 31 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 
-::group::❌ loading /home/runner/work/Mdownloader/Mdownloader/test/features/multiproviders/bridge_mapping_test.dart (failed)
-Failed to load "/home/runner/work/Mdownloader/Mdownloader/test/features/multiproviders/bridge_mapping_test.dart":
-Compilation failed for testPath=/home/runner/work/Mdownloader/Mdownloader/test/features/multiproviders/bridge_mapping_test.dart: test/features/multiproviders/bridge_mapping_test.dart:99:21: Error: Member not found: 'Source.authorNameFrom'.
-      expect(Source.authorNameFrom('Dev'), 'Dev');
-                    ^^^^^^^^^^^^^^
-test/features/multiproviders/bridge_mapping_test.dart:100:21: Error: Member not found: 'Source.authorNameFrom'.
-      expect(Source.authorNameFrom({'name': 'Dev', 'icon': 'x'}), 'Dev');
-                    ^^^^^^^^^^^^^^
-test/features/multiproviders/bridge_mapping_test.dart:101:21: Error: Member not found: 'Source.authorNameFrom'.
-      expect(Source.authorNameFrom(null), isNull);
-                    ^^^^^^^^^^^^^^
-packages/anymex_extension_runtime_bridge/lib/Models/Source.dart:56:21: Error: Member not found: 'Source.authorNameFrom'.
-    author = Source.authorNameFrom(json['author']);
-                    ^^^^^^^^^^^^^^
-packages/anymex_extension_runtime_bridge/lib/Services/CloudStream/Models/CloudStreamSource.dart:57:22: Error: Member not found: 'Source.authorNameFrom'.
-      author: Source.authorNameFrom(rawAuthor),
-                     ^^^^^^^^^^^^^^
-packages/anymex_extension_runtime_bridge/lib/Services/Aniyomi/AniyomiExtensions.dart:286:28: Error: Member not found: 'Source.authorNameFrom'.
-            author: Source.authorNameFrom(map['author']),
-                           ^^^^^^^^^^^^^^
-packages/anymex_extension_runtime_bridge/lib/Services/Aniyomi/Models/Source.dart:43:22: Error: Member not found: 'Source.authorNameFrom'.
-      author: Source.authorNameFrom(json['author']),
-                     ^^^^^^^^^^^^^^
-packages/anymex_extension_runtime_bridge/lib/Services/Sora/SoraExtensions.dart:247:28: Error: Member not found: 'Source.authorNameFrom'.
-            author: Source.authorNameFrom(ext['author']),
-                           ^^^^^^^^^^^^^^
-.
-
+::group::✅ Passing tests
+✅ Pages.fromJson parses the canonical {list, hasNextPage} envelope
+✅ Pages.fromJson accepts results/items envelope aliases
+✅ Pages.fromJson one malformed entry does not take down the page
+✅ Pages.fromJson unknown pagination assumes more when the page is full
+✅ DMedia.fromJson reads unified keys
+✅ DMedia.fromJson reads CloudStream-shaped aliases
+✅ DMedia.fromJson author accepts both string and {name} map
+✅ Source.authorNameFrom accepts strings and {name, icon} maps
+✅ extension manager labels and dev grouping managerLabelOf folds -desktop ids and knows every backend
+✅ extension manager labels and dev grouping devNameOf prefers author, then repo owner, then repo
 ::endgroup::
 
-::error::0 tests passed, 1 failed.
-exit=1
+🎉 10 tests passed.
+exit=0
