@@ -139,70 +139,87 @@ class _MultiProvidersScreenState extends ConsumerState<MultiProvidersScreen>
   }
 
   Future<void> _showAddRepoDialog() async {
-    final urlController = TextEditingController();
-    var managerId = _backends.first.id;
-
-    final added = await showDialog<bool>(
+    final added = await showDialog<_NewRepository>(
       context: context,
-      builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: Text(l10n.addRepository),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: urlController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.multiProvidersRepositoryUrl,
-                    hintText: 'https://…/index.json',
-                  ),
-                ),
-                const SizedBox(height: LayoutConstants.spacingMd),
-                DropdownButtonFormField<String>(
-                  initialValue: managerId,
-                  decoration: InputDecoration(
-                    labelText: l10n.multiProvidersBackend,
-                  ),
-                  items: [
-                    for (final backend in _backends)
-                      DropdownMenuItem(
-                        value: backend.id,
-                        child: Text(backend.name),
-                      ),
-                  ],
-                  onChanged: (v) =>
-                      setDialogState(() => managerId = v ?? managerId),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(
-                  MaterialLocalizations.of(context).cancelButtonLabel,
-                ),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(l10n.add),
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (_) => const _AddRepositoryDialog(),
     );
+    if (added == null || !mounted) return;
 
-    final url = urlController.text.trim();
-    urlController.dispose();
-    if (added != true || url.isEmpty) return;
+    final controller = ref.read(multiProviderBridgeProvider.notifier);
+    await controller.addRepo(added.url, _type, added.backend);
+    await controller.refresh();
+  }
+}
 
-    await ref
-        .read(multiProviderBridgeProvider.notifier)
-        .addRepo(url, _type, managerId);
-    await ref.read(multiProviderBridgeProvider.notifier).refresh();
+/// What the add-repository dialog hands back.
+typedef _NewRepository = ({String url, String backend});
+
+/// Asks for a repository address and which extension system it belongs to.
+///
+/// A widget of its own so that the controller is owned by a `State`: the dialog
+/// is still mounted for its exit transition after `await showDialog` returns, and
+/// a controller disposed by the caller at that point is disposed under a live
+/// `TextField` (the lifetime bug that crashed the iOS build).
+class _AddRepositoryDialog extends StatefulWidget {
+  const _AddRepositoryDialog();
+
+  @override
+  State<_AddRepositoryDialog> createState() => _AddRepositoryDialogState();
+}
+
+class _AddRepositoryDialogState extends State<_AddRepositoryDialog> {
+  final TextEditingController _url = TextEditingController();
+  String _backend = _backends.first.id;
+
+  @override
+  void dispose() {
+    _url.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final url = _url.text.trim();
+    if (url.isEmpty) return;
+    Navigator.of(context).pop<_NewRepository>((url: url, backend: _backend));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.addRepository),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _url,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: l10n.multiProvidersRepositoryUrl,
+              hintText: 'https://…/index.json',
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: LayoutConstants.spacingMd),
+          DropdownButtonFormField<String>(
+            initialValue: _backend,
+            decoration: InputDecoration(labelText: l10n.multiProvidersBackend),
+            items: [
+              for (final backend in _backends)
+                DropdownMenuItem(value: backend.id, child: Text(backend.name)),
+            ],
+            onChanged: (v) => setState(() => _backend = v ?? _backend),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+        ),
+        FilledButton(onPressed: _submit, child: Text(l10n.add)),
+      ],
+    );
   }
 }
 
