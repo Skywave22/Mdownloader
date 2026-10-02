@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -182,16 +184,18 @@ class _MultiProvidersScreenState extends ConsumerState<MultiProvidersScreen>
 
     final progress = ValueNotifier<(int, int)>((0, queue.length));
     var cancelled = false;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _InstallProgressDialog(
-        progress: progress,
-        onCancel: () {
-          cancelled = true;
-          // showDialog pushes on the root navigator; pop the same one.
-          Navigator.of(context, rootNavigator: true).pop();
-        },
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => _InstallProgressDialog(
+          progress: progress,
+          onCancel: () {
+            cancelled = true;
+            // showDialog pushes on the root navigator; pop the same one.
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+        ),
       ),
     );
 
