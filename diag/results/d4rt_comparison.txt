@@ -1,3 +1,0 @@
-REGRESSIONS on the port (fail there, pass on baseline): 0
-FAIL ON BOTH (pre-existing): 0
-FAIL ONLY ON BASELINE: 0

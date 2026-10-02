@@ -1,4 +1,0 @@
-cmd=xvfb-run -a flutter test --no-pub integration_test -d linux
-rc=0
-seconds=35
-lines=18

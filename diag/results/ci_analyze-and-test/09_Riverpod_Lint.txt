@@ -1,3 +1,0 @@
-rc=0 seconds=44
-Analyzing Mdownloader...
-No issues found!

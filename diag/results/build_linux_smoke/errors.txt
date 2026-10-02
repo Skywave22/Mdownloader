@@ -1,1 +1,0 @@
-10: [38;5;3m│ [warning] | 5:01:09 706ms | Bootstrap: could not disable brightness auto-reset[0m
