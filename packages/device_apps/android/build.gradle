@@ -1,0 +1,34 @@
+// Modernised copy of upstream device_apps 2.2.0's build script. The original
+// declared no `namespace` (AGP 8 refuses to configure a library without one) and
+// pulled its plugins from `jcenter()`, which Gradle 9 removed outright - so
+// under this app's Gradle 9.1 the script did not even evaluate. The Java source
+// is untouched. See ../README.md.
+
+group = 'fr.g123k.deviceapps'
+version = '2.2.0'
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace = 'fr.g123k.deviceapps'
+    // The app's root build.gradle.kts overrides compileSdk and ndkVersion for
+    // every subproject; this is the value for building the plugin on its own.
+    compileSdk = 36
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    lint {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation 'androidx.annotation:annotation:1.9.1'
+}
