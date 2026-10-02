@@ -1978,4 +1978,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get multiProvidersFilterHint => 'एक्सटेंशन खोजें';
+
+  @override
+  String repositoryAdded(Object url) {
+    return 'रिपॉज़िटरी $url जोड़ी गई।';
+  }
+
+  @override
+  String failedToAddRepository(Object error) {
+    return 'रिपॉज़िटरी नहीं जोड़ी गई: $error';
+  }
 }

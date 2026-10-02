@@ -1976,4 +1976,14 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get multiProvidersFilterHint => 'Search extensions';
+
+  @override
+  String repositoryAdded(Object url) {
+    return 'Repository $url added.';
+  }
+
+  @override
+  String failedToAddRepository(Object error) {
+    return 'Couldn\'t add repository: $error';
+  }
 }

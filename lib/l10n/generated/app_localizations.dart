@@ -3578,6 +3578,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search extensions'**
   String get multiProvidersFilterHint;
+
+  /// No description provided for @repositoryAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository {url} added.'**
+  String repositoryAdded(Object url);
+
+  /// No description provided for @failedToAddRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add repository: {error}'**
+  String failedToAddRepository(Object error);
 }
 
 class _AppLocalizationsDelegate

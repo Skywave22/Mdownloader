@@ -1992,4 +1992,14 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get multiProvidersFilterHint => 'ಎಕ್ಸ್‌ಟೆನ್ಶನ್‌ಗಳನ್ನು ಹುಡುಕಿ';
+
+  @override
+  String repositoryAdded(Object url) {
+    return '$url ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಿದೆ.';
+  }
+
+  @override
+  String failedToAddRepository(Object error) {
+    return 'ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಲಿಲ್ಲ: $error';
+  }
 }
