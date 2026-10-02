@@ -1,0 +1,4 @@
+cmd=flutter build apk --debug
+rc=1
+seconds=287
+lines=51

@@ -1,0 +1,51 @@
+Running Gradle task 'assembleDebug'...                          
+WARN: Release build is using DEBUG signing — key.properties not found. This APK MUST NOT be distributed publicly.
+libtorrent_flutter: Using PREBUILT native libraries
+Running Gradle task 'assembleDebug'...                            285.7s
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/home/runner/.gradle/wrapper/dists/gradle-9.1.0-all/7wzd0jkjit61aq2p43wpjgij9/gradle-9.1.0/lib/native-platform-0.22-milestone-28.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Warning: Flutter support for your project's Android Gradle Plugin version (Android Gradle Plugin version 8.13.2) will soon be dropped. Please upgrade your Android Gradle Plugin version to a version of at least Android Gradle Plugin version 9.0.1 soon.
+Alternatively, use the flag "--android-skip-build-dependency-validation" to bypass this check.
+
+Potential fix: Your project's AGP version is typically defined in the plugins block of the `settings.gradle` file (/home/runner/work/Mdownloader/Mdownloader/android/settings.gradle), by a plugin with the id of com.android.application. 
+If you don't see a plugins block, your project was likely created with an older template version. In this case it is most likely defined in the top-level build.gradle file (/home/runner/work/Mdownloader/Mdownloader/android/build.gradle) by the following line in the dependencies block of the buildscript: "classpath 'com.android.tools.build:gradle:<version>'".
+
+Note: /home/runner/work/Mdownloader/Mdownloader/packages/device_apps/android/src/main/java/fr/g123k/deviceapps/DeviceAppsPlugin.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+3 warnings
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':anymex_extension_runtime_bridge:compileDebugKotlin'.
+> Error while evaluating property 'friendPathsSet$kotlin_gradle_plugin_common' of task ':anymex_extension_runtime_bridge:compileDebugKotlin'.
+   > Could not resolve all files for configuration ':anymex_extension_runtime_bridge:debugCompileClasspath'.
+      > Could not resolve io.flutter:flutter_embedding_debug:1.0.0-ef0cd000916d64fa0c5d09cc809fa7ad244a5767.
+        Required by:
+            project ':anymex_extension_runtime_bridge'
+         > Cannot find a version of 'io.flutter:flutter_embedding_debug' that satisfies the version constraints:
+              Dependency path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'io.flutter:flutter_embedding_debug:1.0.0-ef0cd000916d64fa0c5d09cc809fa7ad244a5767'
+              Dependency path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'io.flutter:flutter_embedding_debug:1.0.0-af7e796e161ae0bb1ff0758c71a7105418bd9ded'
+              Constraint path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'io.flutter:flutter_embedding_debug:{strictly 1.0.0-af7e796e161ae0bb1ff0758c71a7105418bd9ded}' because of the following reason: version resolved in configuration ':anymex_extension_runtime_bridge:debugRuntimeClasspath' by consistent resolution
+              Dependency path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'project :isar_community_flutter_libs' (debugApiElements) --> 'io.flutter:flutter_embedding_debug:1.0.0-af7e796e161ae0bb1ff0758c71a7105418bd9ded'
+              Dependency path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'project :flutter_qjs' (debugApiElements) --> 'io.flutter:flutter_embedding_debug:1.0.0-af7e796e161ae0bb1ff0758c71a7105418bd9ded'
+              Dependency path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'project :install_plugin' (debugApiElements) --> 'io.flutter:flutter_embedding_debug:1.0.0-af7e796e161ae0bb1ff0758c71a7105418bd9ded'
+              Dependency path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'project :device_apps' (debugApiElements) --> 'io.flutter:flutter_embedding_debug:1.0.0-af7e796e161ae0bb1ff0758c71a7105418bd9ded'
+              Dependency path: 'project :anymex_extension_runtime_bridge' (debugCompileClasspath) --> 'project :libtorrent_flutter' (debugApiElements) --> 'io.flutter:flutter_embedding_debug:1.0.0-af7e796e161ae0bb1ff0758c71a7105418bd9ded'
+
+> There are 2 more failures with identical causes.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4m 45s
+Gradle task assembleDebug failed with exit code 1

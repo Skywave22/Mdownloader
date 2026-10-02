@@ -1,0 +1,11 @@
+16: Note: /home/runner/work/Mdownloader/Mdownloader/packages/device_apps/android/src/main/java/fr/g123k/deviceapps/DeviceAppsPlugin.java uses or overrides a deprecated API.
+17: Note: Recompile with -Xlint:deprecation for details.
+23: FAILURE: Build failed with an exception.
+25: * What went wrong:
+26: Execution failed for task ':anymex_extension_runtime_bridge:compileDebugKotlin'.
+27: > Error while evaluating property 'friendPathsSet$kotlin_gradle_plugin_common' of task ':anymex_extension_runtime_bridge:compileDebugKotlin'.
+28:    > Could not resolve all files for configuration ':anymex_extension_runtime_bridge:debugCompileClasspath'.
+29:       > Could not resolve io.flutter:flutter_embedding_debug:1.0.0-ef0cd000916d64fa0c5d09cc809fa7ad244a5767.
+42: > There are 2 more failures with identical causes.
+50: BUILD FAILED in 4m 45s
+51: Gradle task assembleDebug failed with exit code 1
