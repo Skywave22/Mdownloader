@@ -2,23 +2,19 @@ import 'dart:async';
 
 import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.dart'
     hide Video;
-import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.dart'
-    as bridge show Video;
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skystream/l10n/generated/app_localizations.dart';
 
-import '../../../core/domain/entity/multimedia_item.dart';
 import '../../../core/logger/app_logger.dart';
 import '../../../core/network/http_defaults.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../../core/utils/layout_constants.dart';
 import '../../../shared/widgets/cards_wrapper.dart';
-import '../../../shared/widgets/shimmer_placeholder.dart';
-import '../../../shared/widgets/thumbnail_error_placeholder.dart';
+import '../../../shared/widgets/multimedia_card.dart';
 import '../../multiproviders/data/multiprovider_bridge.dart';
+import 'mstream_details_screen.dart';
 
 /// Browses and plays the sources installed through MultiProviders.
 ///
@@ -434,95 +430,17 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
         ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
     if (methods == null) return;
 
-    final episode = await showModalBottomSheet<DEpisode>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => _EpisodeSheet(
-        title: media.title ?? '',
-        detail: methods.getDetail(media),
+    // Home's opening experience: a full details page with the poster banner,
+    // metadata, synopsis and episode list — not a bottom sheet.
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => MStreamDetailsScreen(
+          media: media,
+          methods: methods,
+          source: source,
+        ),
       ),
     );
-    if (episode == null || !mounted) return;
-    await _play(media, episode, methods, source);
-  }
-
-  /// Resolves the episode's streams and hands them to the player already
-  /// resolved: these come from an extension, not from a SkyStream plugin, so
-  /// the player must not try to resolve the URL again.
-  Future<void> _play(
-    DMedia media,
-    DEpisode episode,
-    SourceMethods methods,
-    Source source,
-  ) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    List<bridge.Video> videos;
-    try {
-      videos = await methods.getVideoList(episode);
-    } catch (e, st) {
-      talker.error('MStream: getVideoList failed', e, st);
-      messenger.showSnackBar(SnackBar(content: Text('$e')));
-      return;
-    }
-    if (!mounted) return;
-    if (videos.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.mstreamNoStreams)),
-      );
-      return;
-    }
-
-    final streams = [
-      for (final v in videos)
-        StreamResult(
-          url: v.url,
-          source: v.quality,
-          providerName: source.name ?? MStreamScreen.title,
-          headers: v.headers,
-          subtitles: [
-            for (final t in v.subtitles ?? const <Track>[])
-              if ((t.file ?? '').isNotEmpty)
-                SubtitleFile(url: t.file!, label: t.label ?? l10n.unknown),
-          ],
-        ),
-    ];
-
-    final title = media.title ?? '';
-    final epName =
-        episode.name ?? l10n.mstreamEpisodeNumber(episode.episodeNumber);
-    final item = MultimediaItem(
-      title: title,
-      url: media.url ?? '',
-      posterUrl: ImageUtils.resolveRemoteUrl(
-        media.cover ?? '',
-        baseUrl: source.baseUrl,
-      ),
-      description: media.description,
-      provider: source.name ?? MStreamScreen.title,
-      episodes: [
-        Episode(
-          name: epName,
-          url: episode.url ?? '',
-          posterUrl: ImageUtils.resolveRemoteUrl(
-            episode.thumbnail ?? media.cover ?? '',
-            baseUrl: source.baseUrl,
-          ),
-          episode: int.tryParse(episode.episodeNumber) ?? 0,
-        ),
-      ],
-    );
-
-    if (!mounted) return;
-    await PlayerRoute(
-      $extra: PlayerRouteExtra(
-        item: item,
-        videoUrl: streams.first.url,
-        episode: item.episodes!.first,
-        preloadedStreams: streams,
-      ),
-    ).push<void>(context);
   }
 }
 
@@ -651,42 +569,19 @@ class _MediaCard extends StatelessWidget {
       media.cover ?? '',
       baseUrl: referer,
     );
-    final headers = <String, String>{
-      'User-Agent': kDefaultBrowserUserAgent,
-      if (referer.isNotEmpty) 'Referer': referer,
-    };
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
+    // The exact card Home renders — same shimmer, error fallback, decode
+    // bound, title-position setting and focus scale — with extension posters
+    // additionally carrying the source's Referer. The hero tag is shared with
+    // the details banner so the poster flies up on open, like Home.
+    return MultimediaCard(
+      imageUrl: cover,
+      title: media.title ?? '',
+      heroTag: 'mstream_poster_${media.url}',
+      httpHeaders: {
+        'User-Agent': kDefaultBrowserUserAgent,
+        if (referer.isNotEmpty) 'Referer': referer,
+      },
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: cover.isEmpty
-                  ? ThumbnailErrorPlaceholder(label: media.title)
-                  : CachedNetworkImage(
-                      imageUrl: cover,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      httpHeaders: headers,
-                      placeholder: (context, url) =>
-                          ShimmerPlaceholder(borderRadius: 12),
-                      errorWidget: (_, _, _) =>
-                          ThumbnailErrorPlaceholder(label: media.title),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            media.title ?? '',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
     );
   }
 }
@@ -886,96 +781,5 @@ class _SourceSelectorDialogState extends State<_SourceSelectorDialog> {
       case ItemType.novel:
         return l10n.novel;
     }
-  }
-}
-
-/// Episode picker: loads the full detail, then lists what can be played.
-class _EpisodeSheet extends StatelessWidget {
-  const _EpisodeSheet({required this.title, required this.detail});
-
-  final String title;
-  final Future<DMedia> detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return FractionallySizedBox(
-      heightFactor: 0.8,
-      child: FutureBuilder<DMedia>(
-        future: detail,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return _EmptyState(
-              message: '${snapshot.error}',
-              actionLabel: l10n.close,
-              onAction: () => Navigator.of(context).pop(),
-            );
-          }
-          final episodes = snapshot.data?.episodes ?? const <DEpisode>[];
-          if (episodes.isEmpty) return _EmptyState(message: l10n.mstreamNoEpisodes);
-          return ListView.builder(
-            itemCount: episodes.length + 1,
-            itemBuilder: (context, i) {
-              if (i == 0) {
-                return ListTile(
-                  title: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                );
-              }
-              final ep = episodes[i - 1];
-              return ListTile(
-                leading: const Icon(Icons.play_circle_outline_rounded),
-                title: Text(
-                  ep.name ?? l10n.mstreamEpisodeNumber(ep.episodeNumber),
-                ),
-                subtitle: ep.episodeNumber.isEmpty
-                    ? null
-                    : Text(l10n.mstreamEpisodeNumber(ep.episodeNumber)),
-                onTap: () => Navigator.of(context).pop(ep),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(LayoutConstants.spacingLg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: LayoutConstants.spacingMd),
-              FilledButton.tonal(
-                onPressed: onAction,
-                child: Text(actionLabel!),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }

@@ -16,6 +16,11 @@ class MultimediaCard extends ConsumerWidget {
   final bool isPortrait;
   final FocusNode? focusNode;
 
+  /// Extra HTTP headers for the poster request. Extension-sourced covers
+  /// (MStream) frequently require a browser User-Agent and/or the source's
+  /// Referer; AniList/TMDB posters don't, so this stays null on Home.
+  final Map<String, String>? httpHeaders;
+
   const MultimediaCard({
     super.key,
     required this.imageUrl,
@@ -24,6 +29,7 @@ class MultimediaCard extends ConsumerWidget {
     required this.heroTag,
     this.isPortrait = true,
     this.focusNode,
+    this.httpHeaders,
   });
 
   @override
@@ -64,6 +70,7 @@ class MultimediaCard extends ConsumerWidget {
               imageUrl: imageUrl ?? '',
               fit: BoxFit.cover,
               width: double.infinity,
+              httpHeaders: httpHeaders,
               // Without this the source decodes whole: a `w780` TV/desktop
               // poster is 780x1170 = 3.65 MB of bitmap for a card painted
               // 400 px wide, and a plugin that serves a 2000x3000 poster is

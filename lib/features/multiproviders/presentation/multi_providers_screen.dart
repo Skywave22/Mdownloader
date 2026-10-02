@@ -9,7 +9,9 @@ import 'package:skystream/l10n/generated/app_localizations.dart';
 
 import '../../../core/network/http_defaults.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/image_utils.dart';
 import '../../../core/utils/layout_constants.dart';
+import '../../mstream/widgets/bridge_credit.dart';
 import '../data/multiprovider_bridge.dart';
 
 /// The extension systems a repository can belong to. They are product names, so
@@ -276,6 +278,8 @@ class _AddRepositoryDialogState extends State<_AddRepositoryDialog> {
             ],
             onChanged: (v) => setState(() => _backend = v ?? _backend),
           ),
+          const SizedBox(height: LayoutConstants.spacingMd),
+          const BridgeCredit(),
         ],
       ),
       actions: [
@@ -315,6 +319,8 @@ class _InstallProgressDialog extends StatelessWidget {
               ),
               const SizedBox(height: LayoutConstants.spacingMd),
               Text(l10n.sourceAttempt(done.clamp(1, total), total)),
+              const SizedBox(height: LayoutConstants.spacingMd),
+              const BridgeCredit(),
             ],
           );
         },
@@ -480,62 +486,82 @@ class _SourceList extends ConsumerWidget {
             ),
           );
         }
-        return ListView.builder(
-          padding: EdgeInsets.only(
-            bottom: LayoutConstants.shellBottomContentPadding(context),
-          ),
-          itemCount: visible.length,
-          itemBuilder: (context, i) {
-            final source = visible[i];
-            final controller = ref.read(multiProviderBridgeProvider.notifier);
-            final disabled = bridgeState.isDisabled(source.uniqueId);
-            return ListTile(
-              leading: _SourceIcon(iconUrl: source.iconUrl),
-              title: Text(source.name ?? l10n.unknown),
-              subtitle: Text(
-                [
-                  source.lang?.toUpperCase() ?? '',
-                  'v${source.version ?? '?'}',
-                  source.managerId ?? '',
-                  if (disabled) l10n.disabled,
-                ].where((s) => s.isNotEmpty).join(' · '),
-              ),
-              trailing: installed
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Keep the source installed but out of MStream and its
-                        // search until it is switched back on.
-                        Tooltip(
-                          message: disabled ? l10n.enable : l10n.disable,
-                          child: Switch(
-                            value: !disabled,
-                            onChanged: (enabled) => controller.setSourceEnabled(
-                              source,
-                              enabled,
-                            ),
-                          ),
-                        ),
-                        if (source.hasUpdate ?? false)
-                          IconButton(
-                            tooltip: l10n.update,
-                            icon: const Icon(Icons.upgrade_rounded),
-                            onPressed: () => controller.update(source),
-                          ),
-                        IconButton(
-                          tooltip: l10n.uninstall,
-                          icon: const Icon(Icons.delete_outline_rounded),
-                          onPressed: () => controller.uninstall(source),
-                        ),
-                      ],
-                    )
-                  : IconButton(
-                      tooltip: l10n.install,
-                      icon: const Icon(Icons.download_rounded),
-                      onPressed: () => controller.install(source),
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: visible.length,
+                itemBuilder: (context, i) {
+                  final source = visible[i];
+                  final controller =
+                      ref.read(multiProviderBridgeProvider.notifier);
+                  final disabled = bridgeState.isDisabled(source.uniqueId);
+                  return ListTile(
+                    leading: _SourceIcon(
+                      iconUrl: source.iconUrl,
+                      baseUrl: source.baseUrl,
                     ),
-            );
-          },
+                    title: Text(source.name ?? l10n.unknown),
+                    subtitle: Text(
+                      [
+                        source.lang?.toUpperCase() ?? '',
+                        'v${source.version ?? '?'}',
+                        source.managerId ?? '',
+                        if (disabled) l10n.disabled,
+                      ].where((s) => s.isNotEmpty).join(' · '),
+                    ),
+                    trailing: installed
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Keep the source installed but out of MStream
+                              // and its search until it is switched back on.
+                              Tooltip(
+                                message: disabled ? l10n.enable : l10n.disable,
+                                child: Switch(
+                                  value: !disabled,
+                                  onChanged: (enabled) =>
+                                      controller.setSourceEnabled(
+                                    source,
+                                    enabled,
+                                  ),
+                                ),
+                              ),
+                              if (source.hasUpdate ?? false)
+                                IconButton(
+                                  tooltip: l10n.update,
+                                  icon: const Icon(Icons.upgrade_rounded),
+                                  onPressed: () => controller.update(source),
+                                ),
+                              IconButton(
+                                tooltip: l10n.uninstall,
+                                icon: const Icon(Icons.delete_outline_rounded),
+                                onPressed: () => controller.uninstall(source),
+                              ),
+                            ],
+                          )
+                        : IconButton(
+                            tooltip: l10n.install,
+                            icon: const Icon(Icons.download_rounded),
+                            onPressed: () => controller.install(source),
+                          ),
+                  );
+                },
+              ),
+            ),
+            // Credit where it is due: the runtime that executes every
+            // extension installed from this screen.
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                LayoutConstants.spacingLg,
+                LayoutConstants.spacingSm,
+                LayoutConstants.spacingLg,
+                LayoutConstants.spacingLg,
+              ),
+              child: BridgeCredit(),
+            ),
+          ],
         );
       },
     );
@@ -543,15 +569,20 @@ class _SourceList extends ConsumerWidget {
 }
 
 /// A source's icon, fetched like a poster (browser UA, cached) because plenty
-/// of repository CDNs refuse the bare Dart client's requests.
+/// of repository CDNs refuse the bare Dart client's requests. Relative icon
+/// paths resolve against the source's base URL, same as MStream covers.
 class _SourceIcon extends StatelessWidget {
-  const _SourceIcon({required this.iconUrl});
+  const _SourceIcon({required this.iconUrl, this.baseUrl});
 
   final String? iconUrl;
+  final String? baseUrl;
 
   @override
   Widget build(BuildContext context) {
-    final url = iconUrl ?? '';
+    final url = ImageUtils.resolveRemoteUrl(
+      iconUrl ?? '',
+      baseUrl: baseUrl ?? '',
+    );
     if (url.isEmpty) return const Icon(Icons.extension_rounded);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),

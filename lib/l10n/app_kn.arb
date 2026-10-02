@@ -528,6 +528,12 @@
   "installAll": "ಎಲ್ಲವನ್ನೂ ಸ್ಥಾಪಿಸಿ",
   "installAllDone": "{count, plural, =1{1 ಮೂಲ ಸ್ಥಾಪಿಸಲಾಗಿದೆ} other{{count} ಮೂಲಗಳನ್ನು ಸ್ಥಾಪಿಸಲಾಗಿದೆ}}",
   "enable": "ಸಕ್ರಿಯಗೊಳಿಸಿ",
-  "disable": "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ"
+  "disable": "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ",
+  "author": "ಲೇಖಕ",
+  "artist": "ಕಲಾವಿದ",
+  "downloadUnsupportedSource": "ಈ ಮೂಲವು ನೇರ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ ಅಥವಾ ಪ್ರಸ್ತುತ ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಬೇರೆ ಮೂಲವನ್ನು ಪ್ರಯತ್ನಿಸಿ.",
+  "downloadStartFailed": "ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಲು ವಿಫಲವಾಗಿದೆ. ಸಂಗ್ರಹಣೆ ಅನುಮತಿಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
+  "noDownloadSourcesFound": "ಈ ಐಟಂಗೆ ಯಾವುದೇ ಡೌನ್‌ಲೋಡ್ ಮೂಲಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+  "extensionRuntimeCredit": "ಎಕ್ಸ್‌ಟೆನ್ಶನ್ ರನ್‌ಟೈಮ್ ಬ್ರಿಡ್ಜ್: AnymeXExtensionRuntimeBridge · RyanYuuki ಅವರಿಂದ"
 }
 

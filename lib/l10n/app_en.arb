@@ -1411,6 +1411,12 @@
   "disable": "Disable",
   "@disable": {
     "description": "MultiProviders: tooltip of the toggle that hides a source from MStream without uninstalling it."
-  }
+  },
+  "author": "Author",
+  "artist": "Artist",
+  "downloadUnsupportedSource": "This source doesn't support direct downloading or is currently unavailable. Please try another source.",
+  "downloadStartFailed": "Failed to start download. Check storage permissions.",
+  "noDownloadSourcesFound": "No download sources found for this item.",
+  "extensionRuntimeCredit": "Extension runtime bridge: AnymeXExtensionRuntimeBridge · by RyanYuuki"
 }
 

@@ -35,14 +35,44 @@ class DownloadLauncher {
 
   DownloadLauncher(this._ref);
 
+  /// Starts the download flow for [item].
+  ///
+  /// Plugin-based items resolve their streams here via the active
+  /// SkyStreamProvider. Extension-based items (MStream) pass their already
+  /// resolved [preloadedStreams] instead — there is no SkyStream provider
+  /// behind those, and routing them through `activeProvider` used to download
+  /// the wrong URL entirely.
   Future<void> launch(
     BuildContext context,
     MultimediaItem item, {
     String? episodeUrl,
+    List<StreamResult>? preloadedStreams,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final resolveUrl = episodeUrl ?? item.url;
     if (resolveUrl.isEmpty) return;
+
+    if (preloadedStreams != null) {
+      if (preloadedStreams.isEmpty) {
+        _ref
+            .read(notificationServiceProvider)
+            .showError(
+              l10n.noDownloadSourcesFound,
+              title: _downloadErrorTitle,
+              icon: Icons.error_outline_rounded,
+            );
+        return;
+      }
+      // Streams are already resolved (and carry the extension's headers).
+      _showSourcePicker(
+        context,
+        preloadedStreams,
+        item,
+        resolveUrl,
+        preloadedStreams: preloadedStreams,
+      );
+      return;
+    }
 
     bool isCanceled = false;
     unawaited(
@@ -76,11 +106,17 @@ class DownloadLauncher {
       Navigator.of(context).pop(); // Dismiss loading dialog
 
       if (streams.isEmpty) {
-        throw Exception('No download sources found for this item.');
+        throw Exception(l10n.noDownloadSourcesFound);
       }
 
       // 3. Show Source Picker
-      _showSourcePicker(context, streams, item, resolveUrl);
+      _showSourcePicker(
+        context,
+        streams,
+        item,
+        resolveUrl,
+        preloadedStreams: streams,
+      );
     } catch (e) {
       if (!context.mounted) return;
       if (!isCanceled) Navigator.of(context).pop(); // Dismiss if still there
@@ -98,8 +134,9 @@ class DownloadLauncher {
     BuildContext context,
     List<StreamResult> streams,
     MultimediaItem item,
-    String resolveUrl,
-  ) {
+    String resolveUrl, {
+    List<StreamResult>? preloadedStreams,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
@@ -138,7 +175,13 @@ class DownloadLauncher {
                       subtitle: host.isNotEmpty ? Text(host) : null,
                       onTap: () {
                         Navigator.pop(ctx);
-                        verifyAndDownload(context, stream, item, resolveUrl);
+                        verifyAndDownload(
+                          context,
+                          stream,
+                          item,
+                          resolveUrl,
+                          preloadedStreams: preloadedStreams,
+                        );
                       },
                     );
                   },
@@ -162,8 +205,9 @@ class DownloadLauncher {
     BuildContext context,
     StreamResult stream,
     MultimediaItem item,
-    String resolveUrl,
-  ) async {
+    String resolveUrl, {
+    List<StreamResult>? preloadedStreams,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     final downloadService = _ref.read(downloadServiceProvider);
 
@@ -223,18 +267,27 @@ class DownloadLauncher {
 
     final finalContext = rootNavigatorKey.currentContext ?? navContext;
 
-    if (metadata == null || metadata.size == null) {
+    // HLS playlists cannot be saved as one file by the byte-stream downloader;
+    // refuse those explicitly. Every other URL can download with an unknown
+    // size — many extension hosts never answer with a Content-Length, and
+    // refusing those was blocking perfectly valid sources.
+    if (_looksLikeHls(stream.url, metadata?.mimeType)) {
       if (finalContext.mounted) {
         _showErrorDialog(
           finalContext,
-          'This source doesn\'t support direct downloading or is currently unavailable. Please try another source.',
+          l10n.downloadUnsupportedSource,
           stream,
           item,
           resolveUrl,
+          preloadedStreams: preloadedStreams,
         );
       }
       return;
     }
+
+    // `metadata == null` only means the size probe failed (HEAD blocked,
+    // Range ignored, timeout); the URL itself may still download fine.
+    final effectiveMetadata = metadata ?? DownloadMetadata();
 
     // 2. Show Confirmation Dialog
     if (finalContext.mounted) {
@@ -251,7 +304,13 @@ class DownloadLauncher {
                 const SizedBox(height: 8),
                 Text(l10n.sourceWithParam(stream.source)),
                 const SizedBox(height: 8),
-                Text(l10n.sizeWithParam(metadata.sizeString)),
+                Text(
+                  l10n.sizeWithParam(
+                    effectiveMetadata.size == null
+                        ? l10n.unknown
+                        : effectiveMetadata.sizeString,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(l10n.fileSaveLocationNotification),
               ],
@@ -269,7 +328,7 @@ class DownloadLauncher {
                     stream: stream,
                     item: item,
                     resolveUrl: resolveUrl,
-                    metadata: metadata,
+                    metadata: effectiveMetadata,
                   );
                 },
                 child: Text(l10n.downloadNow),
@@ -313,8 +372,16 @@ class DownloadLauncher {
         final sanitizedEpName = episodeData.name
             .replaceAll(RegExp(r'[^\w\s-]'), '')
             .trim();
-        filename =
-            "S${episodeData.season}-E${episodeData.episode} $sanitizedEpName$extension";
+        // Extension episodes carry no season (defaults to 0) — "S0-E3" is
+        // noise, so only emit the season segment when there is one.
+        final seasonPrefix =
+            episodeData.season > 0 ? 'S${episodeData.season}-' : '';
+        final epSegment = episodeData.episode > 0
+            ? 'E${episodeData.episode}'
+            : l10n.episodes;
+        filename = sanitizedEpName.isEmpty
+            ? '$seasonPrefix$epSegment$extension'
+            : '$seasonPrefix$epSegment $sanitizedEpName$extension';
       } else {
         final sanitizedTitle = item.title
             .replaceAll(RegExp(r'[^\w\s-]'), '')
@@ -340,7 +407,7 @@ class DownloadLauncher {
         _ref
             .read(notificationServiceProvider)
             .showError(
-              'Failed to start download. Check storage permissions.',
+              l10n.downloadStartFailed,
               title: _downloadErrorTitle,
               icon: Icons.folder_off_rounded,
             );
@@ -366,8 +433,9 @@ class DownloadLauncher {
     String message,
     StreamResult stream,
     MultimediaItem item,
-    String resolveUrl,
-  ) {
+    String resolveUrl, {
+    List<StreamResult>? preloadedStreams,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
@@ -382,17 +450,31 @@ class DownloadLauncher {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
+              // Go back to the source picker, without re-resolving streams
+              // that are already in hand.
               launch(
                 context,
                 item,
                 episodeUrl: resolveUrl,
-              ); // Go back to source picker
+                preloadedStreams: preloadedStreams,
+              );
             },
             child: Text(l10n.selectAnotherSource),
           ),
         ],
       ),
     );
+  }
+
+  /// True for HLS playlist URLs, which the byte-stream downloader cannot save
+  /// as a single file. Checked on the URL and the probed MIME type.
+  bool _looksLikeHls(String url, String? mimeType) {
+    if (mimeType != null &&
+        (mimeType.contains('mpegurl') || mimeType.contains('m3u8'))) {
+      return true;
+    }
+    final path = Uri.tryParse(url)?.path.toLowerCase() ?? url.toLowerCase();
+    return path.endsWith('.m3u8') || path.contains('.m3u8?');
   }
 
   String _getFileExtension(String url, String? mimeType) {

@@ -1,16 +1,25 @@
 # Changelogs - Unreleased
 
 ### ✨ *New Features & Enhancements*
+- **MStream opens like Home** – Tapping a title now opens a full details page with the same layout as Home: poster banner with legibility scrims and a shared-element poster flight, title, metadata pills (genres, author, artist, episode count), Play/Download actions, expandable synopsis, and a full episode list with thumbnails and per-episode play/download buttons.
+- **MStream posters are Home posters** – The grid now renders the exact Home card (same shimmer placeholder, error fallback, decode bounds, title-position setting and focus scale), with extension-required Referer/User-Agent headers layered on top.
+- **Extension runtime credit** – The AnymeX Extension Runtime Bridge by RyanYuuki is credited in-product: a small credit line appears under the add-repository dialog, the install-all progress dialog, the MultiProviders list and the MStream details page.
 - **MStream switches sources like Home** – A pill in the top-right corner names the active source and opens a selector dialog (filter chips plus a source list), the same affordance and behaviour as the provider switcher on Home. The last picked source is remembered across restarts.
 - **Install all / install one** – MultiProviders' Available tab can install every still-uninstalled source of the selected type in sequence (with progress and a cancel button), or a single source at a time.
 - **Enable / disable sources** – Installed sources can be toggled off without uninstalling: they stay installed and updatable but disappear from MStream and its search until re-enabled.
 - **MStream pagination and refresh** – Popular and search results load further pages as you scroll, the grid pulls to refresh, and failures show a Retry button instead of a bare error string.
 
 ### 🐞 *Bug Fixes & System Stability*
+- 🛠️ **Fixed: Downloads of extension content resolving through the wrong provider** – Downloading from MStream used to fall back to the active SkyStream plugin and download an unrelated URL. Extension streams are now passed to the download flow already resolved (with their headers), and "Select Another Source" keeps them instead of re-resolving.
+- 🛠️ **Fixed: Downloads refused on hosts without Content-Length** – Sources whose size probe fails no longer get rejected as "doesn't support direct downloading"; only HLS playlists (`.m3u8`) are refused, with a localized message.
+- 🛠️ **Fixed: Download filenames like "S0-E3 name"** – Extension episodes carry no season; the season segment only appears when there is one, and empty episode names no longer leave a stray space.
+- 🛠️ **Fixed: Episode order flipping between sources** – The bridge's CloudStream adapter (DMedia.fromCs) reverses episode order on a condition that is always true; episodes are now sorted deterministically by number so every extension lists ascending.
+- 🛠️ **Fixed: Extension icons not loading in MultiProviders** – Relative icon paths resolve against the source's base URL and fall back to the extension glyph on failure.
 - 🛠️ **Fixed: MStream posters failing to load** – Extension covers are now cached and fetched with a browser User-Agent and the source's Referer (many CDNs reject the bare Dart client), and site-relative / protocol-relative cover URLs are resolved against the source instead of failing silently.
 - 🛠️ **Fixed: MStream "nothing loads" on some sources** – When a source's popular feed is missing or errors, the tab falls back to its latest feed instead of leaving the grid empty; stale responses from an earlier search or source switch no longer overwrite the current results.
 - 🛠️ **Fixed: MultiProviders Available tab listing already-installed sources** – Installed extensions are hidden from the available list (they stay visible under Installed, with update/uninstall).
 - 🛠️ **Fixed: CI "Package d4rt" leg dying on exit code 64** – `dart analyze` has no `--no-fatal-infos` option (the flag cannot be negated); the leg now runs plain `dart analyze`, whose defaults match its intent.
+- 🌍 New localizations (English, Hindi, Kannada): author/artist labels, the runtime-bridge credit, and the download error messages that were previously hard-coded English.
 
 ---
 
