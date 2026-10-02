@@ -46,6 +46,14 @@ for i, s in enumerate(steps, 1):
     lines = log.splitlines()
     keep = lines if len(lines) <= 700 else lines[:150] + ['... [%d lines elided] ...' % (len(lines) - 550)] + lines[-400:]
     (out / f'{i:02d}_{slug}.txt').write_text(f'rc={r.returncode} seconds={dt:.0f}\n' + '\n'.join(keep) + '\n')
+    # The slice above drops the middle of a long log; failures are what matter, so
+    # keep every failing group's heading and the start of its body, and every ::error::.
+    fails = []
+    for n, l in enumerate(lines):
+        if l.startswith('::group::\u274c') or l.startswith('::error::'):
+            fails.append('\n'.join(x[:400] for x in lines[n:n + 9]))
+    if fails:
+        (out / f'{i:02d}_{slug}_FAILURES.txt').write_text('\n--------\n'.join(fails) + '\n')
     rows.append((i, name, r.returncode, dt))
     print(f'[{i:02d}] rc={r.returncode:<3} {dt:6.0f}s  {name}', flush=True)
 
