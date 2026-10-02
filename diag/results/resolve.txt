@@ -1,8 +1,7 @@
 === attempt 1  rc=0
-overrides={"file_picker": "^13.1.0", "pointycastle": "^4.0.0", "flutter_inappwebview": ">=6.1.5 <6.2.0", "analyzer": "^14.4.0"}
+overrides={}
 Resolving dependencies...
 Downloading packages...
-! analyzer 14.4.0 (overridden)
 + antlr4 4.13.2
 + anymex_extension_runtime_bridge 1.6.1 from git https://github.com/RyanYuuki/AnymeXExtensionRuntimeBridge.git at 7f5f88
 + asn1lib 1.6.5
@@ -14,9 +13,9 @@ Downloading packages...
   connectivity_plus 7.3.1 (7.3.2 available)
   cross_file 0.3.5+5 (0.4.0 available)
   cupertino_ui 1.1.0 (retracted, 1.1.1 available)
-+ d4rt 0.1.7 (0.2.4 available)
+! d4rt 0.1.7+1 from path packages/d4rt (overridden)
   dbus 0.7.15 (0.8.0 available)
-+ device_apps 2.2.0
+! device_apps 2.2.0+1 from path packages/device_apps (overridden)
   device_info_plus 13.2.0 (13.3.0 available)
   dynamic_color 1.9.0 (2.1.0 available)
 + encrypt 5.0.3
@@ -31,13 +30,13 @@ Downloading packages...
   go_router 18.0.1 (18.0.2 available)
 + http_interceptor 2.0.0 (3.0.0 available)
 + image 4.10.1
-+ install_plugin 2.1.0
+! install_plugin 2.1.0+1 from path packages/install_plugin (overridden)
 + isar_community 3.3.0-dev.3 (3.3.2 available)
 + isar_community_flutter_libs 3.3.0-dev.3 (3.3.2 available)
   jni 1.0.3 (1.1.0 available)
 + js 0.7.2
 + js_packer 0.0.6
-+ libtorrent_flutter 1.8.5 (2.0.0 available)
+! libtorrent_flutter 1.8.5 from git https://github.com/RyanYuuki/AnymeXExtensionRuntimeBridge.git at 7f5f88 in packages/libtorrent_flutter (overridden)
   material_color_utilities 0.13.0 (0.13.1 available)
   material_ui 1.3.0 (retracted, 1.5.0 available)
   nm 0.5.0 (0.6.0 available)
@@ -57,7 +56,7 @@ Downloading packages...
 < xml 6.6.1 (was 7.0.1) (7.1.0 available)
 + xpath_selector 3.0.2
 + xpath_selector_html_parser 3.0.1
-Changed 23 dependencies!
-33 packages have newer versions incompatible with dependency constraints.
+Changed 19 dependencies!
+31 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 

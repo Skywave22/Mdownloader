@@ -44,7 +44,6 @@
     "flutter_secure_storage_darwin",
     "flutter_torrent_server",
     "flutter_volume_controller",
-    "install_plugin",
     "integration_test",
     "isar_community_flutter_libs",
     "libtorrent_flutter",

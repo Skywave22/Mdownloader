@@ -18,7 +18,7 @@ packages:
     source: hosted
     version: "0.3.23"
   analyzer:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: analyzer
       sha256: a51c769bff3b6dfbe9d60199b8606d808290702a296bef0c26a4ca391d414e46
@@ -307,13 +307,12 @@ packages:
     source: hosted
     version: "1.1.0"
   d4rt:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: d4rt
-      sha256: "1eb626145e2ed97332f9e6e842e626f973d3969ce30e2794efb4744bd8aeba63"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.7"
+      path: "packages/d4rt"
+      relative: true
+    source: path
+    version: "0.1.7+1"
   dart_style:
     dependency: transitive
     description:
@@ -331,13 +330,12 @@ packages:
     source: hosted
     version: "0.7.15"
   device_apps:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: device_apps
-      sha256: e84dc74d55749993fd671148cc0bd53096e1be0c268fc364285511b1d8a4c19b
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.0"
+      path: "packages/device_apps"
+      relative: true
+    source: path
+    version: "2.2.0+1"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -873,13 +871,12 @@ packages:
     source: hosted
     version: "4.10.1"
   install_plugin:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: install_plugin
-      sha256: "6fb67ba0781e75de4f2f2266ed25e835bfd277c5bfc2ed034af52774355857c6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
+      path: "packages/install_plugin"
+      relative: true
+    source: path
+    version: "2.1.0+1"
   integration_test:
     dependency: "direct dev"
     description: flutter
@@ -990,12 +987,13 @@ packages:
     source: hosted
     version: "3.0.2"
   libtorrent_flutter:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: libtorrent_flutter
-      sha256: "48605ded68779749246deac803bce4ecea75eb2aac2394fdb8b85961014a3d36"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/libtorrent_flutter"
+      ref: "v2.6.0"
+      resolved-ref: "7f5f884ba7e33845f8d7877aaba76a91cb29ee1c"
+      url: "https://github.com/RyanYuuki/AnymeXExtensionRuntimeBridge.git"
+    source: git
     version: "1.8.5"
   lints:
     dependency: transitive

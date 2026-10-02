@@ -1,8 +1,8 @@
 [android] actual=31 expected=25
    GAINED: ['anymex_extension_runtime_bridge', 'device_apps', 'flutter_qjs', 'install_plugin', 'isar_community_flutter_libs', 'libtorrent_flutter']
    LOST:   []
-[ios] actual=25 expected=20
-   GAINED: ['anymex_extension_runtime_bridge', 'flutter_qjs', 'install_plugin', 'isar_community_flutter_libs', 'libtorrent_flutter']
+[ios] actual=24 expected=20
+   GAINED: ['anymex_extension_runtime_bridge', 'flutter_qjs', 'isar_community_flutter_libs', 'libtorrent_flutter']
    LOST:   []
 [macos] actual=23 expected=19
    GAINED: ['anymex_extension_runtime_bridge', 'flutter_qjs', 'isar_community_flutter_libs', 'libtorrent_flutter']

@@ -127,10 +127,6 @@ dependencies:
   get: ^4.7.3
 
 dependency_overrides:
-  file_picker: "^13.1.0"
-  pointycastle: "^4.0.0"
-  flutter_inappwebview: ">=6.1.5 <6.2.0"
-  analyzer: "^14.4.0"
   # Keeps the upstream screen_brightness_windows out of the Windows build.
   #
   # That plugin drives DDC/CI (I²C over the display link) to read and write the
@@ -148,6 +144,63 @@ dependency_overrides:
   # See packages/screen_brightness_windows/README.md.
   screen_brightness_windows:
     path: packages/screen_brightness_windows
+
+  # ---------------------------------------------------------------------------
+  # anymex_extension_runtime_bridge
+  #
+  # The bridge is written for AnymeX, whose pins differ from this app's, and a
+  # package's own dependency_overrides are ignored by whoever depends on it - so
+  # every mismatch has to be settled here, in the root. Each entry below is one
+  # of them; without it `flutter pub get` fails, or (inappwebview) quietly picks
+  # the wrong thing, or the bridge does not compile.
+  # ---------------------------------------------------------------------------
+
+  # The bridge asks for ^8.1.7 and never imports it - its own pubspec is the only
+  # place the name appears in the repository. This restates the constraint the
+  # app already declares so pub stops treating the bridge's as a second opinion.
+  file_picker: ^13.1.0
+
+  # The bridge needs package:encrypt ^5.0.3, which this app dropped: its last
+  # release is from 2023 and it requires pointycastle ^3.6.2, the cap that kept
+  # us off 4.x. 4.0.0 only adds engines and OIDs and drops the unused `js`
+  # dependency, and encrypt compiles against it unchanged.
+  pointycastle: ^4.0.0
+
+  # The bridge pins exactly 6.2.0-beta.2, and the `^6.0.0` above admits it, so
+  # without this line pub moves the whole app onto the beta. That line adds
+  # flutter_inappwebview_linux, whose CMake hard-fails without five apt packages
+  # CI does not install - see the note on the Linux set in
+  # test/platform/native_plugin_surface_test.dart. The bridge only uses
+  # WebViewEnvironment, HeadlessInAppWebView, InAppWebViewController, CookieManager
+  # and WebUri, all of which 6.1.x has.
+  flutter_inappwebview: ">=6.1.5 <6.2.0"
+
+  # The bridge builds against its own copy of libtorrent_flutter (its pubspec
+  # overrides the hosted one with ./packages/libtorrent_flutter), which exports
+  # `customLibraryPath` - the hook TorrentStreamResolver uses to load the engine
+  # on Android. The hosted 1.8.5 has no such setter, so the bridge does not
+  # compile against it. That copy also carries the Android and Linux binaries,
+  # so those two builds do not download them.
+  libtorrent_flutter:
+    git:
+      url: https://github.com/RyanYuuki/AnymeXExtensionRuntimeBridge.git
+      ref: v2.6.0
+      path: packages/libtorrent_flutter
+
+  # d4rt, the Dart interpreter behind Mangayomi's Dart extensions, needs analyzer
+  # ^7.4.5 (the newest release, ^8.4.0) and does not compile against the
+  # analyzer 14 this app resolves. A patched copy, with the upstream test suite.
+  # See packages/d4rt/README.md.
+  d4rt:
+    path: packages/d4rt
+
+  # Android only, and both unbuildable as published under Gradle 9.1 / AGP 8.13:
+  # device_apps calls jcenter(), which Gradle 9 removed, and neither declares a
+  # namespace. Build scripts modernised, sources untouched. See each README.
+  device_apps:
+    path: packages/device_apps
+  install_plugin:
+    path: packages/install_plugin
 
 dev_dependencies:
   flutter_test:

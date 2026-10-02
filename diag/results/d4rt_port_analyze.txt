@@ -1,0 +1,12 @@
+Analyzing d4rt...
+
+  error - lib/src/d4rt_base.dart:230:30 - The getter 'diagnosticSeverity' isn't defined for the type 'DiagnosticCode'. Try importing the library that defines 'diagnosticSeverity', correcting the name to the name of an existing getter, or defining a getter or field named 'diagnosticSeverity'. - undefined_getter
+  error - lib/src/module_loader.dart:402:30 - The getter 'diagnosticSeverity' isn't defined for the type 'DiagnosticCode'. Try importing the library that defines 'diagnosticSeverity', correcting the name to the name of an existing getter, or defining a getter or field named 'diagnosticSeverity'. - undefined_getter
+   info - lib/src/callable.dart:225:35 - 'isAbstract' is deprecated and shouldn't be used. Use isComplete instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib/src/interpreter_visitor.dart:5821:28 - 'isAbstract' is deprecated and shouldn't be used. Use isComplete instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib/src/interpreter_visitor.dart:6162:24 - 'isAbstract' is deprecated and shouldn't be used. Use isComplete instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib/src/security/permissions.dart:28:9 - Library names are not necessary. Remove the library name. - unnecessary_library_name
+   info - lib/src/security/permissions.dart:184:23 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+   info - lib/src/security/permissions.dart:184:32 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+
+8 issues found.
