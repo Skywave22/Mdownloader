@@ -1937,6 +1937,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String failedToAddRepository(Object error) {
     return 'Couldn\'t add repository: $error';
   }
+
+  @override
+  String get addingRepository => 'Adding repository…';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).

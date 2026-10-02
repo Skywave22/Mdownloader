@@ -2002,4 +2002,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String failedToAddRepository(Object error) {
     return 'Couldn\'t add repository: $error';
   }
+
+  @override
+  String get addingRepository => 'Adding repository…';
 }
