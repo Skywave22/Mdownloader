@@ -244,8 +244,13 @@ jobs:
           g++ -c -fPIC -O1 -std=c++17 $defs -Icxx/quickjs -Icxx \
             -o "$out/bridge.o" cxx/libfastdev_quickjs_runtime.cpp
           g++ -shared -o "$out/libquickjs_c_bridge_plugin.so" "$out"/*.o -lm -ldl -lpthread
-          # Fail here rather than as a confusing FFI error inside the suite.
-          nm -D --defined-only "$out/libquickjs_c_bridge_plugin.so" | grep -q ' jsNewRuntime$'
+          # Fail here rather than as a confusing FFI error inside the suite. Not
+          # `nm ... | grep -q`: under pipefail, grep leaving at its first match
+          # can strand nm writing into a closed pipe, and the step then fails
+          # with 141 (SIGPIPE) on a perfectly good library - which also skips the
+          # LIBQUICKJSC_TEST_PATH export below and fails every FFI test after it.
+          nm -D --defined-only "$out/libquickjs_c_bridge_plugin.so" > "$out/symbols.txt"
+          grep -q ' jsNewRuntime$' "$out/symbols.txt"
           echo "LIBQUICKJSC_TEST_PATH=$out/libquickjs_c_bridge_plugin.so" >> "$GITHUB_ENV"
 
       - name: Test
@@ -419,7 +424,12 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          if echo "$CHANGED" | grep -Eq "$NATIVE"; then
+          # A here-string, not `echo | grep -q`: under pipefail, grep leaving at
+          # its first match strands echo writing into a closed pipe once the list
+          # outgrows the pipe buffer, the pipeline reports 141, and `if` reads that
+          # as "no native path changed". A 3,662-file pull request was told it was
+          # a Dart-only change that way and built only Android and Linux.
+          if grep -Eq "$NATIVE" <<<"$CHANGED"; then
             echo "Native-relevant paths changed: building every shipping platform."
             echo "matrix=$FULL" >> "$GITHUB_OUTPUT"
           else
