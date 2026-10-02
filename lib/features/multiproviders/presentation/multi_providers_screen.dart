@@ -158,9 +158,24 @@ class _MultiProvidersScreenState extends ConsumerState<MultiProvidersScreen>
     );
     if (added == null || !mounted) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(multiProviderBridgeProvider.notifier);
-    await controller.addRepo(added.url, _type, added.backend);
-    await controller.refresh();
+    // Repos can fail (invalid URL for the backend, backend not registered...)
+    // and the bridge used to swallow it - the user saw "I added it and
+    // nothing happened". Surface both failure and success instead.
+    try {
+      await controller.addRepo(added.url, _type, added.backend);
+      await controller.refresh();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.repositoryAdded(added.url))),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.failedToAddRepository('$e'))),
+      );
+    }
   }
 
   /// Installs every still-uninstalled source of the current type, one at a

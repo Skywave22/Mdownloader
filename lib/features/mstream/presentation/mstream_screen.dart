@@ -78,7 +78,17 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     if (source == null) return;
     final methods =
         ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
-    if (methods == null) return;
+    if (methods == null) {
+      // A source whose methods cannot be resolved (extension not registered/
+      // runtime not ready) is a load FAILURE - surface the retry state
+      // instead of leaving the screen silently blank.
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = AppLocalizations.of(context)!.failedToLoadContent;
+      });
+      return;
+    }
 
     final generation = ++_generation;
     setState(() {

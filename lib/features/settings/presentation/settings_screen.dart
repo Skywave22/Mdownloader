@@ -17,6 +17,7 @@ import 'package:skystream/l10n/generated/app_localizations.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/router/app_router.dart';
 import 'cache_provider.dart';
+import '../../multiproviders/data/multiprovider_bridge.dart';
 import '../../multiproviders/presentation/multi_providers_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -80,8 +81,15 @@ class SettingsScreen extends ConsumerWidget {
                       icon: Icons.layers_rounded,
                       title: MultiProvidersScreen.title,
                       subtitle: l10n.multiProvidersSubtitle,
-                      isLast: true,
                       onTap: () => const MultiProvidersRoute().go(context),
+                    ),
+                    SettingsTile(
+                      icon: Icons.system_update_alt_rounded,
+                      title: l10n.multiProvidersRuntimeBridge,
+                      subtitle: l10n.extensionRuntimeCredit,
+                      isLast: true,
+                      onTap: () =>
+                          _showExtensionRuntimeDialog(context, ref, l10n),
                     ),
                   ],
                 ),
@@ -94,6 +102,69 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  /// Dedicated settings entry for the extension Runtime Host (the
+  /// bridge APK): shows credit for the bridge and an install/update
+  /// button, the same flow the MultiProviders screen exposes.
+  Future<void> _showExtensionRuntimeDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        return Consumer(
+          builder: (context, dialogRef, _) {
+            final state = dialogRef.watch(multiProviderBridgeProvider);
+            final status = switch (state.stage) {
+              MultiProviderStage.ready => l10n.multiProvidersStageReady,
+              MultiProviderStage.installing =>
+                l10n.multiProvidersStageInstalling,
+              MultiProviderStage.unsupported =>
+                l10n.multiProvidersStageUnsupported,
+              _ => l10n.multiProvidersStageNoHost,
+            };
+            return AlertDialog(
+              title: Text(l10n.multiProvidersRuntimeBridge),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(status, style: theme.textTheme.bodyMedium),
+                  const SizedBox(height: LayoutConstants.spacingMd),
+                  Text(
+                    l10n.extensionRuntimeCredit,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(l10n.cancel),
+                ),
+                if (state.stage != MultiProviderStage.unsupported)
+                  FilledButton(
+                    onPressed: state.isBusy
+                        ? null
+                        : () => dialogRef
+                            .read(multiProviderBridgeProvider.notifier)
+                            .setupRuntime(force: state.hasRuntimeHost),
+                    child: Text(switch (state.stage) {
+                      MultiProviderStage.error => l10n.retry,
+                      MultiProviderStage.ready => l10n.update,
+                      _ => l10n.install,
+                    }),
+                  ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

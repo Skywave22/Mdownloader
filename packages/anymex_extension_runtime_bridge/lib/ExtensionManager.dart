@@ -12,6 +12,7 @@ import 'Services/Sora/Models/Source.dart';
 import 'Services/Sora/SoraExtensions.dart';
 import 'anymex_extension_runtime_bridge.dart';
 
+import 'Logger.dart';
 import 'Settings/KvStore.dart';
 
 class ExtensionManager extends GetxController {
@@ -36,14 +37,33 @@ class ExtensionManager extends GetxController {
   final _pendingAggregations = <ItemType>{};
   Timer? _aggregateTimer;
 
+  /// Memoized so concurrent callers share one initialization and it runs
+  /// exactly once per process.
+  Future<void>? _initFuture;
+
   @override
   void onInit() {
     super.onInit();
-    _initDefaultManagers();
+    // Fire-and-forget for GetX's synchronous lifecycle, but the failure mode
+    // is now visible: any error is logged instead of silently killing the
+    // chain and leaving Sora/Mangayomi/Legado unregistered for the whole
+    // session. Callers that care ([ensureInitialized]) await it.
+    unawaited(ensureInitialized());
+  }
+
+  /// Registers the default managers (Sora, Mangayomi, Legado, plus the
+  /// Runtime-Host backends when the host is loaded) and waits until their
+  /// installed/available lists have been read. Idempotent.
+  Future<void> ensureInitialized() {
+    return _initFuture ??= _initDefaultManagers();
   }
 
   Future<void> _initDefaultManagers() async {
-    await AnymeXRuntimeBridge.checkAndInitialize();
+    try {
+      await AnymeXRuntimeBridge.checkAndInitialize();
+    } catch (e, st) {
+      Logger.log('ExtensionManager: runtime host check failed: $e\n$st');
+    }
 
     await _registerAndInitializeManagers([
       SoraExtensions(),
@@ -51,7 +71,11 @@ class ExtensionManager extends GetxController {
       LegadoExtensions(),
     ]);
 
-    await onRuntimeBridgeInitialization();
+    try {
+      await onRuntimeBridgeInitialization();
+    } catch (e, st) {
+      Logger.log('ExtensionManager: runtime backends failed: $e\n$st');
+    }
   }
 
   Future<void> onRuntimeBridgeInitialization({
@@ -107,7 +131,15 @@ class ExtensionManager extends GetxController {
         listChanged = true;
       }
 
-      await (existingManager ?? manager).initialize();
+      try {
+        await (existingManager ?? manager).initialize();
+      } catch (e, st) {
+        // One broken backend must not leave the others unregistered: the
+        // loop used to abort here on the first throw.
+        Logger.log(
+          'ExtensionManager: ${manager.id} initialize failed: $e\n$st',
+        );
+      }
 
       if (existingManager == null) {
         for (final type in ItemType.values) {
@@ -298,13 +330,19 @@ class ExtensionManager extends GetxController {
 
   Future<void> addRepo(String url, ItemType type, String managerId) async {
     final manager = findById(managerId);
-    if (manager != null) await manager.addRepo(url, type);
+    if (manager == null) {
+      // Used to return silently - "I added a link and nothing happened".
+      throw StateError('No extension backend "$managerId" is registered');
+    }
+    await manager.addRepo(url, type);
   }
 
   Future<void> addRepos(
       List<String> urls, ItemType type, String managerId) async {
     final manager = findById(managerId);
-    if (manager == null) return;
+    if (manager == null) {
+      throw StateError('No extension backend "$managerId" is registered');
+    }
 
     final validUrls = urls.map((u) => u.trim()).where((u) => u.isNotEmpty);
     await Future.wait(validUrls.map((url) => manager.addRepo(url, type)));

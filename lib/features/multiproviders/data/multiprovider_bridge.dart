@@ -157,14 +157,22 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
         projectName: 'SkyStream',
         getDirectory: _getDirectory,
       );
-      // Registers Sora/Mangayomi/Legado immediately and picks up the Runtime
-      // Host if it was downloaded on a previous run.
+      final manager = _manager;
+      // The aggregator's GetX onInit starts registration fire-and-forget;
+      // waiting on it here is what guarantees Sora/Mangayomi/Legado are
+      // actually registered before we touch their lists. Previously an
+      // error anywhere in that chain left every backend except CloudStream
+      // (registered separately) dead for the whole session.
+      await manager?.ensureInitialized();
+      // Registers Aniyomi/CloudStream/Kotatsu and picks up the Runtime
+      // Host if it was downloaded on a previous run. Idempotent with the
+      // calls above.
       await AnymeXRuntimeBridge.checkAndInitialize();
-      await _manager?.onRuntimeBridgeInitialization();
+      await manager?.onRuntimeBridgeInitialization();
       await _publishStage();
       // Self-heal: a cold-start race can leave a backend publishing an empty
       // installed list; re-read everything once initialization has settled.
-      await _manager?.refreshInstalled();
+      await manager?.refreshInstalled();
     } catch (e, st) {
       talker.error('MultiProviders: bridge initialization failed', e, st);
       state = state.copyWith(

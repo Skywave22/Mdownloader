@@ -40,6 +40,22 @@ possible so they can be offered back as a PR.
    backend's installed lists and re-aggregates (no repository network
    traffic). UIs call it on open so a transient empty publish self-heals.
 
+6. **`ExtensionManager` — deterministic, failure-isolated registration.**
+   `onInit` used to fire `_initDefaultManagers()` unawaited; any exception in
+   that chain (`checkAndInitialize` → `registerAndInitializeManagers` →
+   `onRuntimeBridgeInitialization`) silently left Sora/Mangayomi/Legado
+   unregistered for the whole session — only CloudStream (registered by the
+   app separately) kept working, installed lists stayed empty after restart,
+   and `addRepo` no-oped. Now: `ensureInitialized()` memoizes the chain so
+   callers can await it; the chain catches/logs errors per step; and
+   `registerAndInitializeManagers` isolates each manager's `initialize()`
+   with try/catch so one broken backend no longer aborts the loop.
+
+7. **`ExtensionManager.addRepo`/`addRepos` — fail loudly.** A missing
+   backend used to return silently ("I added a link and nothing happened").
+   Both now throw `StateError('No extension backend "$managerId" is
+   registered')` so the UI can show the real cause.
+
 `prebuilt/` and `RuntimeBridges/` from upstream are not vendored (47+ MB of
 build-script artifacts; the Flutter build does not reference them).
 `dependency_overrides` in upstream's pubspec are stripped — the app root's

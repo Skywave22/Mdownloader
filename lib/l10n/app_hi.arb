@@ -537,5 +537,7 @@
   "extensionRuntimeCredit": "एक्सटेंशन रनटाइम ब्रिज: AnymeXExtensionRuntimeBridge · RyanYuuki द्वारा",
   "mstreamPopular": "लोकप्रिय",
   "mstreamLatest": "नवीनतम अपडेट",
-  "multiProvidersFilterHint": "एक्सटेंशन खोजें"
+  "multiProvidersFilterHint": "एक्सटेंशन खोजें",
+  "repositoryAdded": "रिपॉज़िटरी {url} जोड़ी गई।",
+  "failedToAddRepository": "रिपॉज़िटरी नहीं जोड़ी गई: {error}"
 }

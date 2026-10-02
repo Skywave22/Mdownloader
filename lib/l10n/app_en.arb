@@ -1428,5 +1428,7 @@
   "extensionRuntimeCredit": "Extension runtime bridge: AnymeXExtensionRuntimeBridge · by RyanYuuki",
   "mstreamPopular": "Popular",
   "mstreamLatest": "Latest updates",
-  "multiProvidersFilterHint": "Search extensions"
+  "multiProvidersFilterHint": "Search extensions",
+  "repositoryAdded": "Repository {url} added.",
+  "failedToAddRepository": "Couldn't add repository: {error}"
 }

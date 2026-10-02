@@ -134,6 +134,14 @@ class ImageUtils {
       return raw;
     }
     if (baseUri == null || !baseUri.hasScheme) return raw;
-    return baseUri.resolve(raw).toString();
+    try {
+      return baseUri.resolve(raw).toString();
+    } catch (_) {
+      // Malformed relative path (spaces, brackets, control characters...):
+      // Uri.resolve throws. Never let a bad cover URL take down the widget
+      // tree - hand the raw string to the image loader and let its error
+      // placeholder deal with it.
+      return raw;
+    }
   }
 }

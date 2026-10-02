@@ -1,6 +1,7 @@
 # Changelogs - Unreleased
 
 ### ✨ *New Features & Enhancements*
+- **Extension runtime in Settings** – New "Extension runtime bridge" entry in Settings with a one-tap install/update button for the Runtime Host APK (the same download the MultiProviders screen runs) and the bridge author credit.
 - **MStream is laid out like Home** – Same chrome (title, circular search button, source pill in the right corner), the same hero carousel of top titles, and the same horizontal rails ("Popular", "Latest updates") with "View All" opening a paginated grid. In-source search opens the same search UI Home uses, scoped to the active extension.
 - **MultiProviders redesigned** – Extensions are now rich rounded cards (large icon, name, update badge, language/version/backend chips) with a search filter over the lists and a styled install button on the Available tab.
 - **Faster "Install All"** – Installs now run three at a time, and no longer re-download every repository manifest after each individual install (that alone made installs take minutes).
@@ -13,6 +14,10 @@
 - **MStream pagination and refresh** – Popular and search results load further pages as you scroll, the grid pulls to refresh, and failures show a Retry button instead of a bare error string.
 
 ### 🐞 *Bug Fixes & System Stability*
+- 🛠️ **Fixed: only CloudStream extensions working; Mangayomi/Sora/Aniyomi/Legado dead** – The bridge's manager registration ran as an unawaited side effect of its GetX `onInit`, and one exception anywhere in that chain silently left every other backend unregistered for the whole session (installed lists stayed empty after restart and "add repository" did nothing). Registration is now a memoized `ensureInitialized()` the app awaits before touching any backend, errors are isolated per backend, and the chain is logged instead of vanishing.
+- 🛠️ **Fixed: switching extensions could blank the whole MStream screen** – A malformed cover URL crashed `Uri.resolve` while building the poster grid. Bad paths now fall back to the raw URL and let the image placeholder handle the failure.
+- 🛠️ **Fixed: "add repository" showing nothing** – An invalid repo URL or an unregistered backend failed silently. The dialog now shows the failure in a SnackBar (with the real cause) and confirms successful adds; available lists refresh either way.
+- 🛠️ **Fixed: MStream silently blank when a source cannot resolve** – Instead of an empty screen with no feedback, a source whose extension cannot be reached now shows the retry state like every other load failure.
 - 🛠️ **Fixed: "Nothing found" for every CloudStream extension (root cause found in the runtime bridge)** – The bridge's Android CloudStream adapter shipped hard-coded *empty* `getPopular`/`getLatestUpdates` stubs (the desktop adapter already fell back to an empty-query search). The bridge is now vendored (`packages/anymex_extension_runtime_bridge`) with the fix: browse mode lists the source catalogue like it always should have.
 - 🛠️ **Fixed: installed extensions "disappearing" after a restart** – A cold-start race could make a backend publish an empty installed list before its plugins finished loading, and nothing re-read the store afterwards. The vendored bridge reloads persisted plugins and re-queries before ever publishing empty, and the app re-reads installed lists whenever MultiProviders opens.
 - 🛠️ **Fixed: slow extension installs** – Installing an extension re-downloaded every repository manifest afterwards; it now updates the local list only. "Install All" additionally installs three extensions concurrently instead of one-by-one.
