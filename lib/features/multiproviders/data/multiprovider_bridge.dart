@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get;
+import 'package:get/get.dart' show Get, Inst;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -35,7 +35,7 @@ enum MultiProviderStage {
   unsupported,
 
   /// Initialization or the download failed; [MultiProviderBridgeState.message]
-  /// carries the reason.
+  /// carries the exception text.
   error,
 }
 
@@ -46,6 +46,11 @@ class MultiProviderBridgeState {
   });
 
   final MultiProviderStage stage;
+
+  /// The exception text when [stage] is [MultiProviderStage.error]. Every other
+  /// stage is worded by the screen from its localizations, so no prose lives
+  /// here: this layer cannot reach a `BuildContext`, and English hard-coded in
+  /// it would show up untranslated in every locale.
   final String? message;
 
   bool get isBusy =>
@@ -85,7 +90,6 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
       // is reported rather than treated as a failure.
       return const MultiProviderBridgeState(
         stage: MultiProviderStage.unsupported,
-        message: 'Extension runtimes are not available on this platform.',
       );
     }
     return const MultiProviderBridgeState();
@@ -131,7 +135,7 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
       // Registers Sora/Mangayomi/Legado immediately and picks up the Runtime
       // Host if it was downloaded on a previous run.
       await AnymeXRuntimeBridge.checkAndInitialize();
-      await manager?.onRuntimeBridgeInitialization();
+      await _manager?.onRuntimeBridgeInitialization();
       await _publishStage();
     } catch (e, st) {
       talker.error('MultiProviders: bridge initialization failed', e, st);
@@ -152,7 +156,7 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
     state = const MultiProviderBridgeState(stage: MultiProviderStage.installing);
     try {
       await AnymeXRuntimeBridge.setupRuntime(force: force);
-      await manager?.onRuntimeBridgeInitialization(force: force);
+      await _manager?.onRuntimeBridgeInitialization(force: force);
       await _publishStage();
     } catch (e, st) {
       talker.error('MultiProviders: runtime host setup failed', e, st);
@@ -167,22 +171,18 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
     final loaded = await AnymeXRuntimeBridge.isLoaded();
     state = MultiProviderBridgeState(
       stage: loaded ? MultiProviderStage.ready : MultiProviderStage.partial,
-      message: loaded
-          ? null
-          : 'Runtime Host not installed — Aniyomi and CloudStream sources are '
-              'unavailable until it is.',
     );
   }
 
   /// The aggregated manager, or null before [initialize] has succeeded.
-  ExtensionManager? get manager =>
+  ExtensionManager? get _manager =>
       Get.isRegistered<ExtensionManager>() ? Get.find<ExtensionManager>() : null;
 
   Future<void> addRepo(String url, ItemType type, String managerId) async =>
-      manager?.addRepo(url.trim(), type, managerId);
+      _manager?.addRepo(url.trim(), type, managerId);
 
   Future<void> refresh({bool refreshAvailableSource = true}) async =>
-      manager?.refreshExtensions(
+      _manager?.refreshExtensions(
         refreshAvailableSource: refreshAvailableSource,
       );
 
@@ -199,7 +199,7 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
     Source source,
     Future<void> Function(Extension manager) action,
   ) async {
-    final backend = manager?.findById(source.managerId ?? '');
+    final backend = _manager?.findById(source.managerId ?? '');
     if (backend == null) {
       talker.warning(
         'MultiProviders: no backend registered for "${source.managerId}"',
@@ -207,12 +207,12 @@ class MultiProviderBridgeController extends Notifier<MultiProviderBridgeState> {
       return;
     }
     await action(backend);
-    await manager?.refreshExtensions(refreshAvailableSource: false);
+    await _manager?.refreshExtensions(refreshAvailableSource: false);
   }
 
   /// Unified call surface for one installed source — search, details, videos.
   SourceMethods? methodsFor(Source source) {
-    final backend = manager?.findById(source.managerId ?? '');
+    final backend = _manager?.findById(source.managerId ?? '');
     return backend?.createSourceMethods(source);
   }
 }
@@ -249,7 +249,7 @@ dynamic _aggregated(
   ItemType type, {
   required bool installed,
 }) {
-  final manager = c.manager;
+  final manager = c._manager;
   if (manager == null) return null;
   switch (type) {
     case ItemType.anime:

@@ -1,0 +1,27 @@
+name: device_apps
+description: >
+  device_apps 2.2.0 with its Android build script brought up to Gradle 9 / AGP 8.
+  Android only, as upstream. See README.md.
+# Upstream is 2.2.0; the +1 marks this as the patched copy.
+version: 2.2.0+1
+publish_to: 'none'
+homepage: https://github.com/g123k/flutter_plugin_device_apps
+
+# The SDK lower bound is upstream's, on purpose: it is the package's language
+# version, and lib/src/plugin.dart still writes named-parameter defaults as
+# `includeAppIcons: false`, which Dart 3 no longer accepts. Raising the bound would
+# need those three lines edited; leaving it keeps the Dart sources untouched.
+environment:
+  sdk: '>=2.12.0 <4.0.0'
+  flutter: '>=1.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: fr.g123k.deviceapps
+        pluginClass: DeviceAppsPlugin

@@ -79,7 +79,7 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsTile(
                       icon: Icons.layers_rounded,
                       title: MultiProvidersScreen.title,
-                      subtitle: 'Manage aggregated multi-source providers',
+                      subtitle: l10n.multiProvidersSubtitle,
                       isLast: true,
                       onTap: () => const MultiProvidersRoute().go(context),
                     ),

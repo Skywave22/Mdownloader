@@ -1835,4 +1835,92 @@ class AppLocalizationsHi extends AppLocalizations {
   String addonManageNoMatch(String query) {
     return 'No installed add-on matches \"$query\".';
   }
+
+  @override
+  String get refresh => 'रीफ्रेश करें';
+
+  @override
+  String get update => 'अपडेट करें';
+
+  @override
+  String get uninstall => 'अनइंस्टॉल करें';
+
+  @override
+  String get add => 'जोड़ें';
+
+  @override
+  String get available => 'उपलब्ध';
+
+  @override
+  String get manga => 'मंगा';
+
+  @override
+  String get novel => 'उपन्यास';
+
+  @override
+  String get multiProvidersSubtitle =>
+      'एकत्रित बहु-स्रोत प्रदाताओं को प्रबंधित करें';
+
+  @override
+  String get multiProvidersBackend => 'बैकएंड';
+
+  @override
+  String get multiProvidersRepositoryUrl => 'रिपॉजिटरी URL';
+
+  @override
+  String get multiProvidersRuntimeBridge => 'रनटाइम ब्रिज';
+
+  @override
+  String get multiProvidersStageStarting => 'एक्सटेंशन ब्रिज शुरू हो रहा है…';
+
+  @override
+  String get multiProvidersStageInstalling => 'रनटाइम होस्ट इंस्टॉल हो रहा है…';
+
+  @override
+  String get multiProvidersStageNoHost =>
+      'रनटाइम होस्ट इंस्टॉल नहीं है — जब तक यह इंस्टॉल नहीं होता, Aniyomi और CloudStream स्रोत उपलब्ध नहीं हैं।';
+
+  @override
+  String get multiProvidersStageReady =>
+      'रनटाइम होस्ट लोड हो गया — सभी बैकएंड उपलब्ध हैं';
+
+  @override
+  String get multiProvidersStageUnsupported =>
+      'इस प्लेटफ़ॉर्म पर एक्सटेंशन रनटाइम उपलब्ध नहीं हैं।';
+
+  @override
+  String get multiProvidersNoInstalled =>
+      'अभी तक कोई स्रोत इंस्टॉल नहीं है। एक रिपॉजिटरी जोड़ें, फिर \"उपलब्ध\" से इंस्टॉल करें।';
+
+  @override
+  String get multiProvidersNoAvailable =>
+      'कोई स्रोत उपलब्ध नहीं है। ऊपर दिए गए लिंक बटन से एक रिपॉजिटरी जोड़ें।';
+
+  @override
+  String get mstreamNoSources =>
+      'कोई स्ट्रीम स्रोत इंस्टॉल नहीं है।\nरिपॉजिटरी जोड़ने और एक स्रोत इंस्टॉल करने के लिए सेटिंग्स → एक्सटेंशन → MultiProviders खोलें।';
+
+  @override
+  String get mstreamPickSource =>
+      'ब्राउज़ करना शुरू करने के लिए एक स्रोत चुनें।';
+
+  @override
+  String get mstreamNothingFound => 'कुछ नहीं मिला।';
+
+  @override
+  String get mstreamNoEpisodes => 'कोई एपिसोड सूचीबद्ध नहीं है।';
+
+  @override
+  String get mstreamNoStreams => 'इस एपिसोड के लिए कोई स्ट्रीम नहीं मिली।';
+
+  @override
+  String mstreamEpisodeNumber(String number) {
+    return 'एपिसोड $number';
+  }
+
+  @override
+  String get mstreamSearchHint => 'इस स्रोत में खोजें';
+
+  @override
+  String get mstreamManageProviders => 'प्रदाता प्रबंधित करें';
 }

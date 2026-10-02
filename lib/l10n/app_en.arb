@@ -1281,6 +1281,116 @@
         "example": "torrentio"
       }
     }
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Tooltip on the button that reloads a list. In MultiProviders it re-fetches every repository."
+  },
+  "update": "Update",
+  "@update": {
+    "description": "Tooltip on the button that updates an installed extension source to its newer version."
+  },
+  "uninstall": "Uninstall",
+  "@uninstall": {
+    "description": "Tooltip on the button that removes an installed extension source."
+  },
+  "add": "Add",
+  "@add": {
+    "description": "Confirm button of a small dialog that adds one item. In MultiProviders it adds a repository."
+  },
+  "available": "Available",
+  "@available": {
+    "description": "Tab title: the extension sources offered by the configured repositories. Counterpart of the Installed tab."
+  },
+  "manga": "Manga",
+  "@manga": {
+    "description": "Content-type choice in MultiProviders: sources that serve manga."
+  },
+  "novel": "Novel",
+  "@novel": {
+    "description": "Content-type choice in MultiProviders: sources that serve novels."
+  },
+  "multiProvidersSubtitle": "Manage aggregated multi-source providers",
+  "@multiProvidersSubtitle": {
+    "description": "Settings, Extensions group: subtitle of the MultiProviders entry. MultiProviders itself is a product name and stays as written."
+  },
+  "multiProvidersBackend": "Backend",
+  "@multiProvidersBackend": {
+    "description": "Add-repository dialog: label of the dropdown that picks which extension system the repository belongs to (Aniyomi, CloudStream, Mangayomi or Sora)."
+  },
+  "multiProvidersRepositoryUrl": "Repository URL",
+  "@multiProvidersRepositoryUrl": {
+    "description": "Add-repository dialog: label of the field for the repository address."
+  },
+  "multiProvidersRuntimeBridge": "Runtime bridge",
+  "@multiProvidersRuntimeBridge": {
+    "description": "MultiProviders: title of the status card for the extension runtime bridge, the component that loads Aniyomi, CloudStream, Mangayomi and Sora extensions."
+  },
+  "multiProvidersStageStarting": "Starting the extension bridge…",
+  "@multiProvidersStageStarting": {
+    "description": "MultiProviders status card: the extension bridge is starting up."
+  },
+  "multiProvidersStageInstalling": "Installing the Runtime Host…",
+  "@multiProvidersStageInstalling": {
+    "description": "MultiProviders status card: the Runtime Host, the component that runs Aniyomi and CloudStream extensions, is being downloaded or installed."
+  },
+  "multiProvidersStageNoHost": "Runtime Host not installed — Aniyomi and CloudStream sources are unavailable until it is.",
+  "@multiProvidersStageNoHost": {
+    "description": "MultiProviders status card: the bridge works, but the optional Runtime Host is not installed, so Aniyomi and CloudStream sources cannot run. Mangayomi and Sora sources still work."
+  },
+  "multiProvidersStageReady": "Runtime Host loaded — all backends available",
+  "@multiProvidersStageReady": {
+    "description": "MultiProviders status card: everything, including the Runtime Host, is loaded."
+  },
+  "multiProvidersStageUnsupported": "Extension runtimes are not available on this platform.",
+  "@multiProvidersStageUnsupported": {
+    "description": "MultiProviders status card on iOS: extension runtimes cannot run on this platform."
+  },
+  "multiProvidersNoInstalled": "No sources installed yet. Add a repository, then install from Available.",
+  "@multiProvidersNoInstalled": {
+    "description": "MultiProviders, Installed tab: empty state. \"Available\" names the other tab and should match its translation."
+  },
+  "multiProvidersNoAvailable": "No sources available. Add a repository with the link button above.",
+  "@multiProvidersNoAvailable": {
+    "description": "MultiProviders, Available tab: empty state. The link button is the add-repository button in the app bar."
+  },
+  "mstreamNoSources": "No stream sources installed.\nOpen Settings → Extensions → MultiProviders to add a repository and install one.",
+  "@mstreamNoSources": {
+    "description": "MStream tab, empty state when no extension source is installed. The arrows separate the levels of the Settings menu; keep MultiProviders as written, it is a product name."
+  },
+  "mstreamPickSource": "Pick a source to start browsing.",
+  "@mstreamPickSource": {
+    "description": "MStream tab: shown until a source has been selected."
+  },
+  "mstreamNothingFound": "Nothing found.",
+  "@mstreamNothingFound": {
+    "description": "MStream tab: the source's popular list or search returned no results."
+  },
+  "mstreamNoEpisodes": "No episodes listed.",
+  "@mstreamNoEpisodes": {
+    "description": "MStream episode picker: the source lists no episodes for this title."
+  },
+  "mstreamNoStreams": "No streams found for this episode.",
+  "@mstreamNoStreams": {
+    "description": "MStream: message shown when the chosen episode resolves to no playable stream."
+  },
+  "mstreamEpisodeNumber": "Episode {number}",
+  "@mstreamEpisodeNumber": {
+    "description": "MStream episode label. The number is whatever the source reports, so it is a string and may not be numeric.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "12"
+      }
+    }
+  },
+  "mstreamSearchHint": "Search this source",
+  "@mstreamSearchHint": {
+    "description": "MStream: placeholder of the search box that is scoped to the selected source."
+  },
+  "mstreamManageProviders": "Manage providers",
+  "@mstreamManageProviders": {
+    "description": "MStream app bar: tooltip of the button that opens MultiProviders, where sources are installed."
   }
 }
 

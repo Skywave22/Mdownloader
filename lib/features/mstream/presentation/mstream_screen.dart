@@ -4,6 +4,7 @@ import 'package:anymex_extension_runtime_bridge/anymex_extension_runtime_bridge.
     as bridge show Video;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skystream/l10n/generated/app_localizations.dart';
 
 import '../../../core/domain/entity/multimedia_item.dart';
 import '../../../core/logger/app_logger.dart';
@@ -70,13 +71,14 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(multiProviderBridgeProvider);
     final sourcesAsync = ref.watch(installedSourcesProvider(ItemType.anime));
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(MStreamScreen.title),
         actions: [
           IconButton(
-            tooltip: 'Manage providers',
+            tooltip: l10n.mstreamManageProviders,
             icon: const Icon(Icons.extension_rounded),
             onPressed: () => const MultiProvidersRoute().go(context),
           ),
@@ -91,13 +93,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
               error: (e, _) => _Message('$e'),
               data: (sources) {
                 if (sources.isEmpty) {
-                  return const Expanded(
-                    child: _Message(
-                      'No stream sources installed.\n'
-                      'Open Settings → Extensions → MultiProviders to add a '
-                      'repository and install one.',
-                    ),
-                  );
+                  return Expanded(child: _Message(l10n.mstreamNoSources));
                 }
                 // Keep the selection valid when a source is uninstalled.
                 final selected = sources.firstWhere(
@@ -134,9 +130,10 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
   }
 
   Widget _buildResults() {
+    final l10n = AppLocalizations.of(context)!;
     final future = _results;
     if (future == null) {
-      return const _Message('Pick a source to start browsing.');
+      return _Message(l10n.mstreamPickSource);
     }
     return FutureBuilder<Pages>(
       future: future,
@@ -148,7 +145,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
           return _Message('${snapshot.error}');
         }
         final items = snapshot.data?.list ?? const <DMedia>[];
-        if (items.isEmpty) return const _Message('Nothing found.');
+        if (items.isEmpty) return _Message(l10n.mstreamNothingFound);
         return GridView.builder(
           padding: EdgeInsets.fromLTRB(
             LayoutConstants.spacingMd,
@@ -202,6 +199,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     Source source,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context)!;
     List<bridge.Video> videos;
     try {
       videos = await methods.getVideoList(episode);
@@ -213,7 +211,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     if (!mounted) return;
     if (videos.isEmpty) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('No streams found for this episode.')),
+        SnackBar(content: Text(l10n.mstreamNoStreams)),
       );
       return;
     }
@@ -228,13 +226,14 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
           subtitles: [
             for (final t in v.subtitles ?? const <Track>[])
               if ((t.file ?? '').isNotEmpty)
-                SubtitleFile(url: t.file!, label: t.label ?? 'Unknown'),
+                SubtitleFile(url: t.file!, label: t.label ?? l10n.unknown),
           ],
         ),
     ];
 
     final title = media.title ?? '';
-    final epName = episode.name ?? 'Episode ${episode.episodeNumber}';
+    final epName =
+        episode.name ?? l10n.mstreamEpisodeNumber(episode.episodeNumber);
     final item = MultimediaItem(
       title: title,
       url: media.url ?? '',
@@ -280,6 +279,7 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(LayoutConstants.spacingMd),
       child: Row(
@@ -288,10 +288,10 @@ class _Toolbar extends StatelessWidget {
             child: TextField(
               controller: controller,
               textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search_rounded),
-                hintText: 'Search this source',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: l10n.mstreamSearchHint,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: onSubmitted,
@@ -305,7 +305,7 @@ class _Toolbar extends StatelessWidget {
               for (final s in sources)
                 DropdownMenuItem(
                   value: s.uniqueId,
-                  child: Text(s.name ?? 'Unknown'),
+                  child: Text(s.name ?? l10n.unknown),
                 ),
             ],
             onChanged: (id) {
@@ -375,6 +375,7 @@ class _EpisodeSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return FractionallySizedBox(
       heightFactor: 0.8,
       child: FutureBuilder<DMedia>(
@@ -385,7 +386,7 @@ class _EpisodeSheet extends StatelessWidget {
           }
           if (snapshot.hasError) return _Message('${snapshot.error}');
           final episodes = snapshot.data?.episodes ?? const <DEpisode>[];
-          if (episodes.isEmpty) return const _Message('No episodes listed.');
+          if (episodes.isEmpty) return _Message(l10n.mstreamNoEpisodes);
           return ListView.builder(
             itemCount: episodes.length + 1,
             itemBuilder: (context, i) {
@@ -400,10 +401,12 @@ class _EpisodeSheet extends StatelessWidget {
               final ep = episodes[i - 1];
               return ListTile(
                 leading: const Icon(Icons.play_circle_outline_rounded),
-                title: Text(ep.name ?? 'Episode ${ep.episodeNumber}'),
+                title: Text(
+                  ep.name ?? l10n.mstreamEpisodeNumber(ep.episodeNumber),
+                ),
                 subtitle: ep.episodeNumber.isEmpty
                     ? null
-                    : Text('Episode ${ep.episodeNumber}'),
+                    : Text(l10n.mstreamEpisodeNumber(ep.episodeNumber)),
                 onTap: () => Navigator.of(context).pop(ep),
               );
             },

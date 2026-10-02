@@ -1,9 +1,0 @@
- M linux/flutter/generated_plugin_registrant.cc
- M linux/flutter/generated_plugins.cmake
- M macos/Flutter/GeneratedPluginRegistrant.swift
- M pubspec.lock
- M pubspec.yaml
- M windows/flutter/generated_plugin_registrant.cc
- M windows/flutter/generated_plugins.cmake
-?? diag/pubspec.orig.yaml
-?? diag/results/

@@ -1,0 +1,27 @@
+name: install_plugin
+description: >
+  install_plugin 2.1.0, Android only, with its build script brought up to
+  Gradle 9 / AGP 8. See README.md.
+# Upstream is 2.1.0; the +1 marks this as the patched copy.
+version: 2.1.0+1
+publish_to: 'none'
+homepage: https://github.com/hui-z/flutter_install_plugin
+
+# The SDK bounds are upstream's, so the Dart sources keep their language version.
+environment:
+  sdk: '>=2.12.0 <4.0.0'
+  flutter: '>=1.17.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+# Upstream also registers an iOS plugin whose only method opens an App Store URL.
+# The bridge calls installApk(), which is Android-only, so this copy declares
+# Android alone and the iOS build compiles and registers nothing for it.
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.zaihui.installplugin
+        pluginClass: InstallPlugin

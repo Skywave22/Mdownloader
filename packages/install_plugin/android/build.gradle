@@ -1,0 +1,44 @@
+// Modernised copy of upstream install_plugin 2.1.0's build script. The original
+// declared no `namespace` (AGP 8 refuses to configure a library without one) and
+// pinned AGP 7.3 and Kotlin 1.7.10 in its own buildscript. The Kotlin source is
+// untouched. See ../README.md.
+
+group = 'com.zaihui.installplugin'
+version = '2.1.0'
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace = 'com.zaihui.installplugin'
+    // The app's root build.gradle.kts overrides compileSdk and ndkVersion for
+    // every subproject; this is the value for building the plugin on its own.
+    compileSdk = 36
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    lint {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    // InstallFileProvider extends androidx.core.content.FileProvider. Upstream
+    // reached it through androidx.legacy:legacy-support-v4:1.0.0.
+    implementation 'androidx.core:core:1.13.1'
+}

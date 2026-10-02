@@ -1846,4 +1846,95 @@ class AppLocalizationsKn extends AppLocalizations {
   String addonManageNoMatch(String query) {
     return 'No installed add-on matches \"$query\".';
   }
+
+  @override
+  String get refresh => 'ರಿಫ್ರೆಶ್ ಮಾಡಿ';
+
+  @override
+  String get update => 'ಅಪ್‌ಡೇಟ್ ಮಾಡಿ';
+
+  @override
+  String get uninstall => 'ಅನ್‌ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ';
+
+  @override
+  String get add => 'ಸೇರಿಸಿ';
+
+  @override
+  String get available => 'ಲಭ್ಯವಿದೆ';
+
+  @override
+  String get manga => 'ಮಂಗಾ';
+
+  @override
+  String get novel => 'ಕಾದಂಬರಿ';
+
+  @override
+  String get multiProvidersSubtitle =>
+      'ಒಟ್ಟುಗೂಡಿಸಿದ ಬಹು-ಮೂಲ ಪ್ರೊವೈಡರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ';
+
+  @override
+  String get multiProvidersBackend => 'ಬ್ಯಾಕೆಂಡ್';
+
+  @override
+  String get multiProvidersRepositoryUrl => 'ರೆಪೊಸಿಟರಿ URL';
+
+  @override
+  String get multiProvidersRuntimeBridge => 'ರನ್‌ಟೈಮ್ ಬ್ರಿಡ್ಜ್';
+
+  @override
+  String get multiProvidersStageStarting =>
+      'ವಿಸ್ತರಣೆ ಬ್ರಿಡ್ಜ್ ಪ್ರಾರಂಭವಾಗುತ್ತಿದೆ…';
+
+  @override
+  String get multiProvidersStageInstalling =>
+      'ರನ್‌ಟೈಮ್ ಹೋಸ್ಟ್ ಇನ್‌ಸ್ಟಾಲ್ ಆಗುತ್ತಿದೆ…';
+
+  @override
+  String get multiProvidersStageNoHost =>
+      'ರನ್‌ಟೈಮ್ ಹೋಸ್ಟ್ ಇನ್‌ಸ್ಟಾಲ್ ಆಗಿಲ್ಲ — ಅದು ಇನ್‌ಸ್ಟಾಲ್ ಆಗುವವರೆಗೆ Aniyomi ಮತ್ತು CloudStream ಮೂಲಗಳು ಲಭ್ಯವಿಲ್ಲ.';
+
+  @override
+  String get multiProvidersStageReady =>
+      'ರನ್‌ಟೈಮ್ ಹೋಸ್ಟ್ ಲೋಡ್ ಆಗಿದೆ — ಎಲ್ಲಾ ಬ್ಯಾಕೆಂಡ್‌ಗಳು ಲಭ್ಯವಿವೆ';
+
+  @override
+  String get multiProvidersStageUnsupported =>
+      'ಈ ಪ್ಲ್ಯಾಟ್‌ಫಾರ್ಮ್‌ನಲ್ಲಿ ವಿಸ್ತರಣೆ ರನ್‌ಟೈಮ್‌ಗಳು ಲಭ್ಯವಿಲ್ಲ.';
+
+  @override
+  String get multiProvidersNoInstalled =>
+      'ಇನ್ನೂ ಯಾವುದೇ ಮೂಲಗಳನ್ನು ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿಲ್ಲ. ರೆಪೊಸಿಟರಿಯನ್ನು ಸೇರಿಸಿ, ನಂತರ \"ಲಭ್ಯವಿದೆ\" ನಿಂದ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ.';
+
+  @override
+  String get multiProvidersNoAvailable =>
+      'ಯಾವುದೇ ಮೂಲಗಳು ಲಭ್ಯವಿಲ್ಲ. ಮೇಲಿನ ಲಿಂಕ್ ಬಟನ್ ಬಳಸಿ ರೆಪೊಸಿಟರಿಯನ್ನು ಸೇರಿಸಿ.';
+
+  @override
+  String get mstreamNoSources =>
+      'ಯಾವುದೇ ಸ್ಟ್ರೀಮ್ ಮೂಲಗಳನ್ನು ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿಲ್ಲ.\nರೆಪೊಸಿಟರಿ ಸೇರಿಸಲು ಮತ್ತು ಒಂದು ಮೂಲವನ್ನು ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಲು ಸೆಟ್ಟಿಂಗ್‌ಗಳು → ವಿಸ್ತರಣೆಗಳು → MultiProviders ತೆರೆಯಿರಿ.';
+
+  @override
+  String get mstreamPickSource =>
+      'ಬ್ರೌಸ್ ಮಾಡಲು ಪ್ರಾರಂಭಿಸಲು ಒಂದು ಮೂಲವನ್ನು ಆರಿಸಿ.';
+
+  @override
+  String get mstreamNothingFound => 'ಏನೂ ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  @override
+  String get mstreamNoEpisodes => 'ಯಾವುದೇ ಸಂಚಿಕೆಗಳನ್ನು ಪಟ್ಟಿ ಮಾಡಿಲ್ಲ.';
+
+  @override
+  String get mstreamNoStreams =>
+      'ಈ ಸಂಚಿಕೆಗಾಗಿ ಯಾವುದೇ ಸ್ಟ್ರೀಮ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  @override
+  String mstreamEpisodeNumber(String number) {
+    return 'ಸಂಚಿಕೆ $number';
+  }
+
+  @override
+  String get mstreamSearchHint => 'ಈ ಮೂಲದಲ್ಲಿ ಹುಡುಕಿ';
+
+  @override
+  String get mstreamManageProviders => 'ಪ್ರೊವೈಡರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ';
 }

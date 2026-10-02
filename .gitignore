@@ -102,3 +102,12 @@ node_modules/
 reports/*
 research_notes/*
 docs/superpowers/*
+
+# assets/plugins/ is listed under `flutter: assets:` in pubspec.yaml, and Flutter
+# refuses to build (and `flutter analyze` warns) when a listed directory does not
+# exist. The bare `plugins/` rule above ignores it, so a fresh checkout has no
+# such directory unless a placeholder is tracked. Plugin bundles dropped in here
+# at build time stay ignored; only the placeholder is kept.
+!assets/plugins/
+assets/plugins/*
+!assets/plugins/.gitkeep

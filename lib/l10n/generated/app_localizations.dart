@@ -3338,6 +3338,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No installed add-on matches \"{query}\".'**
   String addonManageNoMatch(String query);
+
+  /// Tooltip on the button that reloads a list. In MultiProviders it re-fetches every repository.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// Tooltip on the button that updates an installed extension source to its newer version.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
+  /// Tooltip on the button that removes an installed extension source.
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall'**
+  String get uninstall;
+
+  /// Confirm button of a small dialog that adds one item. In MultiProviders it adds a repository.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// Tab title: the extension sources offered by the configured repositories. Counterpart of the Installed tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// Content-type choice in MultiProviders: sources that serve manga.
+  ///
+  /// In en, this message translates to:
+  /// **'Manga'**
+  String get manga;
+
+  /// Content-type choice in MultiProviders: sources that serve novels.
+  ///
+  /// In en, this message translates to:
+  /// **'Novel'**
+  String get novel;
+
+  /// Settings, Extensions group: subtitle of the MultiProviders entry. MultiProviders itself is a product name and stays as written.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage aggregated multi-source providers'**
+  String get multiProvidersSubtitle;
+
+  /// Add-repository dialog: label of the dropdown that picks which extension system the repository belongs to (Aniyomi, CloudStream, Mangayomi or Sora).
+  ///
+  /// In en, this message translates to:
+  /// **'Backend'**
+  String get multiProvidersBackend;
+
+  /// Add-repository dialog: label of the field for the repository address.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository URL'**
+  String get multiProvidersRepositoryUrl;
+
+  /// MultiProviders: title of the status card for the extension runtime bridge, the component that loads Aniyomi, CloudStream, Mangayomi and Sora extensions.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime bridge'**
+  String get multiProvidersRuntimeBridge;
+
+  /// MultiProviders status card: the extension bridge is starting up.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the extension bridge…'**
+  String get multiProvidersStageStarting;
+
+  /// MultiProviders status card: the Runtime Host, the component that runs Aniyomi and CloudStream extensions, is being downloaded or installed.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing the Runtime Host…'**
+  String get multiProvidersStageInstalling;
+
+  /// MultiProviders status card: the bridge works, but the optional Runtime Host is not installed, so Aniyomi and CloudStream sources cannot run. Mangayomi and Sora sources still work.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime Host not installed — Aniyomi and CloudStream sources are unavailable until it is.'**
+  String get multiProvidersStageNoHost;
+
+  /// MultiProviders status card: everything, including the Runtime Host, is loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime Host loaded — all backends available'**
+  String get multiProvidersStageReady;
+
+  /// MultiProviders status card on iOS: extension runtimes cannot run on this platform.
+  ///
+  /// In en, this message translates to:
+  /// **'Extension runtimes are not available on this platform.'**
+  String get multiProvidersStageUnsupported;
+
+  /// MultiProviders, Installed tab: empty state. "Available" names the other tab and should match its translation.
+  ///
+  /// In en, this message translates to:
+  /// **'No sources installed yet. Add a repository, then install from Available.'**
+  String get multiProvidersNoInstalled;
+
+  /// MultiProviders, Available tab: empty state. The link button is the add-repository button in the app bar.
+  ///
+  /// In en, this message translates to:
+  /// **'No sources available. Add a repository with the link button above.'**
+  String get multiProvidersNoAvailable;
+
+  /// MStream tab, empty state when no extension source is installed. The arrows separate the levels of the Settings menu; keep MultiProviders as written, it is a product name.
+  ///
+  /// In en, this message translates to:
+  /// **'No stream sources installed.\nOpen Settings → Extensions → MultiProviders to add a repository and install one.'**
+  String get mstreamNoSources;
+
+  /// MStream tab: shown until a source has been selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a source to start browsing.'**
+  String get mstreamPickSource;
+
+  /// MStream tab: the source's popular list or search returned no results.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found.'**
+  String get mstreamNothingFound;
+
+  /// MStream episode picker: the source lists no episodes for this title.
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes listed.'**
+  String get mstreamNoEpisodes;
+
+  /// MStream: message shown when the chosen episode resolves to no playable stream.
+  ///
+  /// In en, this message translates to:
+  /// **'No streams found for this episode.'**
+  String get mstreamNoStreams;
+
+  /// MStream episode label. The number is whatever the source reports, so it is a string and may not be numeric.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode {number}'**
+  String mstreamEpisodeNumber(String number);
+
+  /// MStream: placeholder of the search box that is scoped to the selected source.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this source'**
+  String get mstreamSearchHint;
+
+  /// MStream app bar: tooltip of the button that opens MultiProviders, where sources are installed.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage providers'**
+  String get mstreamManageProviders;
 }
 
 class _AppLocalizationsDelegate
