@@ -18,6 +18,12 @@ name: l10n codegen
 
 on:
   workflow_dispatch:
+  # TEMPORARY (remove before merge): registers the workflow on a feature
+  # branch, where workflow_dispatch is not available until the file lands on
+  # the default branch. One run to produce the artifact, then this goes back
+  # to workflow_dispatch-only.
+  push:
+    branches: [arena/01a0fb7d-mdownloader]
 
 permissions:
   contents: read
