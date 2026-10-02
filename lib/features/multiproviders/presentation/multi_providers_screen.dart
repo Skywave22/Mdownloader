@@ -22,6 +22,7 @@ const List<({String id, String name})> _backends = [
   (id: 'cloudstream', name: 'CloudStream'),
   (id: 'mangayomi', name: 'Mangayomi'),
   (id: 'sora', name: 'Sora'),
+  (id: 'legado', name: 'Legado'),
 ];
 
 /// Manages the AnymeX extension runtime bridge: the Runtime Host download,
@@ -160,11 +161,14 @@ class _MultiProvidersScreenState extends ConsumerState<MultiProvidersScreen>
 
     final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(multiProviderBridgeProvider.notifier);
+    // Legado sources are novels; pasting a Legado link while on another tab
+    // used to be a silent no-op - route it to the right type instead.
+    final type = added.backend == 'legado' ? ItemType.novel : _type;
     // Repos can fail (invalid URL for the backend, backend not registered...)
     // and the bridge used to swallow it - the user saw "I added it and
     // nothing happened". Surface both failure and success instead.
     try {
-      await controller.addRepo(added.url, _type, added.backend);
+      await controller.addRepo(added.url, type, added.backend);
       await controller.refresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

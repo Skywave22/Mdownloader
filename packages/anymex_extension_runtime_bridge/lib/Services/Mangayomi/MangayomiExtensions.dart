@@ -224,17 +224,17 @@ class MangayomiExtensions extends Extension {
 
       final repos = _loadRepos(type);
 
-      if (repos.any((r) => r.url == repoUrl)) {
-        return;
-      }
-
       final res = await _client.get(uri);
       if (res.statusCode != 200) {
         throw Exception("Failed to fetch repo");
       }
 
-      final repo = Repo(url: repoUrl, managerId: id);
-      final updatedRepos = List<Repo>.from(repos)..add(repo);
+      // Re-adding an already-saved repo must still fetch and merge its
+      // sources - the silent early-return is exactly "I add the link and
+      // nothing comes" when an earlier fetch failed or the list is stale.
+      final updatedRepos = repos.any((r) => r.url == repoUrl)
+          ? repos
+          : (List<Repo>.from(repos)..add(Repo(url: repoUrl, managerId: id)));
 
       _saveRepos(updatedRepos, type);
       final parsed = await compute(

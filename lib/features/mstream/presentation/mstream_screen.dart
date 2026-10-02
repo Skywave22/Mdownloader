@@ -468,18 +468,25 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
   }
 
   Source _selectedSource(List<Source> enabled) {
-    final current = _source;
-    if (current != null) {
+    final bridge = ref.read(multiProviderBridgeProvider.notifier);
+    bool usable(Source s) => bridge.methodsFor(s) != null;
+
+    // Remember the user's pick across restarts, but only while its extension
+    // is actually reachable — a dead remembered/first source used to
+    // dead-end the whole screen ("first is not working").
+    final wantedId = _source?.uniqueId ??
+        ref.read(multiProviderBridgeProvider).lastSourceId;
+    if (wantedId != null) {
       for (final source in enabled) {
-        if (source.uniqueId == current.uniqueId) return source;
+        if (source.uniqueId == wantedId && usable(source)) return source;
       }
     }
-    final remembered = ref.read(multiProviderBridgeProvider).lastSourceId;
-    if (remembered != null) {
-      for (final source in enabled) {
-        if (source.uniqueId == remembered) return source;
-      }
+    // Fall back to the first source whose extension resolves.
+    for (final source in enabled) {
+      if (usable(source)) return source;
     }
+    // Nothing is resolvable yet (backend still starting) - keep the old
+    // behaviour so the retry state explains the failure.
     return enabled.first;
   }
 

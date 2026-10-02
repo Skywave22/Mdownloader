@@ -60,7 +60,11 @@ class LegadoExtensions extends Extension {
 
   @override
   Future<void> addRepo(String repoUrl, ItemType type) async {
-    if (type != ItemType.novel) return;
+    if (type != ItemType.novel) {
+      // Used to return silently - "I paste the link and nothing happens".
+      throw Exception(
+          "Legado repositories are novel sources - add them from the Novel tab");
+    }
 
     try {
       final uri = Uri.tryParse(repoUrl);
@@ -69,9 +73,6 @@ class LegadoExtensions extends Extension {
       }
 
       final repos = _loadRepos(type);
-      if (repos.any((r) => r.url == repoUrl)) {
-        return;
-      }
 
       final res = await _client.get(uri);
       if (res.statusCode != 200) {
@@ -86,15 +87,18 @@ class LegadoExtensions extends Extension {
         repoName = uri.pathSegments.last.replaceAll('.json', '');
       }
 
-      final repo = Repo(
-        url: repoUrl,
-        name: repoName ?? 'Legado Repo',
-        iconUrl: 'https://raw.githubusercontent.com/gedoor/legado/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png',
-        managerId: id,
-        extensions: parsed.length.toString(),
-      );
-
-      final updatedRepos = List<Repo>.from(repos)..add(repo);
+      // Re-adding an already-saved repo still fetches and merges its sources
+      // instead of silently doing nothing.
+      final updatedRepos = repos.any((r) => r.url == repoUrl)
+          ? repos
+          : (List<Repo>.from(repos)
+            ..add(Repo(
+              url: repoUrl,
+              name: repoName ?? 'Legado Repo',
+              iconUrl: 'https://raw.githubusercontent.com/gedoor/legado/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png',
+              managerId: id,
+              extensions: parsed.length.toString(),
+            )));
       _saveRepos(updatedRepos, type);
 
       final rx = getAvailableRx(type);

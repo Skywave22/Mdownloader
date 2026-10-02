@@ -74,10 +74,6 @@ class SoraExtensions extends Extension {
 
       final repos = _loadRepos(type);
 
-      if (repos.any((r) => r.url == repoUrl)) {
-        return;
-      }
-
       final res = await _client.get(uri);
       if (res.statusCode != 200) {
         throw Exception("Failed to fetch repo");
@@ -115,14 +111,18 @@ class SoraExtensions extends Extension {
         }
       }
 
-      final repo = Repo(
-          url: repoUrl,
-          name: repoName,
-          iconUrl: repoIcon,
-          managerId: id,
-          extensions: parsed.length.toString());
-
-      final updatedRepos = List<Repo>.from(repos)..add(repo);
+      // Re-adding an already-saved repo still fetches and merges its
+      // sources (see the Mangayomi backend note) - the silent early-return
+      // is exactly "I add the link and nothing comes".
+      final updatedRepos = repos.any((r) => r.url == repoUrl)
+          ? repos
+          : (List<Repo>.from(repos)
+            ..add(Repo(
+                url: repoUrl,
+                name: repoName,
+                iconUrl: repoIcon,
+                managerId: id,
+                extensions: parsed.length.toString())));
 
       _saveRepos(updatedRepos, type);
       final rx = getAvailableRx(type);

@@ -56,6 +56,16 @@ possible so they can be offered back as a PR.
    Both now throw `StateError('No extension backend "$managerId" is
    registered')` so the UI can show the real cause.
 
+8. **`addRepo` on every backend — re-adding a saved repo re-fetches and
+   merges** (Mangayomi/Sora/Aniyomi/Legado). All four used to `return`
+   silently when the repo URL was already known, so re-adding a link whose
+   earlier fetch had failed (or whose list was stale) showed "nothing" -
+   the exact user complaint. The repo entry is still only appended once, but
+   its manifest is always re-parsed and merged into the available list.
+   Additionally, Legado's `addRepo` no longer silently ignores non-novel
+   types (it throws a clear "add them from the Novel tab" error), and the
+   app routes Legado links to the novel type automatically.
+
 `prebuilt/` and `RuntimeBridges/` from upstream are not vendored (47+ MB of
 build-script artifacts; the Flutter build does not reference them).
 `dependency_overrides` in upstream's pubspec are stripped — the app root's
