@@ -1,0 +1,63 @@
+# Throwaway diagnostic: reproduces the CI failure points and COMMITS the
+# output to the branch (log hosts are unreadable from here). Removed once
+# the round is green.
+name: diag
+
+on:
+  push:
+    branches: [arena/01a0fb7d-mdownloader]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: 3.47.5
+
+jobs:
+  diag:
+    name: Diagnose
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Run the failing steps, capture everything
+        run: |
+          set +e
+          exec 2>&1
+          {
+            echo "=== flutter pub get ==="
+            flutter pub get; echo "exit=$?"
+            echo "=== flutter gen-l10n ==="
+            flutter gen-l10n; echo "exit=$?"
+            echo "=== build_runner ==="
+            dart run build_runner build --delete-conflicting-outputs; echo "exit=$?"
+            echo "=== gen-l10n drift ==="
+            git diff --stat -- lib/l10n/generated
+            echo "=== flutter analyze ==="
+            flutter analyze; echo "exit=$?"
+            echo "=== dart analyze --fatal-infos ==="
+            dart analyze --fatal-infos; echo "exit=$?"
+            echo "=== flutter test (mapping test only) ==="
+            flutter test test/features/multiproviders/bridge_mapping_test.dart; echo "exit=$?"
+          } > diag_output.txt
+          wc -l diag_output.txt
+
+      - name: Commit diagnostics
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diag_output.txt
+          if git diff --cached --quiet; then
+            echo 'no output'
+          else
+            git commit -m 'chore(diag): capture analyze/test output [skip ci]'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
