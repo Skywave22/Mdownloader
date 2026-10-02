@@ -1969,4 +1969,13 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get extensionRuntimeCredit =>
       'एक्सटेंशन रनटाइम ब्रिज: AnymeXExtensionRuntimeBridge · RyanYuuki द्वारा';
+
+  @override
+  String get mstreamPopular => 'लोकप्रिय';
+
+  @override
+  String get mstreamLatest => 'नवीनतम अपडेट';
+
+  @override
+  String get multiProvidersFilterHint => 'एक्सटेंशन खोजें';
 }

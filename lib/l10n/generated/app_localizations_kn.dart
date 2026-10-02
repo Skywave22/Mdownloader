@@ -1983,4 +1983,13 @@ class AppLocalizationsKn extends AppLocalizations {
   @override
   String get extensionRuntimeCredit =>
       'ಎಕ್ಸ್‌ಟೆನ್ಶನ್ ರನ್‌ಟೈಮ್ ಬ್ರಿಡ್ಜ್: AnymeXExtensionRuntimeBridge · RyanYuuki ಅವರಿಂದ';
+
+  @override
+  String get mstreamPopular => 'ಜನಪ್ರಿಯ';
+
+  @override
+  String get mstreamLatest => 'ಇತ್ತೀಚಿನ ನವೀಕರಣಗಳು';
+
+  @override
+  String get multiProvidersFilterHint => 'ಎಕ್ಸ್‌ಟೆನ್ಶನ್‌ಗಳನ್ನು ಹುಡುಕಿ';
 }

@@ -1934,4 +1934,13 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get extensionRuntimeCredit =>
       'Extension runtime bridge: AnymeXExtensionRuntimeBridge · by RyanYuuki';
+
+  @override
+  String get mstreamPopular => 'Popular';
+
+  @override
+  String get mstreamLatest => 'Latest updates';
+
+  @override
+  String get multiProvidersFilterHint => 'Search extensions';
 }

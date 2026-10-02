@@ -3560,6 +3560,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Extension runtime bridge: AnymeXExtensionRuntimeBridge · by RyanYuuki'**
   String get extensionRuntimeCredit;
+
+  /// No description provided for @mstreamPopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get mstreamPopular;
+
+  /// No description provided for @mstreamLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest updates'**
+  String get mstreamLatest;
+
+  /// No description provided for @multiProvidersFilterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search extensions'**
+  String get multiProvidersFilterHint;
 }
 
 class _AppLocalizationsDelegate
