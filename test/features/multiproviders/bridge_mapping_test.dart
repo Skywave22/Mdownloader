@@ -113,15 +113,16 @@ void main() {
     });
 
     test('devNameOf prefers author, then repo owner, then repo', () {
-      Source with({String? author, String? repo}) =>
+      Source make({String? author, String? repo}) =>
           Source(name: 'n', author: author, repo: repo);
 
-      expect(devNameOf(with(author: 'Dev')), 'Dev');
+      expect(devNameOf(make(author: 'Dev')), 'Dev');
       expect(
-        devNameOf(with(repo: 'https://github.com/some-dev/exts/index.min.json')),
+        devNameOf(
+            make(repo: 'https://github.com/some-dev/exts/index.min.json')),
         'some-dev',
       );
-      expect(devNameOf(with()), '—');
+      expect(devNameOf(make()), '—');
     });
   });
 }

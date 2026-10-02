@@ -533,10 +533,11 @@ class _SourceListState extends ConsumerState<_SourceList> {
           child: Builder(
             builder: (context) {
               final ids = <String>{
-                for (final s in async.valueOrNull ?? const <Source>[])
+                for (final s in async.value ?? const <Source>[])
                   if ((s.managerId ?? '').isNotEmpty) s.managerId!,
               };
-              final chips = <String>['all', ...ids.toList()..sort()];
+              final sortedIds = ids.toList()..sort();
+              final chips = <String>['all', ...sortedIds];
               return ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(
