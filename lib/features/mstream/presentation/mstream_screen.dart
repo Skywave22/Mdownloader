@@ -178,8 +178,11 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     if (methods == null) return;
 
     // Home's opening experience: a full details page with the poster banner,
-    // metadata, synopsis and episode list.
-    Navigator.of(context).push<void>(
+    // metadata, synopsis and episode list. Pushed on the ROOT navigator -
+    // Home's /details and /player routes live there too, so the player and
+    // every dialog below stack exactly like they do on Home (the shell
+    // navigation bar is covered instead of peeking beside the player).
+    Navigator.of(context, rootNavigator: true).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => MStreamDetailsScreen(
           media: media,
@@ -196,7 +199,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     final methods =
         ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
     if (methods == null) return;
-    Navigator.of(context).push<void>(
+    Navigator.of(context, rootNavigator: true).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => MStreamAllScreen(
           title: title,

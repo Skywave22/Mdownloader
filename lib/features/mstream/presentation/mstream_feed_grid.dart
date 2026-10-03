@@ -122,7 +122,10 @@ class _MStreamFeedGridState extends State<MStreamFeedGrid> {
       if (!mounted || generation != _generation) return;
       setState(() {
         if (append) {
-          _items.addAll(pages.list);
+          // Page boundaries can shift between requests - dedupe by URL so
+          // the grid never shows the same poster twice.
+          final seen = _items.map((m) => m.url ?? '').toSet();
+          _items.addAll(pages.list.where((m) => seen.add(m.url ?? '')));
           _page = page;
         } else {
           _items
@@ -149,7 +152,8 @@ class _MStreamFeedGridState extends State<MStreamFeedGrid> {
   }
 
   void _open(DMedia media) {
-    Navigator.of(context).push<void>(
+    // Root navigator - same stack as Home's /details (player and dialogs).
+    Navigator.of(context, rootNavigator: true).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => MStreamDetailsScreen(
           media: media,

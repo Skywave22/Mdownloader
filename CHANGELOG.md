@@ -1,6 +1,7 @@
 # Changelogs - Unreleased
 
 ### ✨ *New Features & Enhancements*
+- **MStream episode rows carry Home's live state** – Each episode shows the same two signals Home's episode cards do: a Watched/Watching badge and a progress bar over the thumbnail from your watch history, and real download state — a green check for an owned file, a live progress ring while a download runs (tapping it opens the progress dialog).
 - **Extensions grouped by developer** – The Available tab now groups extensions by their author ("dev"): each group is an expandable card headed by the author's name with an **Install all** button, and every extension inside keeps its own one-by-one install button. Sources without a declared author group under the repository owner.
 - **Backend filter** – Chip row in MultiProviders filters the lists per backend (CloudStream, Aniyomi, Mangayomi, Sora, Legado, Kotatsu) — "these are CloudStream, these are Aniyomi".
 - **Extension runtime in Settings** – New "Extension runtime bridge" entry in Settings with a one-tap install/update button for the Runtime Host APK (the same download the MultiProviders screen runs).
@@ -16,6 +17,11 @@
 - **MStream pagination and refresh** – Popular and search results load further pages as you scroll, the grid pulls to refresh, and failures show a Retry button instead of a bare error string.
 
 ### 🐞 *Bug Fixes & System Stability*
+- 🛠️ **Fixed: MStream Play button broken — silent freeze, or player opening under the shell bar** – Play used to await stream resolution with no feedback and then push the player on the wrong navigator (so the app's bottom bar sat on top of it) while skipping Home's playback flow entirely. Play now runs Home's exact path: an already-downloaded episode plays from disk, resolution shows the cancelable loading dialog, external players receive the stream when set, and the internal player opens with every stream as failover. MStream details now open on the root navigator exactly like Home's `/details`, so the player, dialogs and back button all stack one-to-one.
+- 🛠️ **Fixed: MStream Download button doing nothing while streams resolved (and re-downloading owned files)** – Downloads show the same cancelable loading dialog before the source picker; an already-downloaded episode's button opens the download manager (play locally / delete) instead of silently downloading it again, and a running download's button shows live progress instead of a dead icon.
+- 🛠️ **Fixed: crash in the MStream play path** – The player route was built with `episodes!.first`, which threw for sources that report no episodes; the play path now derives its episode safely.
+- 🛠️ **Fixed: duplicate posters in paginated MStream grids** – Page boundaries can shift between requests; appended pages are now deduped by URL like the home rails.
+- 🛠️ **Fixed: "Install all" reporting a repository-add failure** – A failed install now shows the actual error instead of the wrong event's message.
 - 🛠️ **Fixed: switching extensions in MStream jumped back to the Home screen** – The source dialog closed itself *and* its callback popped a second time; that second pop removed the app shell route so the router landed on Home. The extension picker now stays on MStream.
 - 🛠️ **Fixed: MStream details showing only a Retry button (no poster, no metadata)** – `getDetail` failures no longer replace the page: the poster, title and metadata always render, and a compact retry note handles enrichment failures. Play/Download also fall back to the media itself when a source lists no episodes — so a movie always plays.
 - 🛠️ **Fixed: "EP 1" shown under movies** – Movies and one-shots now show just Play/Download like Home; the episode list appears only for real multi-episode series.

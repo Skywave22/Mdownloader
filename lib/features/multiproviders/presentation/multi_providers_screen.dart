@@ -983,8 +983,10 @@ class _AuthorGroupState extends ConsumerState<_AuthorGroup> {
       );
     } catch (e) {
       if (!mounted) return;
+      // Install failures say what actually happened - 'failed to add
+      // repository' is the wrong event for this button.
       messenger.showSnackBar(
-        SnackBar(content: Text(l10n.failedToAddRepository('$e'))),
+        SnackBar(content: Text(l10n.errorPrefix('$e'))),
       );
     } finally {
       if (mounted) setState(() => _installing = false);
