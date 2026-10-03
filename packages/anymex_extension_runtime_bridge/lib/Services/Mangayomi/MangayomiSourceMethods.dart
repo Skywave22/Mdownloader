@@ -19,7 +19,7 @@ import 'Util/get_source_preference.dart';
 import 'Util/lib.dart';
 import 'Eval/dart/model/filter.dart';
 
-class MangayomiSourceMethods implements SourceMethods {
+class MangayomiSourceMethods extends SourceMethods {
   @override
   final MSource source;
 

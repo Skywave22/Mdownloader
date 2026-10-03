@@ -11,7 +11,7 @@ import 'package:anymex_extension_runtime_bridge/Services/Legado/LegadoSourceMeth
 /// Regression tests for the tolerant JSON layer: manifests in the wild send
 /// strings as one-element lists, versions as numbers, flags as 0/1 - none of
 /// which may crash a repository add or a details fetch again
-/// ("type 'List<dynamic>' is not a subtype of type 'String'").
+/// (`type 'List<dynamic>' is not a subtype of type 'String'`).
 void main() {
   group('JsonX coercion', () {
     test('strOf joins lists and stringifies numbers', () {

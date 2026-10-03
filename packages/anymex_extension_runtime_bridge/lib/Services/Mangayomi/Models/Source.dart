@@ -67,7 +67,7 @@ class MSource extends Source {
       author: base.author,
       sourceCode: strOf(json['sourceCode']),
       sourceCodeUrl: strOf(json['sourceCodeUrl']) ?? strOf(json['url']),
-      headers: json['headers'] == null ? null : strMapOf(json['headers']),
+      headers: strOf(json['headers']),
       sourceCodeLanguage: isLnReader
           ? SourceCodeLanguage.lnreader
           : languages[langIndex],
