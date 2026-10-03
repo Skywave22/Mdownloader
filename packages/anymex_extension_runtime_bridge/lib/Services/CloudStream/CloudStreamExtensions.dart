@@ -1,3 +1,4 @@
+import '../../Models/JsonX.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -243,7 +244,7 @@ class CloudStreamExtensions extends Extension {
       final metas = <String, String?>{};
       for (final e in result) {
         final map = Map<String, dynamic>.from(e);
-        final internalName = map['internalName'] ?? map['name'] as String?;
+        final internalName = strOf(map['internalName']) ?? strOf(map['name']);
         if (internalName != null) {
           final norm = _normalizeName(internalName);
           var metaStr = getVal<String>('cs_meta_$norm');

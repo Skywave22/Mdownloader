@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../../Extensions/SourceMethods.dart';
 import '../../Models/DEpisode.dart';
+import '../../Models/DSection.dart';
 import '../../Models/DMedia.dart';
 import '../../Models/Page.dart';
 import '../../Models/Pages.dart';
@@ -145,6 +146,48 @@ class LegadoSourceMethods extends SourceMethods {
     }
   }
 
+  /// ExploreUrl rows: `"Title::url"` per line (an unnamed line becomes
+  /// "Section N"). These are the extension's own browse sections.
+  List<({String label, String url})> _exploreLines() {
+    final template = source.exploreUrl;
+    if (template == null || template.trim().isEmpty) return const [];
+    final out = <({String label, String url})>[];
+    var n = 0;
+    for (final raw in template.split(RegExp(r'[\r\n]+'))) {
+      final line = raw.trim();
+      if (line.isEmpty) continue;
+      n++;
+      final sep = line.indexOf('::');
+      out.add(sep > 0
+          ? (
+              label: line.substring(0, sep).trim(),
+              url: line.substring(sep + 2).trim(),
+            )
+          : (label: 'Section $n', url: line));
+    }
+    return out;
+  }
+
+  @override
+  Future<List<DSection>> getSections({SourceParams? parameters}) async {
+    final lines = _exploreLines();
+    // A single unnamed row is what Popular/Latest already cover.
+    if (lines.length < 2) return const [];
+    return [
+      for (final line in lines) DSection(id: line.url, name: line.label),
+    ];
+  }
+
+  @override
+  Future<Pages> getSectionPages(
+    DSection section,
+    int page, {
+    SourceParams? parameters,
+  }) {
+    if (section.id.trim().isEmpty) return Future.value(Pages(list: []));
+    return _getExplore(page, urlTemplate: section.id);
+  }
+
   @override
   Future<Pages> getPopular(int page, {SourceParams? parameters}) async {
     return _getExplore(page, preferPopular: true);
@@ -155,41 +198,34 @@ class LegadoSourceMethods extends SourceMethods {
     return _getExplore(page, preferPopular: false);
   }
 
-  Future<Pages> _getExplore(int page, {required bool preferPopular}) async {
+  Future<Pages> _getExplore(
+    int page, {
+    bool preferPopular = true,
+    String? urlTemplate,
+  }) async {
     try {
-      final exploreTemplate = source.exploreUrl;
-      if (exploreTemplate == null || exploreTemplate.trim().isEmpty) {
-        return Pages(list: [], hasNextPage: false);
-      }
-
-      // ExploreUrl can contain multiple sections e.g. "Latest::url1\nHot::url2"
-      final lines = exploreTemplate
-          .split(RegExp(r'[\r\n]+'))
-          .map((l) => l.trim())
-          .where((l) => l.isNotEmpty)
-          .toList();
-
-      if (lines.isEmpty) return Pages(list: [], hasNextPage: false);
-
-      String targetLine = lines.first;
-      if (preferPopular) {
-        final hotLine = lines.firstWhere(
-          (l) => l.toLowerCase().contains('hot') || l.toLowerCase().contains('popular'),
-          orElse: () => lines.length > 1 ? lines[1] : lines.first,
-        );
-        targetLine = hotLine;
+      String urlPart;
+      if (urlTemplate != null) {
+        urlPart = urlTemplate;
       } else {
-        final latestLine = lines.firstWhere(
-          (l) => l.toLowerCase().contains('latest') || l.toLowerCase().contains('update'),
-          orElse: () => lines.first,
-        );
-        targetLine = latestLine;
-      }
+        final lines = _exploreLines();
+        if (lines.isEmpty) return Pages(list: [], hasNextPage: false);
 
-      // Strip title prefix (e.g. "Hot::/novel-list/...")
-      String urlPart = targetLine;
-      if (targetLine.contains('::')) {
-        urlPart = targetLine.substring(targetLine.indexOf('::') + 2).trim();
+        bool matches(({String label, String url}) l, String word) {
+          final t = '${l.label} ${l.url}'.toLowerCase();
+          return t.contains(word);
+        }
+
+        final target = preferPopular
+            ? lines.firstWhere(
+                (l) => matches(l, 'hot') || matches(l, 'popular'),
+                orElse: () => lines.length > 1 ? lines[1] : lines.first,
+              )
+            : lines.firstWhere(
+                (l) => matches(l, 'latest') || matches(l, 'update'),
+                orElse: () => lines.first,
+              );
+        urlPart = target.url;
       }
 
       final url = LegadoRuleEngine.buildUrl(

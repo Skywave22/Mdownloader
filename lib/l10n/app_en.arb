@@ -1430,5 +1430,6 @@
   "mstreamLatest": "Latest updates",
   "multiProvidersFilterHint": "Search extensions",
   "repositoryAdded": "Repository {url} added.",
-  "failedToAddRepository": "Couldn't add repository: {error}"
+  "failedToAddRepository": "Couldn't add repository: {error}",
+  "addingRepository": "Adding repository…"
 }

@@ -2002,4 +2002,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String failedToAddRepository(Object error) {
     return 'ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಲಿಲ್ಲ: $error';
   }
+
+  @override
+  String get addingRepository => 'ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗುತ್ತಿದೆ…';
 }

@@ -164,19 +164,35 @@ class _MultiProvidersScreenState extends ConsumerState<MultiProvidersScreen>
     // Legado sources are novels; pasting a Legado link while on another tab
     // used to be a silent no-op - route it to the right type instead.
     final type = added.backend == 'legado' ? ItemType.novel : _type;
-    // Repos can fail (invalid URL for the backend, backend not registered...)
-    // and the bridge used to swallow it - the user saw "I added it and
-    // nothing happened". Surface both failure and success instead.
+    // Immediate, visible feedback: the fetch can take a while on slow links
+    // and "nothing happens" is what a silent wait feels like. The timeout
+    // keeps a dead URL from hanging forever.
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.addingRepository), duration: const Duration(seconds: 60)),
+    );
     try {
-      await controller.addRepo(added.url, type, added.backend);
-      await controller.refresh();
+      await controller
+          .addRepo(added.url, type, added.backend)
+          .timeout(const Duration(seconds: 30));
+      await controller
+          .refresh()
+          .timeout(const Duration(seconds: 60));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(content: Text(l10n.repositoryAdded(added.url))),
+      );
+    } on TimeoutException {
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.failedToAddRepository('timeout'))),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(content: Text(l10n.failedToAddRepository('$e'))),
       );
     }
@@ -338,8 +354,6 @@ class _InstallProgressDialog extends StatelessWidget {
               ),
               const SizedBox(height: LayoutConstants.spacingMd),
               Text(l10n.sourceAttempt(done.clamp(1, total), total)),
-              const SizedBox(height: LayoutConstants.spacingMd),
-              const BridgeCredit(),
             ],
           );
         },
@@ -454,6 +468,9 @@ class _SourceList extends ConsumerStatefulWidget {
 class _SourceListState extends ConsumerState<_SourceList> {
   final TextEditingController _filter = TextEditingController();
 
+  /// Selected backend chip: 'all' or a manager id (cloudstream, aniyomi...).
+  String _backend = 'all';
+
   @override
   void dispose() {
     _filter.dispose();
@@ -510,6 +527,40 @@ class _SourceListState extends ConsumerState<_SourceList> {
             ),
           ),
         ),
+        // Backend filter: "these are CloudStream, these are Aniyomi...".
+        SizedBox(
+          height: 42,
+          child: Builder(
+            builder: (context) {
+              final ids = <String>{
+                for (final s in async.value ?? const <Source>[])
+                  if ((s.managerId ?? '').isNotEmpty) s.managerId!,
+              };
+              final sortedIds = ids.toList()..sort();
+              final chips = <String>['all', ...sortedIds];
+              return ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: LayoutConstants.spacingMd,
+                  vertical: 4,
+                ),
+                children: [
+                  for (final id in chips)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(
+                          id == 'all' ? l10n.all : managerLabelOf(id),
+                        ),
+                        selected: _backend == id,
+                        onSelected: (_) => setState(() => _backend = id),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
         Expanded(
           child: async.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -540,15 +591,16 @@ class _SourceListState extends ConsumerState<_SourceList> {
                         if (!installedIds.contains(s.uniqueId)) s,
                     ];
               final needle = _filter.text.trim().toLowerCase();
-              final visible = needle.isEmpty
-                  ? installed
-                  : [
-                      for (final s in installed)
-                        if ((s.name ?? '').toLowerCase().contains(needle) ||
-                            (s.lang ?? '').toLowerCase().contains(needle) ||
-                            (s.managerId ?? '').toLowerCase().contains(needle))
-                          s,
-                    ];
+              bool matches(Source s) {
+                if (_backend != 'all' && s.managerId != _backend) return false;
+                if (needle.isEmpty) return true;
+                return (s.name ?? '').toLowerCase().contains(needle) ||
+                    (s.author ?? '').toLowerCase().contains(needle) ||
+                    (s.lang ?? '').toLowerCase().contains(needle) ||
+                    (s.managerId ?? '').toLowerCase().contains(needle);
+              }
+
+              final visible = [for (final s in installed) if (matches(s)) s];
               if (visible.isEmpty) {
                 return Center(
                   child: Padding(
@@ -565,31 +617,43 @@ class _SourceListState extends ConsumerState<_SourceList> {
                   ),
                 );
               }
+              if (widget.installed) {
+                return ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: visible.length,
+                  itemBuilder: (context, i) {
+                    final source = visible[i];
+                    return _SourceCard(
+                      source: source,
+                      installed: widget.installed,
+                      disabled: bridgeState.isDisabled(source.uniqueId),
+                    );
+                  },
+                );
+              }
+              // Available: grouped by developer ("dev") - one expandable
+              // group per author with an Install-all button, and each
+              // extension inside keeps its own one-by-one install button.
+              final groups = <String, List<Source>>{};
+              for (final s in visible) {
+                groups.putIfAbsent(devNameOf(s), () => <Source>[]).add(s);
+              }
+              final entries = groups.entries.toList()
+                ..sort((a, b) =>
+                    a.key.toLowerCase().compareTo(b.key.toLowerCase()));
               return ListView.builder(
                 padding: EdgeInsets.zero,
-                itemCount: visible.length,
+                itemCount: entries.length,
                 itemBuilder: (context, i) {
-                  final source = visible[i];
-                  return _SourceCard(
-                    source: source,
-                    installed: widget.installed,
-                    disabled: bridgeState.isDisabled(source.uniqueId),
+                  final entry = entries[i];
+                  return _AuthorGroup(
+                    author: entry.key,
+                    sources: entry.value,
                   );
                 },
               );
             },
           ),
-        ),
-        // Credit where it is due: the runtime that executes every
-        // extension installed from this screen.
-        const Padding(
-          padding: EdgeInsets.fromLTRB(
-            LayoutConstants.spacingLg,
-            LayoutConstants.spacingSm,
-            LayoutConstants.spacingLg,
-            LayoutConstants.spacingLg,
-          ),
-          child: BridgeCredit(),
         ),
       ],
     );
@@ -677,6 +741,13 @@ class _SourceCard extends ConsumerWidget {
                         spacing: 6,
                         runSpacing: 4,
                         children: [
+                          // The author shows on every card (Installed too),
+                          // not just as the Available tab's group header.
+                          if ((source.author ?? '').trim().isNotEmpty)
+                            _chip(
+                              context,
+                              '${l10n.author}: ${source.author!.trim()}',
+                            ),
                           if ((source.lang ?? '').isNotEmpty)
                             _chip(context, source.lang!.toUpperCase()),
                           _chip(context, 'v${source.version ?? '?'}'),
@@ -773,5 +844,159 @@ class _SourceIcon extends StatelessWidget {
         errorWidget: (_, _, _) => const Icon(Icons.extension_rounded),
       ),
     );
+  }
+}
+
+/// Display name for a backend manager id ('-desktop' variants fold into
+/// their mobile name).
+String managerLabelOf(String id) {
+  final base = id.replaceFirst('-desktop', '');
+  for (final backend in _backends) {
+    if (backend.id == base) return backend.name;
+  }
+  switch (base) {
+    case 'kotatsu':
+      return 'Kotatsu';
+    case 'legado':
+      return 'Legado';
+  }
+  return base;
+}
+
+/// The "dev" behind an extension: its declared author, or the repo owner
+/// path segment when the manifest does not declare one.
+String devNameOf(Source source) {
+  final author = source.author?.trim();
+  if (author != null && author.isNotEmpty) return author;
+  final segments = Uri.tryParse(source.repo ?? '')
+          ?.pathSegments
+          .where((segment) => segment.isNotEmpty)
+          .toList() ??
+      const <String>[];
+  if (segments.isNotEmpty) return segments.first;
+  return source.repo?.isNotEmpty == true ? source.repo! : '—';
+}
+
+/// One developer's extensions: an expandable group with an Install-all
+/// button in the header and the usual per-extension cards inside.
+class _AuthorGroup extends ConsumerStatefulWidget {
+  const _AuthorGroup({required this.author, required this.sources});
+
+  final String author;
+  final List<Source> sources;
+
+  @override
+  ConsumerState<_AuthorGroup> createState() => _AuthorGroupState();
+}
+
+class _AuthorGroupState extends ConsumerState<_AuthorGroup> {
+  bool _expanded = true;
+  bool _installing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final bridgeState = ref.watch(multiProviderBridgeProvider);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        LayoutConstants.spacingMd,
+        4,
+        LayoutConstants.spacingMd,
+        4,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: LayoutConstants.spacingMd,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.person_rounded,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.author,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      '${widget.sources.length}',
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: _installing ? null : _installAll,
+                      icon: _installing
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download_rounded, size: 18),
+                      label: Text(l10n.installAll),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+                  ],
+                ),
+              ),
+            ),
+            if (_expanded)
+              for (final source in widget.sources)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  child: _SourceCard(
+                    source: source,
+                    installed: false,
+                    disabled: bridgeState.isDisabled(source.uniqueId),
+                  ),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _installAll() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _installing = true);
+    try {
+      final succeeded = await ref
+          .read(multiProviderBridgeProvider.notifier)
+          .installAll(widget.sources);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.installAllDone(succeeded))),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      // Install failures say what actually happened - 'failed to add
+      // repository' is the wrong event for this button.
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.errorPrefix('$e'))),
+      );
+    } finally {
+      if (mounted) setState(() => _installing = false);
+    }
   }
 }

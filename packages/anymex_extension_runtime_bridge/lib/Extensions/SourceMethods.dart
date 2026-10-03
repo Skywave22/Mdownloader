@@ -1,5 +1,6 @@
 import '../Models/DEpisode.dart';
 import '../Models/DMedia.dart';
+import '../Models/DSection.dart';
 import '../Models/Page.dart';
 import '../Models/Pages.dart';
 import '../Models/Source.dart';
@@ -30,6 +31,22 @@ abstract class SourceMethods {
   Stream<Video>? getVideoListStream(DEpisode episode,
           {SourceParams? parameters}) =>
       null;
+
+  /// Named browse sections the extension itself defines (Legado explore
+  /// rows, and any backend hook that grows one). Empty means the app shows
+  /// just the standard Popular/Latest rails - those two hooks are extension
+  /// code too, this is for extensions that define MORE rows than that.
+  Future<List<DSection>> getSections({SourceParams? parameters}) async =>
+      const [];
+
+  /// One page of a section returned by [getSections]; [section.id] is the
+  /// backend's own handle for the row.
+  Future<Pages> getSectionPages(
+    DSection section,
+    int page, {
+    SourceParams? parameters,
+  }) async =>
+      Pages(list: const []);
 
   Future<List<dynamic>> getFilterList() async => [];
 

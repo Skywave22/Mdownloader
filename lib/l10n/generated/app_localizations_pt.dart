@@ -1979,6 +1979,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String failedToAddRepository(Object error) {
     return 'Couldn\'t add repository: $error';
   }
+
+  @override
+  String get addingRepository => 'Adding repository…';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

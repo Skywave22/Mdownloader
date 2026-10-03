@@ -1,3 +1,4 @@
+import '../../../Models/JsonX.dart';
 import '../../../anymex_extension_runtime_bridge.dart';
 import '../Eval/dart/model/m_source.dart' as m;
 import '../Util/string_extensions.dart';
@@ -25,6 +26,7 @@ class MSource extends Source {
     super.hasUpdate,
     super.supportsLatest = false,
     super.supportsPopular = false,
+    super.author,
     this.sourceCodeUrl,
     this.sourceCode,
     this.headers,
@@ -35,6 +37,18 @@ class MSource extends Source {
     final base = Source.fromJson(json);
 
     final isLnReader = json['site'] != null && json['url'] != null && json['sourceCodeLanguage'] == null;
+
+    // Manifests send the language as an index, a name, or not at all.
+    const languages = SourceCodeLanguage.values;
+    final rawLang = json['sourceCodeLanguage'];
+    var langIndex = intOf(rawLang) ?? 0;
+    if (langIndex < 0 || langIndex >= languages.length) {
+      final langName = strOf(rawLang)?.toLowerCase();
+      langIndex = languages.indexWhere(
+        (l) => l.name.toLowerCase() == langName,
+      );
+      if (langIndex < 0) langIndex = 0;
+    }
 
     return MSource(
       id: base.id,
@@ -50,12 +64,13 @@ class MSource extends Source {
       hasUpdate: base.hasUpdate,
       supportsLatest: base.supportsLatest ?? false,
       supportsPopular: base.supportsPopular ?? false,
-      sourceCode: json['sourceCode'],
-      sourceCodeUrl: json['sourceCodeUrl'] ?? json['url'],
-      headers: json['headers'],
+      author: base.author,
+      sourceCode: strOf(json['sourceCode']),
+      sourceCodeUrl: strOf(json['sourceCodeUrl']) ?? strOf(json['url']),
+      headers: strOf(json['headers']),
       sourceCodeLanguage: isLnReader
           ? SourceCodeLanguage.lnreader
-          : SourceCodeLanguage.values[json['sourceCodeLanguage'] ?? 0],
+          : languages[langIndex],
     );
   }
 

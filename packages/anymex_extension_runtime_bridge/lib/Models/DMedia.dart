@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'DEpisode.dart';
+import 'JsonX.dart';
+import 'Source.dart';
 
 class DMedia {
   String? title;
@@ -23,43 +25,49 @@ class DMedia {
   });
 
   factory DMedia.fromJson(Map<String, dynamic> json) {
-    final parsedEpisodes = json['episodes'] != null
-        ? (json['episodes'] as List)
-            .map((e) => DEpisode.fromJson(Map<String, dynamic>.from(e)))
-            .toList()
-        : <DEpisode>[];
-    final poster = json['cover'] ?? json['posterUrl'] ?? json['thumbnail_url'];    
+    final parsedEpisodes = [
+      for (final e in mapListOf(json['episodes']))
+        DEpisode.fromJson(e),
+    ];
 
+    // Unified and CloudStream-shaped payloads both land here; accept the
+    // aliases either side uses so nothing degrades to "title only".
     return DMedia(
-      title: json['title'] ?? json['name'],
-      url: json['url'],
-      cover: json['thumbnail_url'] ?? poster,
-      description: json['description'],
-      artist: json['artist'],
-      author: json['author'],
-      genre: json['genre'] != null ? List<String>.from(json['genre']) : [],
+      title: strOf(json['title']) ?? strOf(json['name']),
+      url: strOf(json['url']) ?? strOf(json['link']),
+      cover: strOf(json['cover']) ??
+          strOf(json['posterUrl']) ??
+          strOf(json['thumbnail_url']) ??
+          strOf(json['image']) ??
+          strOf(json['poster']),
+      description: strOf(json['description']) ??
+          strOf(json['synopsis']) ??
+          strOf(json['plot']),
+      artist: strOf(json['artist']),
+      author: Source.authorNameFrom(json['author'] ?? json['authors']),
+      genre: strListOr(json['genre'] ?? json['genres']),
       episodes: parsedEpisodes,
     );
   }
 
   factory DMedia.fromCs(Map<String, dynamic> json) {
-    final String? mediaTitle = json['title'] ?? json['name'];
+    final String? mediaTitle = strOf(json['title']) ?? strOf(json['name']);
 
-    final parsedEpisodes = json['episodes'] != null
-        ? (json['episodes'] as List).map((e) {
-            final epJson = Map<String, dynamic>.from(e);
+    final parsedEpisodes = mapListOf(json['episodes']).map((epJson) {
+            final Map<String, dynamic> epMap = epJson;
             
             if (mediaTitle != null && mediaTitle.isNotEmpty) {
-              final String? urlData = epJson['url'] ?? epJson['data'];
+              final String? urlData =
+                  strOf(epMap['url']) ?? strOf(epMap['data']);
               if (urlData != null && urlData.trim().startsWith('{')) {
                 try {
                   final decoded = jsonDecode(urlData);
-                  if (decoded is Map<String, dynamic> && !decoded.containsKey('title')) {
+                  if (decoded is Map && !decoded.containsKey('title')) {
                     decoded['title'] = mediaTitle;
                     final injected = jsonEncode(decoded);
-                    epJson['url'] = injected;
-                    if (epJson.containsKey('data')) {
-                      epJson['data'] = injected;
+                    epMap['url'] = injected;
+                    if (epMap.containsKey('data')) {
+                      epMap['data'] = injected;
                     }
                   }
                 } catch (_) {
@@ -67,18 +75,17 @@ class DMedia {
                 }
               }
             }
-            return DEpisode.fromCs(epJson);
-          }).toList()
-        : <DEpisode>[];
+            return DEpisode.fromCs(epMap);
+          }).toList();
 
     return DMedia(
-      title: json['title'],
-      url: json['url'],
-      cover: json['cover'] ?? json['thumbnail_url'],
-      description: json['description'],
-      artist: json['artist'],
-      author: json['author'],
-      genre: json['genre'] != null ? List<String>.from(json['genre']) : [],
+      title: mediaTitle,
+      url: strOf(json['url']),
+      cover: strOf(json['cover']) ?? strOf(json['thumbnail_url']),
+      description: strOf(json['description']),
+      artist: strOf(json['artist']),
+      author: Source.authorNameFrom(json['author'] ?? json['authors']),
+      genre: strListOr(json['genre'] ?? json['genres']),
       episodes: parsedEpisodes..sort(DEpisode.compareByEpisodeNumber),
     );
   }

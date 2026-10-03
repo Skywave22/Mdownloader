@@ -539,5 +539,6 @@
   "mstreamLatest": "नवीनतम अपडेट",
   "multiProvidersFilterHint": "एक्सटेंशन खोजें",
   "repositoryAdded": "रिपॉज़िटरी {url} जोड़ी गई।",
-  "failedToAddRepository": "रिपॉज़िटरी नहीं जोड़ी गई: {error}"
+  "failedToAddRepository": "रिपॉज़िटरी नहीं जोड़ी गई: {error}",
+  "addingRepository": "रिपॉज़िटरी जोड़ी जा रही है…"
 }

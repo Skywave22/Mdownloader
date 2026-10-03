@@ -50,6 +50,10 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
   /// the same items.
   List<DMedia> _latest = const <DMedia>[];
 
+  /// Browse rows the extension itself defines (beyond the standard
+  /// Popular/Latest hooks) with their first page, rendered as named rails.
+  List<({DSection section, List<DMedia> media})> _sectionRails = const [];
+
   bool _loading = false;
   int _generation = 0;
   Object? _error;
@@ -99,48 +103,82 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     List<DMedia> popular = const <DMedia>[];
     List<DMedia> latest = const <DMedia>[];
     Object? error;
+
+    // Pages 1+2 per feed, deduped by URL: thin page-1 results used to leave
+    // the screen at "1-2 items and one row".
+    Future<List<DMedia>> twoPages(
+      Future<Pages> Function(int page) listing,
+    ) async {
+      final pages = await Future.wait([listing(1), listing(2)]);
+      final seen = <String>{};
+      return [
+        for (final m in [...pages[0].list, ...pages[1].list])
+          if (m.url == null || seen.add(m.url!)) m,
+      ];
+    }
+
     try {
-      popular = (await methods.getPopular(1)).list;
+      popular = await twoPages(methods.getPopular);
       if (popular.isEmpty) {
-        popular = (await methods.getLatestUpdates(1)).list;
+        popular = await twoPages(methods.getLatestUpdates);
       }
     } catch (e) {
       error = e;
       try {
-        popular = (await methods.getLatestUpdates(1)).list;
+        popular = await twoPages(methods.getLatestUpdates);
         error = null;
       } catch (_) {/* keep the first error */}
     }
     try {
-      latest = (await methods.getLatestUpdates(1)).list;
+      latest = await twoPages(methods.getLatestUpdates);
       if (latest.isEmpty) {
-        latest = (await methods.getPopular(1)).list;
+        latest = await twoPages(methods.getPopular);
       }
     } catch (e) {
       error ??= e;
       try {
-        latest = (await methods.getPopular(1)).list;
+        latest = await twoPages(methods.getPopular);
         error = null;
       } catch (_) {/* keep the first error */}
     }
 
-    if (!mounted || generation != _generation) return;
+    // Browse rows the extension itself defines (Legado explore links and any
+    // future backend hook) render as their own named rails - they come from
+    // the extension, not from a fixed list here.
+    var sectionRails = <({DSection section, List<DMedia> media})>[];
+    try {
+      final sections = await methods.getSections();
+      if (sections.isNotEmpty) {
+        final pages = await Future.wait([
+          // One dead row must not take the other sections down with it.
+          for (final sec in sections)
+            methods.getSectionPages(sec, 1).catchError(
+              (Object e) => Pages(list: const <DMedia>[]),
+            ),
+        ]);
+        sectionRails = [
+          for (var i = 0; i < sections.length; i++)
+            if (pages[i].list.isNotEmpty)
+              (section: sections[i], media: pages[i].list),
+        ];
+      }
+    } catch (e) {
+      talker.debug('MStream: extension sections failed: $e');
+    }
 
-    // A source with a single listing answers both feeds identically; show it
-    // once instead of two identical rails.
-    final sameFeed = popular.length == latest.length &&
-        popular.isNotEmpty &&
-        List.generate(popular.length, (i) => popular[i].url == latest[i].url)
-            .every((same) => same);
+    if (!mounted || generation != _generation) return;
 
     talker.debug(
       'MStream: ${source.name} feeds — popular=${popular.length} '
-      'latest=${latest.length} error=$error',
+      'latest=${latest.length} sections=${sectionRails.length} error=$error',
     );
 
     setState(() {
       _popular = popular;
-      _latest = sameFeed ? const <DMedia>[] : latest;
+      // Both rails always render (like Home); sources whose single listing
+      // answers both feeds show it under both labels rather than losing one.
+      _latest = latest;
+      _sectionRails = sectionRails;
       _loading = false;
       _error = (popular.isEmpty && latest.isEmpty) ? error : null;
     });
@@ -151,6 +189,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
       _source = source;
       _popular = const <DMedia>[];
       _latest = const <DMedia>[];
+      _sectionRails = const [];
       _error = null;
     });
     unawaited(
@@ -169,8 +208,11 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     if (methods == null) return;
 
     // Home's opening experience: a full details page with the poster banner,
-    // metadata, synopsis and episode list.
-    Navigator.of(context).push<void>(
+    // metadata, synopsis and episode list. Pushed on the ROOT navigator -
+    // Home's /details and /player routes live there too, so the player and
+    // every dialog below stack exactly like they do on Home (the shell
+    // navigation bar is covered instead of peeking beside the player).
+    Navigator.of(context, rootNavigator: true).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => MStreamDetailsScreen(
           media: media,
@@ -181,19 +223,20 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     );
   }
 
-  void _openAll(String title, MStreamFeed feed) {
+  void _openAll(String title, MStreamFeed feed, {DSection? section}) {
     final source = _source;
     if (source == null) return;
     final methods =
         ref.read(multiProviderBridgeProvider.notifier).methodsFor(source);
     if (methods == null) return;
-    Navigator.of(context).push<void>(
+    Navigator.of(context, rootNavigator: true).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => MStreamAllScreen(
           title: title,
           methods: methods,
           source: source,
           feed: feed,
+          section: section,
         ),
       ),
     );
@@ -448,6 +491,28 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
                 ),
               ),
             ),
+          for (final rail in _sectionRails)
+            SliverToBoxAdapter(
+              child: MediaHorizontalList(
+                title: rail.section.name,
+                mediaList: [for (final m in rail.media) _toItem(m)],
+                category: ViewAllCategory.providerContent,
+                showViewAll: true,
+                heroTagPrefix: 'mstream',
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = rail.media.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+                onViewAll: () => _openAll(
+                  rail.section.name,
+                  MStreamFeed.section,
+                  section: rail.section,
+                ),
+              ),
+            ),
           SliverPadding(
             padding: EdgeInsets.only(
               bottom: LayoutConstants.shellBottomContentPadding(context),
@@ -495,13 +560,10 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     if (selected == null) return;
     showDialog<void>(
       context: context,
-      builder: (context) => _SourceSelectorDialog(
+      builder: (_) => _SourceSelectorDialog(
         sources: enabled,
         activeId: selected.uniqueId,
-        onSelected: (source) {
-          Navigator.of(context).pop();
-          _selectSource(source);
-        },
+        onSelected: _selectSource,
       ),
     );
   }

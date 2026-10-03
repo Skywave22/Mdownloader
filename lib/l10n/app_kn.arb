@@ -539,5 +539,6 @@
   "mstreamLatest": "ಇತ್ತೀಚಿನ ನವೀಕರಣಗಳು",
   "multiProvidersFilterHint": "ಎಕ್ಸ್‌ಟೆನ್ಶನ್‌ಗಳನ್ನು ಹುಡುಕಿ",
   "repositoryAdded": "{url} ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಿದೆ.",
-  "failedToAddRepository": "ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಲಿಲ್ಲ: {error}"
+  "failedToAddRepository": "ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗಲಿಲ್ಲ: {error}",
+  "addingRepository": "ರೆಪೊಸಿಟರಿ ಸೇರಿಸಲಾಗುತ್ತಿದೆ…"
 }

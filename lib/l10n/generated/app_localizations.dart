@@ -3590,6 +3590,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t add repository: {error}'**
   String failedToAddRepository(Object error);
+
+  /// No description provided for @addingRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding repository…'**
+  String get addingRepository;
 }
 
 class _AppLocalizationsDelegate

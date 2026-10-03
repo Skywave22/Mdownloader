@@ -1,3 +1,4 @@
+import '../../../Models/JsonX.dart';
 import '../../../Models/Source.dart';
 
 class CloudStreamSource extends Source {
@@ -21,6 +22,7 @@ class CloudStreamSource extends Source {
     super.hasUpdate,
     super.supportsLatest = false,
     super.supportsPopular = false,
+    super.author,
     this.internalName,
     this.pluginUrl,
     this.jarUrl,
@@ -28,30 +30,31 @@ class CloudStreamSource extends Source {
   });
 
   factory CloudStreamSource.fromJson(Map<String, dynamic> json) {
-    final language = json['language'] as String?;
-    final rawVersion = json['version']?.toString() ?? json['versionLast']?.toString();
+    final language = strOf(json['language']);
+    final rawVersion = strOf(json['version']) ?? strOf(json['versionLast']);
     final versionStr = (rawVersion != null && rawVersion.isNotEmpty) ? rawVersion : "1.0.0";
+    final name = strOf(json['name']);
+    final internalName = strOf(json['internalName']) ?? name;
 
     return CloudStreamSource(
-      id: json['id']?.toString().toLowerCase() ??
-          json['name']?.toString().toLowerCase() ??
-          '',
-      name: json['name'],
-      baseUrl: json['url'],
+      id: strOf(json['id'])?.toLowerCase() ?? name?.toLowerCase() ?? '',
+      name: name,
+      baseUrl: strOf(json['url']),
       lang: (language == null || language.trim().isEmpty) ? 'ALL' : language,
-      iconUrl: json['iconUrl'],
-      isNsfw: json['isNsfw'] ?? false,
+      iconUrl: strOf(json['iconUrl']),
+      isNsfw: boolOr(json['isNsfw']),
       version: versionStr,
-      versionLast: json['versionLast']?.toString() ?? versionStr,
-      repo: json['repo'],
+      versionLast: strOf(json['versionLast']) ?? versionStr,
+      repo: strOf(json['repo']),
       managerId: 'cloudstream',
-      hasUpdate: json['hasUpdate'] ?? false,
-      supportsLatest: json['supportsLatest'] ?? false,
-      supportsPopular: json['supportsPopular'] ?? false,
+      hasUpdate: boolOr(json['hasUpdate']),
+      supportsLatest: boolOr(json['supportsLatest']),
+      supportsPopular: boolOr(json['supportsPopular']),
       itemType: ItemType.anime,
-      jarUrl: json['jarUrl'] ?? json['jar'],
-      internalName: json['internalName'] ?? json['name'],
-      pluginUrl: json['pluginUrl'] ?? json['plugin'] ?? json['url'],
+      author: Source.authorNameFrom(json['author'] ?? json['authors']),
+      jarUrl: strOf(json['jarUrl']) ?? strOf(json['jar']),
+      internalName: internalName,
+      pluginUrl: strOf(json['pluginUrl']) ?? strOf(json['plugin']) ?? strOf(json['url']),
       hasSettings: json['hasSettings'] as bool? ?? false,
     );
   }

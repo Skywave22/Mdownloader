@@ -12,15 +12,21 @@ import 'package:skystream/l10n/generated/app_localizations.dart';
 import '../../../core/domain/entity/multimedia_item.dart';
 import '../../../core/logger/app_logger.dart';
 import '../../../core/network/http_defaults.dart';
-import '../../../core/router/app_router.dart';
+import '../../../core/services/download_service.dart';
+import '../../../core/storage/episode_watch_repository.dart';
+import '../../../core/storage/history_repository.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../../core/utils/layout_constants.dart';
 import '../../../shared/widgets/custom_widgets.dart';
 import '../../../shared/widgets/expandable_text.dart';
+import '../../../shared/widgets/loading_dialog.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/thumbnail_error_placeholder.dart';
 import '../../details/presentation/download_launcher.dart';
-import '../widgets/bridge_credit.dart';
+import '../../details/presentation/downloaded_file_provider.dart';
+import '../../details/presentation/playback_launcher.dart';
+import '../../details/presentation/widgets/download_management_dialog.dart';
+import '../../details/presentation/widgets/download_progress_dialog.dart';
 
 /// The opening screen for extension media, modelled 1:1 on the Home details
 /// experience ([DetailsScreen]): the same banner-with-scrim app bar, the same
@@ -116,13 +122,38 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
     }
   }
 
-  /// Resolves the episode's streams and hands them to the player already
-  /// resolved: these come from an extension, not from a SkyStream plugin, so
-  /// the player must not try to resolve the URL again.
+  /// Plays an episode through Home's [PlaybackLauncher] - the exact path the
+  /// plugin-based details screen uses, so external players, the downloaded-
+  /// file intercept and stream failover all behave the same as Home:
+  ///
+  /// 1. an already-downloaded episode plays from disk (no network),
+  /// 2. otherwise the extension resolves streams behind Home's cancelable
+  ///    loading dialog (this used to freeze silently on slow sources),
+  /// 3. external players receive stream one; the internal player opens with
+  ///    every stream as failover.
   Future<void> _play(DEpisode episode) async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final streams = await _resolveStreams(episode);
+    final ep = _multimediaEpisode(episode);
+    final item = _multimediaItem(episode, ep: ep);
+
+    // Home's play path checks downloads first - a downloaded episode plays
+    // from disk instead of hitting the network again.
+    final localFile = await ref
+        .read(downloadServiceProvider)
+        .getDownloadedFile(item, episode: ep);
+    if (!mounted) return;
+    if (localFile != null) {
+      await ref.read(playbackLauncherProvider).playResolved(
+            context,
+            item: item,
+            videoUrl: localFile.path,
+            episode: ep,
+          );
+      return;
+    }
+
+    final streams = await _resolveStreamsWithProgress(episode);
     if (streams == null || !mounted) return;
     if (streams.isEmpty) {
       messenger.showSnackBar(
@@ -131,24 +162,23 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
       return;
     }
 
-    final item = _multimediaItem(episode);
-    await PlayerRoute(
-      $extra: PlayerRouteExtra(
-        item: item,
-        videoUrl: streams.first.url,
-        episode: item.episodes!.first,
-        preloadedStreams: streams,
-      ),
-    ).push<void>(context);
+    await ref.read(playbackLauncherProvider).playResolved(
+          context,
+          item: item,
+          videoUrl: streams.first.url,
+          episode: ep,
+          streams: streams,
+        );
   }
 
   /// Downloads an episode through the same source picker the plugin-based
-  /// downloads use. Streams are resolved by the extension first — the
-  /// download launcher never talks to a SkyStream provider here.
+  /// downloads use. Streams are resolved by the extension first - the
+  /// download launcher never talks to a SkyStream provider here - behind the
+  /// same cancelable loading dialog the play path shows.
   Future<void> _download(DEpisode episode) async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final streams = await _resolveStreams(episode);
+    final streams = await _resolveStreamsWithProgress(episode);
     if (streams == null || !mounted) return;
     if (streams.isEmpty) {
       messenger.showSnackBar(
@@ -157,13 +187,38 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
       return;
     }
 
-    final item = _multimediaItem(episode);
+    final ep = _multimediaEpisode(episode);
+    final item = _multimediaItem(episode, ep: ep);
     await ref.read(downloadLauncherProvider).launch(
           context,
           item,
-          episodeUrl: episode.url ?? '',
+          episodeUrl: ep.url,
           preloadedStreams: streams,
         );
+  }
+
+  /// Wraps [_resolveStreams] in Home's [LoadingDialog] - visible progress
+  /// with a working Cancel instead of a silent await. Returns null when the
+  /// user cancels; the dialog lives on the root navigator (showDialog).
+  Future<List<StreamResult>?> _resolveStreamsWithProgress(
+    DEpisode episode,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    var canceled = false;
+    unawaited(
+      LoadingDialog.show(
+        context,
+        message: l10n.resolving,
+        onCancel: () => canceled = true,
+      ),
+    );
+    final streams = await _resolveStreams(episode);
+    if (!mounted) return null;
+    if (!canceled) {
+      // Dismiss the loading dialog we opened - never a page below it.
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+    return canceled ? null : streams;
   }
 
   Future<List<StreamResult>?> _resolveStreams(DEpisode episode) async {
@@ -196,25 +251,31 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
     ];
   }
 
-  MultimediaItem _multimediaItem(DEpisode episode) {
+  /// The [Episode] twin of a bridge episode: the shape the player, the
+  /// downloader and the history/download repos key their bookkeeping by.
+  /// Always exactly one per bridge episode - no `!` anywhere downstream.
+  Episode _multimediaEpisode(DEpisode episode) {
     final detail = _detail ?? widget.media;
     final l10n = AppLocalizations.of(context)!;
     final epName =
         episode.name ?? l10n.mstreamEpisodeNumber(episode.episodeNumber);
+    return Episode(
+      name: epName,
+      url: episode.url ?? '',
+      posterUrl: _resolve(episode.thumbnail ?? detail.cover),
+      episode: int.tryParse(episode.episodeNumber) ?? 0,
+    );
+  }
+
+  MultimediaItem _multimediaItem(DEpisode episode, {required Episode ep}) {
+    final detail = _detail ?? widget.media;
     return MultimediaItem(
       title: detail.title ?? '',
       url: widget.media.url ?? '',
       posterUrl: _resolve(detail.cover ?? widget.media.cover),
       description: detail.description ?? widget.media.description,
       provider: widget.source.name ?? MStreamDetailsScreen.title,
-      episodes: [
-        Episode(
-          name: epName,
-          url: episode.url ?? '',
-          posterUrl: _resolve(episode.thumbnail ?? detail.cover),
-          episode: int.tryParse(episode.episodeNumber) ?? 0,
-        ),
-      ],
+      episodes: [ep],
     );
   }
 
@@ -273,8 +334,6 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
                     ),
                     const SizedBox(height: 32),
                     _buildEpisodes(context, l10n),
-                    const SizedBox(height: 32),
-                    const BridgeCredit(),
                     const SizedBox(height: 50),
                   ],
                 ),
@@ -388,9 +447,24 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
     );
   }
 
-  Widget _buildActions(BuildContext context, AppLocalizations l10n) {
+  /// What the big Play/Download buttons act on: the first episode for
+  /// series, the media itself for movies and one-shots. Movies must behave
+  /// like Home — two buttons and nothing else.
+  DEpisode get _playable {
     final episodes = _detail?.episodes ?? const <DEpisode>[];
-    final firstEpisode = episodes.isNotEmpty ? episodes.first : null;
+    if (episodes.isNotEmpty) return episodes.first;
+    return DEpisode(
+      url: widget.media.url,
+      name: widget.media.title,
+      episodeNumber: '1',
+    );
+  }
+
+  /// Movies and one-shots: Home shows just Play/Download and no episode
+  /// strip. Only real multi-episode series get the episode list.
+  bool get _showEpisodeList => (_detail?.episodes?.length ?? 0) >= 2;
+
+  Widget _buildActions(BuildContext context, AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -400,11 +474,7 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            onPressed: _loading
-                ? null
-                : firstEpisode != null
-                    ? () => unawaited(_play(firstEpisode))
-                    : null,
+            onPressed: () => unawaited(_play(_playable)),
           ),
         ),
         const SizedBox(width: 12),
@@ -415,19 +485,41 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            onPressed: _loading
-                ? null
-                : firstEpisode != null
-                    ? () => unawaited(_download(firstEpisode))
-                    : null,
+            onPressed: () => unawaited(_download(_playable)),
           ),
         ),
       ],
     );
   }
 
+  Widget _buildEpisodeTile(DEpisode episode) {
+    final ep = _multimediaEpisode(episode);
+    return _EpisodeTile(
+      episode: episode,
+      item: _multimediaItem(episode, ep: ep),
+      ep: ep,
+      referer: _referer,
+      imageHeaders: _imageHeaders,
+      fallbackCover: _detail?.cover ?? widget.media.cover,
+      onTap: () => unawaited(_play(episode)),
+      onDownload: () => unawaited(_download(episode)),
+    );
+  }
+
   Widget _buildEpisodes(BuildContext context, AppLocalizations l10n) {
     final episodes = _detail?.episodes ?? const <DEpisode>[];
+    // Movies/one-shots: no episode strip (Home shows just Play/Download).
+    if (!_showEpisodeList) {
+      // getDetail can still fail for metadata enrichment; the poster and
+      // title above always render, so just offer a compact retry here.
+      if (_error != null) {
+        return _DetailErrorNotice(
+          error: _error!,
+          onRetry: () => unawaited(_load()),
+        );
+      }
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -492,15 +584,7 @@ class _MStreamDetailsScreenState extends ConsumerState<MStreamDetailsScreen> {
                 ),
           )
         else
-          for (final episode in episodes)
-            _EpisodeTile(
-              episode: episode,
-              referer: _referer,
-              imageHeaders: _imageHeaders,
-              fallbackCover: _detail?.cover ?? widget.media.cover,
-              onTap: () => unawaited(_play(episode)),
-              onDownload: () => unawaited(_download(episode)),
-            ),
+          for (final episode in episodes) _buildEpisodeTile(episode),
       ],
     );
   }
@@ -553,9 +637,16 @@ class _MetadataBar extends StatelessWidget {
 
 /// One episode row: thumbnail, number + name, air date, and play/download
 /// affordances. Same information hierarchy as the Home episode list.
-class _EpisodeTile extends StatelessWidget {
+/// One episode row. Carries the same two live states Home's EpisodeCard
+/// shows: watch progress (badge + progress bar over the thumbnail) and
+/// download state - management dialog when downloaded, progress dialog while
+/// downloading, the source-picker launcher otherwise (never a silent
+/// re-download of an owned file).
+class _EpisodeTile extends ConsumerStatefulWidget {
   const _EpisodeTile({
     required this.episode,
+    required this.item,
+    required this.ep,
     required this.referer,
     required this.imageHeaders,
     required this.onTap,
@@ -563,31 +654,131 @@ class _EpisodeTile extends StatelessWidget {
     this.fallbackCover,
   });
 
+  /// The bridge episode as rendered (name, thumbnail, dates).
   final DEpisode episode;
+
+  /// Multimedia twins used for player/download/history bookkeeping - the
+  /// same keys [EpisodeCard] and the download launcher use on Home.
+  final MultimediaItem item;
+  final Episode ep;
+
   final String referer;
   final Map<String, String> imageHeaders;
   final String? fallbackCover;
   final VoidCallback onTap;
+
+  /// Invoked only when the episode is neither downloaded nor downloading -
+  /// the resolve-then-launch flow.
   final VoidCallback onDownload;
+
+  @override
+  ConsumerState<_EpisodeTile> createState() => _EpisodeTileState();
+}
+
+class _EpisodeTileState extends ConsumerState<_EpisodeTile> {
+  @override
+  void initState() {
+    super.initState();
+    // Surface the download state on first paint (Home's card does this too).
+    Future.microtask(_checkDownloaded);
+  }
+
+  @override
+  void didUpdateWidget(covariant _EpisodeTile old) {
+    super.didUpdateWidget(old);
+    if (old.ep.url != widget.ep.url) {
+      Future.microtask(_checkDownloaded);
+    }
+  }
+
+  void _checkDownloaded() {
+    if (!mounted) return;
+    ref
+        .read(downloadedFilesProvider.notifier)
+        .checkFile(widget.item, episode: widget.ep);
+  }
+
+  void _onDownloadPressed() {
+    final downloadedFile = ref.read(downloadedFilesProvider)[widget.ep.url];
+    final isDownloading = ref
+        .read(activeDownloadsProvider)
+        .contains(widget.ep.url);
+    if (downloadedFile != null) {
+      // Owned file: manage (play local / delete) instead of re-downloading.
+      DownloadManagementDialog.show(
+        context,
+        widget.item,
+        downloadedFile,
+        episode: widget.ep,
+      );
+    } else if (isDownloading) {
+      DownloadProgressDialog.show(
+        context,
+        '${widget.item.title} - ${widget.ep.name}',
+        widget.ep.url,
+      );
+    } else {
+      widget.onDownload();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final episode = widget.episode;
+
+    // Watch progress - same repositories and keying as Home's EpisodeCard.
+    final historyRepo = ref.watch(historyRepositoryProvider);
+    final epPos = historyRepo.getEpisodePosition(
+      widget.ep.url,
+      mainUrl: widget.item.url,
+      season: widget.ep.season,
+      episode: widget.ep.episode,
+    );
+    final epDur = historyRepo.getEpisodeDuration(
+      widget.ep.url,
+      mainUrl: widget.item.url,
+      season: widget.ep.season,
+      episode: widget.ep.episode,
+    );
+    ref.watch(episodeWatchRevisionProvider);
+    final episodeWatchRepo = ref.watch(episodeWatchRepositoryProvider);
+    final progress = epDur > 0 ? (epPos / epDur).clamp(0.0, 1.0) : 0.0;
+    final isWatched = episodeWatchRepo.isWatched(widget.item.url, widget.ep);
+    final displayedProgress = isWatched ? 1.0 : progress;
+
+    String? statusBadge;
+    if (isWatched) {
+      statusBadge = l10n.watched.toUpperCase();
+    } else if (progress > 0.02) {
+      statusBadge = l10n.watching.toUpperCase();
+    }
+
+    // Download state.
+    final downloadedFile = ref.watch(downloadedFilesProvider)[widget.ep.url];
+    final isDownloading = ref
+        .watch(activeDownloadsProvider)
+        .contains(widget.ep.url);
+    final downloadProgress =
+        ref.watch(downloadProgressProvider)[widget.ep.url]?.progress ?? 0.0;
+
     final thumb = ImageUtils.resolveRemoteUrl(
-      episode.thumbnail ?? fallbackCover ?? '',
-      baseUrl: referer,
+      episode.thumbnail ?? widget.fallbackCover ?? '',
+      baseUrl: widget.referer,
     );
     final epLabel = episode.episodeNumber.isNotEmpty
         ? l10n.mstreamEpisodeNumber(episode.episodeNumber)
         : l10n.episodes;
+
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
+          onTap: widget.onTap,
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
@@ -597,17 +788,60 @@ class _EpisodeTile extends StatelessWidget {
                   child: SizedBox(
                     width: 112,
                     height: 64,
-                    child: thumb.isEmpty
-                        ? ThumbnailErrorPlaceholder(label: epLabel)
-                        : CachedNetworkImage(
-                            imageUrl: thumb,
-                            fit: BoxFit.cover,
-                            httpHeaders: imageHeaders,
-                            placeholder: (context, url) =>
-                                const ColoredBox(color: Colors.black12),
-                            errorWidget: (_, _, _) =>
-                                ThumbnailErrorPlaceholder(label: epLabel),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        thumb.isEmpty
+                            ? ThumbnailErrorPlaceholder(label: epLabel)
+                            : CachedNetworkImage(
+                                imageUrl: thumb,
+                                fit: BoxFit.cover,
+                                httpHeaders: widget.imageHeaders,
+                                placeholder: (context, url) =>
+                                    const ColoredBox(color: Colors.black12),
+                                errorWidget: (_, _, _) =>
+                                    ThumbnailErrorPlaceholder(label: epLabel),
+                              ),
+                        // Watch progress along the bottom edge of the
+                        // thumbnail, video-style.
+                        if (displayedProgress > 0.02)
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: LinearProgressIndicator(
+                              value: displayedProgress,
+                              minHeight: 3,
+                              backgroundColor: Colors.black26,
+                            ),
                           ),
+                        if (statusBadge != null)
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: Container(
+                              margin: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isWatched
+                                    ? Colors.green.withValues(alpha: 0.9)
+                                    : colorScheme.primary.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                statusBadge,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -648,22 +882,77 @@ class _EpisodeTile extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: l10n.download,
-                  icon: const Icon(Icons.download_outlined, size: 20),
-                  onPressed: onDownload,
+                  icon: isDownloading
+                      // Live progress ring while the download runs.
+                      ? SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            value: downloadProgress > 0
+                                ? downloadProgress
+                                : null,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Icon(
+                          downloadedFile != null
+                              ? Icons.download_done_rounded
+                              : Icons.download_outlined,
+                          size: 20,
+                          color: downloadedFile != null ? Colors.green : null,
+                        ),
+                  onPressed: _onDownloadPressed,
                 ),
                 IconButton(
                   tooltip: l10n.play,
                   icon: Icon(
                     Icons.play_circle_fill_rounded,
                     size: 32,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: colorScheme.primary,
                   ),
-                  onPressed: onTap,
+                  onPressed: widget.onTap,
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Compact "couldn't load more details" note used where a full-page retry
+/// would hide the metadata and poster that are already on screen.
+class _DetailErrorNotice extends StatelessWidget {
+  const _DetailErrorNotice({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.errorPrefix(error.toString())),
+          const SizedBox(height: 8),
+          CustomButton(
+            isPrimary: true,
+            onPressed: onRetry,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(l10n.retry),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,3 +1,4 @@
+import '../../Models/JsonX.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -236,9 +237,10 @@ class AniyomiExtensions extends Extension {
       final sources = <Source>[];
 
       for (final item in decoded) {
-        final map = item as Map<String, dynamic>;
-        final name = map['name'] as String? ?? '';
-        final pkg = map['pkg'] as String? ?? '';
+        final map = Map<String, dynamic>.from(item as Map);
+        final name = strOr(map['name']);
+        final pkg = strOr(map['pkg']);
+        final srcs = mapListOf(map["sources"]);
 
         var detectedType = name.startsWith('Aniyomi: ')
             ? ItemType.anime
@@ -258,31 +260,30 @@ class AniyomiExtensions extends Extension {
 
         if (detectedType != targetType) continue;
 
-        final rawIconUrl = map['iconUrl'] as String? ?? '';
-        final rawApkUrl = map['apkUrl'] as String? ?? '';
+        final rawIconUrl = strOr(map['iconUrl']);
+        final rawApkUrl = strOr(map['apkUrl']);
 
         sources.add(
           ASource(
-            id: map["sources"] != null &&
-                    map["sources"] is List &&
-                    (map["sources"] as List).isNotEmpty
-                ? (map["sources"] as List).first['id']?.toString() ?? ''
-                : '',
+            id: srcs.isEmpty ? '' : strOr(srcs.first['id']),
             name: name.startsWith('Aniyomi: ')
                 ? name.substring(9)
                 : name.startsWith('Tachiyomi: ')
                     ? name.substring(10)
                     : name,
-            pkgName: map['pkg'],
-            apkName: rawApkUrl.startsWith('http') ? rawApkUrl : map['apk'],
-            lang: map['lang'],
-            version: map['version'],
-            isNsfw: map['isNsfw'] ?? false,
+            pkgName: pkg,
+            apkName: rawApkUrl.startsWith('http')
+                ? rawApkUrl
+                : strOf(map['apk']),
+            lang: strOf(map['lang']),
+            version: strOf(map['version']),
+            isNsfw: boolOr(map['isNsfw'] ?? map['nsfw']),
             itemType: detectedType,
             repo: repoUrl,
             iconUrl: rawIconUrl.startsWith('http')
                 ? rawIconUrl
-                : "$baseIconUrl/icon/${map['pkg']}.png",
+                : "$baseIconUrl/icon/$pkg.png",
+            author: Source.authorNameFrom(map['author'] ?? map['authors']),
           )..managerId = managerId,
         );
       }

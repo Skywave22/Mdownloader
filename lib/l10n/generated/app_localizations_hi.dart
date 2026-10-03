@@ -1988,4 +1988,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String failedToAddRepository(Object error) {
     return 'रिपॉज़िटरी नहीं जोड़ी गई: $error';
   }
+
+  @override
+  String get addingRepository => 'रिपॉज़िटरी जोड़ी जा रही है…';
 }

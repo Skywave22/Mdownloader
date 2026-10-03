@@ -1,3 +1,5 @@
+import 'JsonX.dart';
+
 class Source {
   String? id;
   String? name;
@@ -15,6 +17,10 @@ class Source {
   bool? supportsLatest;
   bool? supportsPopular;
 
+  /// The extension's developer, when the manifest declares one. Used to
+  /// group a repo's extensions by author in the manager UI.
+  String? author;
+
   Source({
     this.id = '',
     this.name = '',
@@ -31,30 +37,48 @@ class Source {
     this.isPrivate,
     this.supportsLatest = false,
     this.supportsPopular = false,
+    this.author,
   });
 
   Source.fromJson(Map<String, dynamic> json) {
-    baseUrl = json['baseUrl'] ?? json['site'];
-    iconUrl = json['iconUrl'];
-    id = json['id'].toString();
-    isNsfw = json['isNsfw'];
-    lang = json['lang'];
-    name = json['name'];
-    version = json['version'];
-    versionLast = json['versionLast'];
-    repo = json['repo'];
-    managerId = json['managerId'];
-    hasUpdate = json['hasUpdate'] ?? false;
-    isPrivate = json['isPrivate'] ?? (json['isShared'] != null ? !(json['isShared'] as bool) : null);
-    supportsLatest = json['supportsLatest'] ?? false;
-    supportsPopular = json['supportsPopular'] ?? false;
+    baseUrl = strOf(json['baseUrl']) ?? strOf(json['site']);
+    iconUrl = strOf(json['iconUrl']);
+    id = strOf(json['id']) ?? '';
+    isNsfw = boolOf(json['isNsfw'] ?? json['nsfw']);
+    lang = strOf(json['lang']);
+    name = strOf(json['name']);
+    version = strOf(json['version']);
+    versionLast = strOf(json['versionLast']);
+    repo = strOf(json['repo']);
+    managerId = strOf(json['managerId']);
+    hasUpdate = boolOr(json['hasUpdate']);
+    isPrivate = boolOf(json['isPrivate']) ??
+        (boolOf(json['isShared']) != null ? !boolOr(json['isShared']) : null);
+    supportsLatest = boolOr(json['supportsLatest']);
+    supportsPopular = boolOr(json['supportsPopular']);
+    author = Source.authorNameFrom(json['author'] ?? json['authors']);
 
     final isLnReader = json['site'] != null && json['url'] != null && json['sourceCodeLanguage'] == null;
     if (isLnReader) {
       itemType = ItemType.novel;
     } else {
-      itemType = ItemType.values[json['itemType'] ?? 0];
+      itemType = Source.itemTypeOf(json['itemType']);
     }
+  }
+
+  /// Manifests disagree: an index, a name string, or absent. Accept all.
+  static ItemType itemTypeOf(dynamic raw) {
+    final index = intOf(raw);
+    if (index != null && index >= 0 && index < ItemType.values.length) {
+      return ItemType.values[index];
+    }
+    final name = strOf(raw)?.toLowerCase();
+    if (name != null) {
+      for (final t in ItemType.values) {
+        if (t.name == name) return t;
+      }
+    }
+    return ItemType.manga;
   }
 
   Map<String, dynamic> toJson() => {
@@ -73,7 +97,25 @@ class Source {
         'isPrivate': isPrivate,
         'supportsLatest': supportsLatest,
         'supportsPopular': supportsPopular,
+        'author': author,
       };
+
+  /// Manifests disagree on the author's shape: a plain string, an
+  /// `{name, icon}` object, or a list of either. Accept all.
+  static String? authorNameFrom(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is Map) return strOf(raw['name'] ?? raw['author']);
+    if (raw is List) {
+      final names = <String>[];
+      for (final e in raw) {
+        final s = authorNameFrom(e);
+        if (s != null && s.trim().isNotEmpty) names.add(s);
+      }
+      return names.isEmpty ? null : names.join(', ');
+    }
+    final s = raw.toString().trim();
+    return s.isEmpty ? null : s;
+  }
 
   String get uniqueId => id ?? '';
 }
