@@ -1,0 +1,33 @@
+name: Diag (temporary)
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Analyze (annotations)
+        run: |
+          set +e
+          flutter analyze > analyze.txt 2>&1
+          grep -E "error •|warning •" analyze.txt | while IFS= read -r line; do
+            echo "::error::ANALYZE $line"
+          done
+          tail -n 30 analyze.txt
+          exit 0
+      - name: Test (annotations)
+        run: |
+          set +e
+          flutter test > test.txt 2>&1
+          grep -E "ANALYZE|Expected|Actual|Error|Exception|failed|✓|✗|loading " test.txt | tail -60 | while IFS= read -r line; do
+            echo "::warning::TEST $line"
+          done
+          grep -B2 -A6 -E "Some tests failed|All tests passed" test.txt | tail -40
+          tail -n 30 test.txt
+          exit 0
