@@ -1,3 +1,5 @@
+import 'JsonX.dart';
+
 class PageUrl {
   String url;
   Map<String, String>? headers;
@@ -6,8 +8,8 @@ class PageUrl {
 
   factory PageUrl.fromJson(Map<String, dynamic> json) {
     return PageUrl(
-      json['url'].toString().trim(),
-      headers: (json['headers'] as Map?)?.cast<String, String>(),
+      strOr(json['url']).trim(),
+      headers: json['headers'] == null ? null : strMapOf(json['headers']),
     );
   }
 

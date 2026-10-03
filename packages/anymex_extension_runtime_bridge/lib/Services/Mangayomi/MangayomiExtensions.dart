@@ -262,18 +262,32 @@ class MangayomiExtensions extends Extension {
       (String body, String repoUrl, ItemType itemType, String managerId) args) {
     final (body, repoUrl, itemType, managerId) = args;
 
-    final decoded = jsonDecode(body);
+    // A repo must not die because one entry is odd: parse each entry on its
+    // own and skip (and log) whatever refuses to map. This function runs in
+    // an isolate, so an uncaught field-cast here used to surface as
+    // "couldn't add repository: type 'List<dynamic>' is not a subtype of
+    // type 'String'" for the whole repo.
+    final dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      return const [];
+    }
 
     if (decoded is! List) return const [];
 
     final sources = <Source>[];
-
     for (final e in decoded) {
-      final ext = Map<String, dynamic>.from(e);
-
-      sources.add(
-        MSource.fromJson(ext)..repo = repoUrl..managerId = managerId,
-      );
+      if (e is! Map) continue;
+      try {
+        sources.add(
+          MSource.fromJson(Map<String, dynamic>.from(e))
+            ..repo = repoUrl
+            ..managerId = managerId,
+        );
+      } catch (_) {
+        // skip just this entry
+      }
     }
 
     return sources.where((s) => s.itemType == itemType).toList(growable: false);

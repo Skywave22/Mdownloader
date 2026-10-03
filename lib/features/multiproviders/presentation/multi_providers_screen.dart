@@ -741,6 +741,13 @@ class _SourceCard extends ConsumerWidget {
                         spacing: 6,
                         runSpacing: 4,
                         children: [
+                          // The author shows on every card (Installed too),
+                          // not just as the Available tab's group header.
+                          if ((source.author ?? '').trim().isNotEmpty)
+                            _chip(
+                              context,
+                              '${l10n.author}: ${source.author!.trim()}',
+                            ),
                           if ((source.lang ?? '').isNotEmpty)
                             _chip(context, source.lang!.toUpperCase()),
                           _chip(context, 'v${source.version ?? '?'}'),

@@ -1,4 +1,5 @@
 import 'DMedia.dart';
+import 'JsonX.dart';
 
 class Pages {
   List<DMedia> list;
@@ -30,7 +31,7 @@ class Pages {
       // Unknown pagination should not stop after page 1 - thin pages used to
       // leave feeds at "1-2 items" forever. Assume more when the page came
       // back with a reasonable amount of entries.
-      hasNextPage: json['hasNextPage'] ?? (parsed.length >= 8),
+      hasNextPage: boolOf(json['hasNextPage']) ?? (parsed.length >= 8),
     );
   }
 

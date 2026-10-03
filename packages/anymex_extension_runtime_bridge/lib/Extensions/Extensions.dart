@@ -1,3 +1,4 @@
+import '../Models/JsonX.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -156,11 +157,11 @@ class Repo {
 
   factory Repo.fromJson(Map<String, dynamic> json) {
     return Repo(
-      url: json['url'],
-      name: json['name'],
-      iconUrl: json['iconUrl'],
-      extensions: json['extensions'],
-      managerId: json['managerId'],
+      url: strOf(json['url']) ?? '',
+      name: strOf(json['name']),
+      iconUrl: strOf(json['iconUrl']),
+      extensions: strOf(json['extensions']),
+      managerId: strOf(json['managerId']),
     );
   }
 

@@ -1,3 +1,4 @@
+import '../../Models/JsonX.dart';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -207,12 +208,20 @@ class SoraExtensions extends Extension {
       Iterable<Map<String, dynamic>> extensions;
 
       if (decoded is List) {
-        extensions = decoded.whereType<Map<String, dynamic>>();
+        extensions = [
+          for (final e in decoded)
+            if (e is Map) Map<String, dynamic>.from(e),
+        ];
       } else if (decoded is Map<String, dynamic>) {
         if (decoded.containsKey('sourceName')) {
           extensions = [decoded];
         } else {
-          extensions = decoded.values.cast<Map<String, dynamic>>();
+          // Values may hold non-map noise (a version string, a list) - a
+          // lazy `.cast` here used to throw the whole repo away.
+          extensions = [
+            for (final e in decoded.values)
+              if (e is Map) Map<String, dynamic>.from(e),
+          ];
         }
       } else {
         return const [];
@@ -236,15 +245,15 @@ class SoraExtensions extends Extension {
         sources.add(
           SSource(
             id: '${ext['sourceName']}@$repoUrl',
-            name: ext['sourceName'],
+            name: strOf(ext['sourceName']),
             itemType: itemType,
-            lang: ext['language'],
-            version: ext['version'],
-            iconUrl: ext['iconUrl'] ?? ext['iconURL'],
-            baseUrl: ext['baseUrl'],
-            sourceCodeUrl: ext['scriptUrl'] ?? ext['scriptURL'],
+            lang: strOf(ext['language']),
+            version: strOf(ext['version']),
+            iconUrl: strOf(ext['iconUrl']) ?? strOf(ext['iconURL']),
+            baseUrl: strOf(ext['baseUrl']),
+            sourceCodeUrl: strOf(ext['scriptUrl']) ?? strOf(ext['scriptURL']),
             repo: repoUrl,
-            author: Source.authorNameFrom(ext['author']),
+            author: Source.authorNameFrom(ext['author'] ?? ext['authors']),
           )..managerId = managerId,
         );
       }

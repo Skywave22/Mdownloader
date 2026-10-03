@@ -1,3 +1,4 @@
+import '../../../Models/JsonX.dart';
 import '../../../Models/Source.dart';
 
 class KotatsuSource extends Source {
@@ -24,21 +25,21 @@ class KotatsuSource extends Source {
 
   factory KotatsuSource.fromJson(Map<String, dynamic> json) {
     return KotatsuSource(
-      id: json['id']?.toString(),
-      name: json['name'],
-      baseUrl: json['baseUrl'],
-      lang: json['lang'],
-      iconUrl: json['iconUrl'],
-      isNsfw: json['isNsfw'],
-      version: json['version'],
-      versionLast: json['versionLast'],
-      repo: json['repo'],
-      hasUpdate: json['hasUpdate'] ?? false,
-      supportsLatest: json['supportsLatest'] ?? false,
-      supportsPopular: json['supportsPopular'] ?? false,
-      itemType: ItemType.values[json['itemType'] ?? 0],
-      jarName: json['jarName'],
-      pkgName: json['pkgName'],
+      id: strOf(json['id']),
+      name: strOf(json['name']),
+      baseUrl: strOf(json['baseUrl']),
+      lang: strOf(json['lang']),
+      iconUrl: strOf(json['iconUrl']),
+      isNsfw: boolOf(json['isNsfw']),
+      version: strOf(json['version']),
+      versionLast: strOf(json['versionLast']),
+      repo: strOf(json['repo']),
+      hasUpdate: boolOr(json['hasUpdate']),
+      supportsLatest: boolOr(json['supportsLatest']),
+      supportsPopular: boolOr(json['supportsPopular']),
+      itemType: Source.itemTypeOf(json['itemType']),
+      jarName: strOf(json['jarName']),
+      pkgName: strOf(json['pkgName']),
     );
   }
 

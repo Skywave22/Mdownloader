@@ -1,3 +1,5 @@
+import 'JsonX.dart';
+
 class Video {
   String? title;
   String url;
@@ -39,17 +41,13 @@ class Video {
       videoTitle,
       (json['url'] ?? '').toString().trim(),
       quality,
-      headers: normalizeHeaders((json['headers'] as Map?)?.cast<String, String>()),
-      subtitles: json['subtitles'] != null
-          ? (json['subtitles'] as List)
-              .map((e) => Track.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-          : [],
-      audios: json['audios'] != null
-          ? (json['audios'] as List)
-              .map((e) => Track.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-          : [],
+      headers: normalizeHeaders(strMapOf(json['headers'])),
+      subtitles: [
+        for (final e in mapListOf(json['subtitles'])) Track.fromJson(e),
+      ],
+      audios: [
+        for (final e in mapListOf(json['audios'])) Track.fromJson(e),
+      ],
       extraData: json,
     );
   }
@@ -76,17 +74,15 @@ class Video {
       videoTitle,
       (json['url'] ?? '').toString().trim(),
       quality,
-      headers: normalizeHeaders((json["extraData"]?['allHeaders'] as Map?)?.cast<String, String>()),
-      subtitles: json['subtitles'] != null
-          ? (json['subtitles'] as List)
-              .map((e) => Track.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-          : [],
-      audios: json['audios'] != null
-          ? (json['audios'] as List)
-              .map((e) => Track.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-          : [],
+      headers: normalizeHeaders(
+        strMapOf(mapOf(json['extraData'])['allHeaders']),
+      ),
+      subtitles: [
+        for (final e in mapListOf(json['subtitles'])) Track.fromJson(e),
+      ],
+      audios: [
+        for (final e in mapListOf(json['audios'])) Track.fromJson(e),
+      ],
       extraData: json,
     );
   }

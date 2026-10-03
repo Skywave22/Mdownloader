@@ -5,6 +5,8 @@ export './ExtensionManager.dart';
 export './Extensions/Extensions.dart';
 export './Extensions/SourceMethods.dart';
 export './Models/DEpisode.dart';
+export './Models/DSection.dart';
+export './Models/JsonX.dart';
 export './Models/DMedia.dart';
 export './Models/Page.dart';
 export './Models/Pages.dart';

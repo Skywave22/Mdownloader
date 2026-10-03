@@ -1,3 +1,4 @@
+import '../../../Models/JsonX.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
@@ -133,7 +134,9 @@ class LegadoSource extends Source {
       bookSourceType: json['bookSourceType'] is int ? json['bookSourceType'] : int.tryParse(json['bookSourceType']?.toString() ?? '0') ?? 0,
       bookSourceComment: json['bookSourceComment']?.toString(),
       searchUrl: json['searchUrl']?.toString(),
-      exploreUrl: json['exploreUrl']?.toString(),
+      exploreUrl: json['exploreUrl'] is List
+          ? strListOr(json['exploreUrl']).join('\n')
+          : strOf(json['exploreUrl']),
       header: headerStr,
       ruleSearch: parseRuleMap(json['ruleSearch']),
       ruleExplore: parseRuleMap(json['ruleExplore']),

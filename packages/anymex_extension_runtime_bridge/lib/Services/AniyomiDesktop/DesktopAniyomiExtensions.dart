@@ -1,3 +1,4 @@
+import '../../Models/JsonX.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -82,30 +83,32 @@ class DesktopAniyomiExtensions extends DesktopExtensionBase {
       final parsed = <ASource>[];
 
       for (final e in (result as List)) {
-        final map = e as Map<String, dynamic>;
-        final detectedType =
-            map['type'] == 'anime' ? ItemType.anime : ItemType.manga;
+        final map = Map<String, dynamic>.from(e as Map);
+        final detectedType = strOf(map['type']) == 'anime'
+            ? ItemType.anime
+            : ItemType.manga;
         if (detectedType != type) continue;
 
-        final className = map['className'] as String;
-        final pkgName = (map['pkgName'] as String?)?.isNotEmpty == true
-            ? map['pkgName'] as String
+        final className = strOr(map['className']);
+        final rawPkgName = strOf(map['pkgName']);
+        final pkgName = (rawPkgName?.isNotEmpty == true)
+            ? rawPkgName!
             : (className.contains('.')
                 ? className.substring(0, className.lastIndexOf('.'))
                 : className);
         final iconUrl = getVal<String>('desktop_ext_icon_$pkgName') ??
             'https://aniyomi.org/img/logo-128px.png';
         final savedVersion = getVal<String>('desktop_ext_version_$pkgName');
-        final version = savedVersion ?? map['version'] as String? ?? '1.0.0';
+        final version = savedVersion ?? strOf(map['version']) ?? '1.0.0';
 
         final aSource = ASource(
-          id: map['id']?.toString() ?? className,
-          name: map['name'] as String?,
-          lang: map['lang'] as String?,
+          id: strOf(map['id']) ?? className,
+          name: strOf(map['name']),
+          lang: strOf(map['lang']),
           pkgName: pkgName,
           version: version,
-          isNsfw: map['isNsfw'] as bool? ?? false,
-          baseUrl: map['baseUrl'] as String?,
+          isNsfw: boolOr(map['isNsfw'] ?? map['nsfw']),
+          baseUrl: strOf(map['baseUrl']),
           itemType: detectedType,
           iconUrl: iconUrl,
         );
@@ -201,9 +204,10 @@ class DesktopAniyomiExtensions extends DesktopExtensionBase {
       final sources = <Source>[];
 
       for (final item in decoded) {
-        final map = item as Map<String, dynamic>;
-        final name = map['name'] as String? ?? '';
-        final pkg = map['pkg'] as String? ?? '';
+        final map = Map<String, dynamic>.from(item as Map);
+        final name = strOr(map['name']);
+        final pkg = strOr(map['pkg']);
+        final srcs = mapListOf(map["sources"]);
 
         var detectedType = name.startsWith('Aniyomi: ')
             ? ItemType.anime
@@ -223,31 +227,29 @@ class DesktopAniyomiExtensions extends DesktopExtensionBase {
 
         if (detectedType != targetType) continue;
 
-        final rawIconUrl = map['iconUrl'] as String? ?? '';
-        final rawApkUrl = map['apkUrl'] as String? ?? '';
+        final rawIconUrl = strOr(map['iconUrl']);
+        final rawApkUrl = strOr(map['apkUrl']);
 
         sources.add(
           ASource(
-            id: map["sources"] != null &&
-                    map["sources"] is List &&
-                    (map["sources"] as List).isNotEmpty
-                ? (map["sources"] as List).first['id']?.toString() ?? ''
-                : '',
+            id: srcs.isEmpty ? '' : strOr(srcs.first['id']),
             name: name.startsWith('Aniyomi: ')
                 ? name.substring(9)
                 : name.startsWith('Tachiyomi: ')
                     ? name.substring(10)
                     : name,
-            pkgName: map['pkg'],
-            apkName: rawApkUrl.startsWith('http') ? rawApkUrl : map['apk'],
-            lang: map['lang'],
-            version: map['version'],
-            isNsfw: map['isNsfw'] ?? false,
+            pkgName: pkg,
+            apkName: rawApkUrl.startsWith('http')
+                ? rawApkUrl
+                : strOf(map['apk']),
+            lang: strOf(map['lang']),
+            version: strOf(map['version']),
+            isNsfw: boolOr(map['isNsfw'] ?? map['nsfw']),
             itemType: detectedType,
             repo: repoUrl,
             iconUrl: rawIconUrl.startsWith('http')
                 ? rawIconUrl
-                : "$baseIconUrl/icon/${map['pkg']}.png",
+                : "$baseIconUrl/icon/$pkg.png",
           ),
         );
       }

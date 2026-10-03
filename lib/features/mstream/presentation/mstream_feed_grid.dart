@@ -21,6 +21,9 @@ enum MStreamFeed {
 
   /// A search query against the source.
   search,
+
+  /// A named browse row the extension itself defines ([DSection]).
+  section,
 }
 
 /// The paginated extension-content grid, in the same card style Home's grids
@@ -32,6 +35,7 @@ class MStreamFeedGrid extends StatefulWidget {
     required this.source,
     required this.feed,
     this.query,
+    this.section,
   });
 
   final SourceMethods methods;
@@ -40,6 +44,9 @@ class MStreamFeedGrid extends StatefulWidget {
 
   /// Only for [MStreamFeed.search].
   final String? query;
+
+  /// Only for [MStreamFeed.section].
+  final DSection? section;
 
   @override
   State<MStreamFeedGrid> createState() => _MStreamFeedGridState();
@@ -88,6 +95,10 @@ class _MStreamFeedGridState extends State<MStreamFeedGrid> {
     switch (widget.feed) {
       case MStreamFeed.search:
         return widget.methods.search(widget.query ?? '', page, const <dynamic>[]);
+      case MStreamFeed.section:
+        final section = widget.section;
+        if (section == null) return Pages(list: const []);
+        return widget.methods.getSectionPages(section, page);
       case MStreamFeed.popular:
         try {
           return await widget.methods.getPopular(page);
@@ -245,12 +256,14 @@ class MStreamAllScreen extends StatelessWidget {
     required this.methods,
     required this.source,
     required this.feed,
+    this.section,
   });
 
   final String title;
   final SourceMethods methods;
   final Source source;
   final MStreamFeed feed;
+  final DSection? section;
 
   @override
   Widget build(BuildContext context) {
@@ -269,6 +282,7 @@ class MStreamAllScreen extends StatelessWidget {
         methods: methods,
         source: source,
         feed: feed,
+        section: section,
       ),
     );
   }

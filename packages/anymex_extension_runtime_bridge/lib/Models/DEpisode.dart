@@ -1,3 +1,5 @@
+import 'JsonX.dart';
+
 class DEpisode {
   String? url;
   String? name;
@@ -37,43 +39,40 @@ class DEpisode {
       episodeStr = '';
     }
     return DEpisode(
-      url: json['url'],
-      name: json['name'],
-      dateUpload: json['dateUpload']?.toString() ??
-          json['date_upload']?.toString() ??
-          '',
-      scanlator: json['scanlator'],
-      thumbnail: json['thumbnail'],
-      description: json['description'],
-      memo: json['memo']?.toString() ?? json['description']?.toString(),
-      filler: json['filler'],
+      url: strOf(json['url']),
+      name: strOf(json['name']),
+      dateUpload: strOf(json['dateUpload']) ?? strOf(json['date_upload']) ?? '',
+      scanlator: strOf(json['scanlator']),
+      thumbnail: strOf(json['thumbnail']),
+      description: strOf(json['description']),
+      memo: strOf(json['memo']) ?? strOf(json['description']),
+      filler: boolOf(json['filler']),
       episodeNumber: episodeStr,
       sortMap: json['sortMap'] != null
-          ? Map<String, String>.from(json['sortMap'])
+          ? strMapOf(json['sortMap'])
           : {
-              "season": json['season']?.toString() ?? '',
+              "season": strOf(json['season']) ?? '',
             },
     );
   }
 
   factory DEpisode.fromCs(Map<String, dynamic> json) {
+    final extra = mapOf(json['extraData']);
     return DEpisode(
-        url: json['dataUrl'] ?? json['url'],
-        name: json['name'],
-        dateUpload: json['dateUpload']?.toString() ??
-            json['date_upload']?.toString() ??
-            '',
-        scanlator: json['scanlator'],
-        thumbnail: json['thumbnail'] ??
-            json['posterUrl'] ??
-            json['extraData']?['thumbnail'],
-        description: json['description'],
-        memo: json['memo']?.toString() ?? json['description']?.toString(),
-        filler: json['filler'],
-        episodeNumber: json['episodeNumber']?.toString() ?? json['episode']?.toString() ?? '1',
+        url: strOf(json['dataUrl']) ?? strOf(json['url']),
+        name: strOf(json['name']),
+        dateUpload: strOf(json['dateUpload']) ?? strOf(json['date_upload']) ?? '',
+        scanlator: strOf(json['scanlator']),
+        thumbnail: strOf(json['thumbnail']) ??
+            strOf(json['posterUrl']) ??
+            strOf(extra['thumbnail']),
+        description: strOf(json['description']),
+        memo: strOf(json['memo']) ?? strOf(json['description']),
+        filler: boolOf(json['filler']),
+        episodeNumber: strOf(json['episodeNumber']) ?? strOf(json['episode']) ?? '1',
         sortMap: {
-          "season": json['extraData']?['season']?.toString() ?? '',
-          "type": json['extraData']?['episodeGroup']?.toString() ?? ''
+          "season": strOf(extra['season']) ?? '',
+          "type": strOf(extra['episodeGroup']) ?? ''
         });
   }
 

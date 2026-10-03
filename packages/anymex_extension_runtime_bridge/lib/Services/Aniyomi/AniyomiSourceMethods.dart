@@ -1,3 +1,4 @@
+import '../../Models/JsonX.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -163,10 +164,10 @@ class AniyomiSourceMethods extends SourceMethods {
   }
 
   dynamic _mapAniyomiFilterToClass(Map<dynamic, dynamic> map) {
-    final name = map['name'] as String? ?? '';
-    final type = map['type'] as String? ?? '';
+    final name = strOr(map['name']);
+    final type = strOr(map['type']);
     final state = map['state'];
-    final values = map['values'] as List<dynamic>?;
+    final values = map['values'] is List ? map['values'] as List<dynamic> : null;
 
     switch (type) {
       case 'Header':
@@ -318,9 +319,17 @@ class AniyomiSourceMethods extends SourceMethods {
 
     if (result is String) return const [];
 
-    return List<dynamic>.from(
-      result,
-    ).map((e) => mapToSourcePreference(Map<String, dynamic>.from(e))).toList();
+    // One malformed preference entry must not blank the whole list.
+    final prefs = <SourcePreference>[];
+    for (final e in List<dynamic>.from(result)) {
+      if (e is! Map) continue;
+      try {
+        prefs.add(mapToSourcePreference(Map<String, dynamic>.from(e)));
+      } catch (_) {
+        // skip just this entry
+      }
+    }
+    return prefs;
   }
 
   @override
@@ -335,62 +344,61 @@ class AniyomiSourceMethods extends SourceMethods {
 }
 
 SourcePreference mapToSourcePreference(Map<String, dynamic> json) {
-  final type = json['type'] as String?;
+  final type = strOf(json['type']);
+  final key = strOf(json['key']) ?? '';
+  final title = strOf(json['title']);
+  final summary = strOf(json['summary']);
+  final rawValue = json['value'];
   switch (type) {
     case 'checkbox':
       return SourcePreference(
-        key: json['key'],
+        key: key,
         type: type,
         checkBoxPreference: CheckBoxPreference(
-          title: json['title'],
-          summary: json['summary'],
-          value: json['value'],
+          title: title,
+          summary: summary,
+          value: boolOr(rawValue),
         ),
       );
 
     case 'switch':
       return SourcePreference(
-        key: json['key'],
+        key: key,
         type: type,
         switchPreferenceCompat: SwitchPreferenceCompat(
-          title: json['title'],
-          summary: json['summary'],
-          value: json['value'],
+          title: title,
+          summary: summary,
+          value: boolOr(rawValue),
         ),
       );
 
     case 'list':
-      final entries =
-          (json['entries'] as List?)?.map((e) => e.toString()).toList();
-      final entryValues =
-          (json['entryValues'] as List?)?.map((e) => e.toString()).toList();
-      final valueIndex = entryValues?.indexOf(json['value']?.toString() ?? '');
+      final entries = strListOr(json['entries']);
+      final entryValues = strListOr(json['entryValues']);
+      final valueIndex = entryValues.indexOf(strOr(rawValue));
       return SourcePreference(
-        key: json['key'],
+        key: key,
         type: type,
         listPreference: ListPreference(
-          title: json['title'],
-          summary: json['summary'],
+          title: title,
+          summary: summary,
           entries: entries,
           entryValues: entryValues,
           valueIndex: valueIndex != -1 ? valueIndex : 0,
-          value: json['value']?.toString(),
+          value: strOf(rawValue),
         ),
       );
 
     case 'multi_select':
-      final entries =
-          (json['entries'] as List?)?.map((e) => e.toString()).toList();
-      final entryValues =
-          (json['entryValues'] as List?)?.map((e) => e.toString()).toList();
-      final values =
-          (json['value'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      final entries = strListOr(json['entries']);
+      final entryValues = strListOr(json['entryValues']);
+      final values = strListOr(rawValue);
       return SourcePreference(
-        key: json['key'],
+        key: key,
         type: type,
         multiSelectListPreference: MultiSelectListPreference(
-          title: json['title'],
-          summary: json['summary'],
+          title: title,
+          summary: summary,
           entries: entries,
           entryValues: entryValues,
           values: values,
@@ -399,16 +407,16 @@ SourcePreference mapToSourcePreference(Map<String, dynamic> json) {
 
     case 'text':
       return SourcePreference(
-        key: json['key'],
+        key: key,
         type: type,
         editTextPreference: EditTextPreference(
-          title: json['title'],
-          summary: json['summary'],
-          value: json['value']?.toString(),
+          title: title,
+          summary: summary,
+          value: strOf(rawValue),
         ),
       );
 
     default:
-      return SourcePreference(key: json['key']);
+      return SourcePreference(key: key);
   }
 }

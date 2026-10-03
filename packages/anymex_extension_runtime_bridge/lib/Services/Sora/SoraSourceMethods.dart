@@ -1,3 +1,4 @@
+import '../../Models/JsonX.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -145,14 +146,14 @@ class SoraSourceMethods extends SourceMethods {
     void add(Map e, {String? fallback}) {
       episodes.add(
         DEpisode(
-          episodeNumber: e["number"]?.toString() ??
-              e["chapter"]?.toString() ??
+          episodeNumber: strOf(e["number"]) ??
+              strOf(e["chapter"]) ??
               fallback ??
               "",
-          url: e["href"] ?? e["id"],
-          name: e?["title"] ??
-              "Episode ${e['number'] ?? e['chapter'] ?? fallback ?? ''}",
-          scanlator: e["scanlation_group"] ?? e["scanlator_group"],
+          url: strOf(e["href"]) ?? strOf(e["id"]),
+          name: strOf(e["title"]) ??
+              "Episode ${strOf(e['number']) ?? strOf(e['chapter']) ?? fallback ?? ''}",
+          scanlator: strOf(e["scanlation_group"]) ?? strOf(e["scanlator_group"]),
         ),
       );
     }
@@ -310,9 +311,9 @@ class SoraSourceMethods extends SourceMethods {
     return raw.map<DMedia>((e) {
       final map = Map<String, dynamic>.from(e);
       return DMedia(
-        title: map['title'],
-        url: map['href'] ?? map['id'],
-        cover: map['image'] ?? map['imageURL'],
+        title: strOf(map['title']),
+        url: strOf(map['href']) ?? strOf(map['id']),
+        cover: strOf(map['image']) ?? strOf(map['imageURL']),
       );
     }).toList();
   }

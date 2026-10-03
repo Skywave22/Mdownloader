@@ -50,6 +50,10 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
   /// the same items.
   List<DMedia> _latest = const <DMedia>[];
 
+  /// Browse rows the extension itself defines (beyond the standard
+  /// Popular/Latest hooks) with their first page, rendered as named rails.
+  List<({DSection section, List<DMedia> media})> _sectionRails = const [];
+
   bool _loading = false;
   int _generation = 0;
   Object? _error;
@@ -138,11 +142,35 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
       } catch (_) {/* keep the first error */}
     }
 
+    // Browse rows the extension itself defines (Legado explore links and any
+    // future backend hook) render as their own named rails - they come from
+    // the extension, not from a fixed list here.
+    var sectionRails = <({DSection section, List<DMedia> media})>[];
+    try {
+      final sections = await methods.getSections();
+      if (sections.isNotEmpty) {
+        final pages = await Future.wait([
+          // One dead row must not take the other sections down with it.
+          for (final sec in sections)
+            methods.getSectionPages(sec, 1).catchError(
+              (Object e) => Pages(list: const <DMedia>[]),
+            ),
+        ]);
+        sectionRails = [
+          for (var i = 0; i < sections.length; i++)
+            if (pages[i].list.isNotEmpty)
+              (section: sections[i], media: pages[i].list),
+        ];
+      }
+    } catch (e) {
+      talker.debug('MStream: extension sections failed: $e');
+    }
+
     if (!mounted || generation != _generation) return;
 
     talker.debug(
       'MStream: ${source.name} feeds — popular=${popular.length} '
-      'latest=${latest.length} error=$error',
+      'latest=${latest.length} sections=${sectionRails.length} error=$error',
     );
 
     setState(() {
@@ -150,6 +178,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
       // Both rails always render (like Home); sources whose single listing
       // answers both feeds show it under both labels rather than losing one.
       _latest = latest;
+      _sectionRails = sectionRails;
       _loading = false;
       _error = (popular.isEmpty && latest.isEmpty) ? error : null;
     });
@@ -160,6 +189,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
       _source = source;
       _popular = const <DMedia>[];
       _latest = const <DMedia>[];
+      _sectionRails = const [];
       _error = null;
     });
     unawaited(
@@ -193,7 +223,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
     );
   }
 
-  void _openAll(String title, MStreamFeed feed) {
+  void _openAll(String title, MStreamFeed feed, {DSection? section}) {
     final source = _source;
     if (source == null) return;
     final methods =
@@ -206,6 +236,7 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
           methods: methods,
           source: source,
           feed: feed,
+          section: section,
         ),
       ),
     );
@@ -457,6 +488,28 @@ class _MStreamScreenState extends ConsumerState<MStreamScreen> {
                 onViewAll: () => _openAll(
                   l10n.mstreamLatest,
                   MStreamFeed.latest,
+                ),
+              ),
+            ),
+          for (final rail in _sectionRails)
+            SliverToBoxAdapter(
+              child: MediaHorizontalList(
+                title: rail.section.name,
+                mediaList: [for (final m in rail.media) _toItem(m)],
+                category: ViewAllCategory.providerContent,
+                showViewAll: true,
+                heroTagPrefix: 'mstream',
+                httpHeaders: _imageHeaders,
+                onTap: (item) {
+                  final match = rail.media.where(
+                    (m) => (m.url ?? '') == item.url,
+                  );
+                  if (match.isNotEmpty) _openMedia(match.first);
+                },
+                onViewAll: () => _openAll(
+                  rail.section.name,
+                  MStreamFeed.section,
+                  section: rail.section,
                 ),
               ),
             ),

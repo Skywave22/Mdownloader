@@ -1,3 +1,4 @@
+import '../../Models/JsonX.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -178,10 +179,10 @@ class DesktopAniyomiSourceMethods extends SourceMethods {
   }
 
   dynamic _mapAniyomiFilterToClass(Map<dynamic, dynamic> map) {
-    final name = map['name'] as String? ?? '';
-    final type = map['type'] as String? ?? '';
+    final name = strOr(map['name']);
+    final type = strOr(map['type']);
     final state = map['state'];
-    final values = map['values'] as List<dynamic>?;
+    final values = map['values'] is List ? map['values'] as List<dynamic> : null;
 
     switch (type) {
       case 'Header':
