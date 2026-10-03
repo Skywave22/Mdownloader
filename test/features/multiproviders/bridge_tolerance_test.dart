@@ -124,7 +124,7 @@ void main() {
       final video = Video.fromJson({
         'url': 'https://v/1',
         'headers': {
-          'Referer': 42,
+          'X-Num': 42,
           'X-List': ['a'],
         },
         'subtitles': {
@@ -132,7 +132,7 @@ void main() {
           'label': 'English',
         },
       });
-      expect(video.headers?['Referer'], '42');
+      expect(video.headers?['X-Num'], '42');
       expect(video.headers?['X-List'], 'a');
       expect(video.subtitles, hasLength(1));
       expect(video.subtitles!.first.label, 'English');
