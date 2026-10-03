@@ -41,7 +41,9 @@ class Video {
       videoTitle,
       (json['url'] ?? '').toString().trim(),
       quality,
-      headers: normalizeHeaders(strMapOf(json['headers'])),
+      headers: json['headers'] == null
+          ? null
+          : normalizeHeaders(strMapOf(json['headers'])),
       subtitles: [
         for (final e in mapListOf(json['subtitles'])) Track.fromJson(e),
       ],
@@ -74,9 +76,11 @@ class Video {
       videoTitle,
       (json['url'] ?? '').toString().trim(),
       quality,
-      headers: normalizeHeaders(
-        strMapOf(mapOf(json['extraData'])['allHeaders']),
-      ),
+      headers: mapOf(json['extraData'])['allHeaders'] == null
+          ? null
+          : normalizeHeaders(
+              strMapOf(mapOf(json['extraData'])['allHeaders']),
+            ),
       subtitles: [
         for (final e in mapListOf(json['subtitles'])) Track.fromJson(e),
       ],

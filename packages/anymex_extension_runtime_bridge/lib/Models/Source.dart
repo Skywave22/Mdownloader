@@ -44,11 +44,11 @@ class Source {
     baseUrl = strOf(json['baseUrl']) ?? strOf(json['site']);
     iconUrl = strOf(json['iconUrl']);
     id = strOf(json['id']) ?? '';
-    isNsfw = boolOr(json['isNsfw'] ?? json['nsfw']);
+    isNsfw = boolOf(json['isNsfw'] ?? json['nsfw']);
     lang = strOf(json['lang']);
     name = strOf(json['name']);
     version = strOf(json['version']);
-    versionLast = strOf(json['versionLast']) ?? version;
+    versionLast = strOf(json['versionLast']);
     repo = strOf(json['repo']);
     managerId = strOf(json['managerId']);
     hasUpdate = boolOr(json['hasUpdate']);

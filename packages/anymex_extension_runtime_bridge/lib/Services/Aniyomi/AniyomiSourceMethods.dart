@@ -345,7 +345,7 @@ class AniyomiSourceMethods extends SourceMethods {
 
 SourcePreference mapToSourcePreference(Map<String, dynamic> json) {
   final type = strOf(json['type']);
-  final key = strOf(json['key']) ?? '';
+  final key = strOf(json['key']);
   final title = strOf(json['title']);
   final summary = strOf(json['summary']);
   final rawValue = json['value'];
