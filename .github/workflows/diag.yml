@@ -15,25 +15,56 @@ jobs:
           channel: stable
       - run: flutter pub get
       - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Build QuickJS Test Bridge
+        run: |
+          set -euo pipefail
+          cd packages/flutter_js_ng
+          out="$RUNNER_TEMP/qjs"
+          mkdir -p "$out"
+          # No CONFIG_BIGNUM and no cutils/libbf: quickjs-ng dropped libbf and
+          # made cutils header-only; dtoa.c took over the number formatting.
+          defs='-DCONFIG_VERSION="2024-01-01" -DQUICKJS -D_GNU_SOURCE'
+          for f in dtoa libregexp libunicode quickjs; do
+            gcc -c -fPIC -O1 -std=gnu17 -funsigned-char -Wno-unused-but-set-variable \
+              $defs -Icxx/quickjs -o "$out/$f.o" "cxx/quickjs/$f.c"
+          done
+          g++ -c -fPIC -O1 -std=c++17 $defs -Icxx/quickjs -Icxx \
+            -o "$out/bridge.o" cxx/libfastdev_quickjs_runtime.cpp
+          g++ -shared -o "$out/libquickjs_c_bridge_plugin.so" "$out"/*.o -lm -ldl -lpthread
+          # Fail here rather than as a confusing FFI error inside the suite. Not
+          # `nm ... | grep -q`: under pipefail, grep leaving at its first match
+          # can strand nm writing into a closed pipe, and the step then fails
+          # with 141 (SIGPIPE) on a perfectly good library - which also skips the
+          # LIBQUICKJSC_TEST_PATH export below and fails every FFI test after it.
+          nm -D --defined-only "$out/libquickjs_c_bridge_plugin.so" > "$out/symbols.txt"
+          grep -q ' jsNewRuntime$' "$out/symbols.txt"
+          echo "LIBQUICKJSC_TEST_PATH=$out/libquickjs_c_bridge_plugin.so" >> "$GITHUB_ENV"
+
       - name: Capture
         run: |
           set +e
+          flutter analyze > analyze.txt 2>&1
+          dart analyze --fatal-infos > dartanalyze.txt 2>&1
           flutter test > test.txt 2>&1
           {
-            echo "## Diag: failing tests"
+            echo "## Diag"
+            echo "### flutter analyze"
             echo '```'
-            grep -E "\[E\]" test.txt | head -80
+            grep -E "error •|warning •|info •" analyze.txt | head -40
             echo '```'
-            echo "## Summary"
+            echo "### dart analyze"
             echo '```'
-            grep -E "^[0-9]{2}:[0-9]{2} \+.*:" test.txt | tail -2
-            grep -E "error •" <(flutter analyze 2>&1) | head -15
+            grep -E "error •|warning •|info •" dartanalyze.txt | head -40
+            echo '```'
+            echo "### test failures"
+            echo '```'
+            grep -E "\[E\]|Some tests failed|All tests passed|passed," test.txt | head -60
+            echo '```'
+            echo "### test tail"
+            echo '```'
+            tail -n 25 test.txt
             echo '```'
           } > diag_note.md
-          grep -E "\[E\]" test.txt | head -10 | while IFS= read -r line; do
-            echo "::error::FAIL $line"
-          done
-          cat diag_note.md
       - name: Comment results
         env:
           GH_TOKEN: ${{ github.token }}
